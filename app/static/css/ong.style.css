@@ -44,9 +44,19 @@ footer address {
   line-height: 1.6;
 }
 
+nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 16px;
+  padding: 0 16px;
+}
+
 nav a {
   color: #42aaff;
-  margin: 0 15px;
+  margin: 0;
+  padding: 8px 12px;
   text-decoration: none;
   font-weight: bold;
   transition: color 0.3s;
