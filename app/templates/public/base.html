@@ -13,6 +13,7 @@
       <nav>
         <a href="{{ url_for('public.index') }}" class="{% if active_page == 'inicio' %}is-active{% endif %}">Início</a>
         <a href="{{ url_for('public.sobre') }}" class="{% if active_page == 'sobre' %}is-active{% endif %}">Sobre</a>
+        <a href="{{ url_for('public.projetos') }}" class="{% if active_page == 'projetos' %}is-active{% endif %}">Projetos</a>
         <a href="{{ url_for('public.galeria') }}" class="{% if active_page == 'galeria' %}is-active{% endif %}">Galeria</a>
         <a href="{{ url_for('public.doacao') }}" class="{% if active_page == 'doacao' %}is-active{% endif %}">Doação</a>
         <a href="{{ url_for('public.contato') }}" class="{% if active_page == 'contato' %}is-active{% endif %}">Contato</a>
