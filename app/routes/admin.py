@@ -379,11 +379,9 @@ def voluntarios_create():
     if form.validate_on_submit():
         voluntario = Voluntario(
             nome=form.nome.data,
-            email=form.email.data,
-            telefone=form.telefone.data,
-            area_interesse=form.area_interesse.data,
+            area=form.area.data,
             disponibilidade=form.disponibilidade.data,
-            mensagem=form.mensagem.data,
+            descricao=form.descricao.data,
         )
         db.session.add(voluntario)
         db.session.commit()
@@ -399,11 +397,9 @@ def voluntarios_edit(voluntario_id: int):
     form = VoluntarioForm(obj=voluntario)
     if form.validate_on_submit():
         voluntario.nome = form.nome.data
-        voluntario.email = form.email.data
-        voluntario.telefone = form.telefone.data
-        voluntario.area_interesse = form.area_interesse.data
+        voluntario.area = form.area.data
         voluntario.disponibilidade = form.disponibilidade.data
-        voluntario.mensagem = form.mensagem.data
+        voluntario.descricao = form.descricao.data
         db.session.commit()
         flash("Voluntário atualizado com sucesso.", "success")
         return redirect(url_for("admin.voluntarios_list"))

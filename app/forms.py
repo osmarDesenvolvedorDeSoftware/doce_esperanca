@@ -7,7 +7,7 @@ from flask import current_app
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileAllowed, FileField
 from wtforms import BooleanField, DateField, PasswordField, StringField, SubmitField, TextAreaField
-from wtforms.validators import DataRequired, Email, Length, Optional as OptionalValidator, URL, ValidationError
+from wtforms.validators import DataRequired, Length, Optional as OptionalValidator, URL, ValidationError
 
 ALLOWED_IMAGE_EXTENSIONS: Iterable[str] = ("jpg", "jpeg", "png")
 ALLOWED_DOC_EXTENSIONS: Iterable[str] = ("pdf",)
@@ -85,11 +85,9 @@ class ParceiroForm(FlaskForm):
 
 class VoluntarioForm(FlaskForm):
     nome = StringField("Nome", validators=[DataRequired(), Length(max=255)])
-    email = StringField("Email", validators=[DataRequired(), Email(), Length(max=255)])
-    telefone = StringField("Telefone", validators=[OptionalValidator(), Length(max=50)])
-    area_interesse = StringField("Área de Interesse", validators=[OptionalValidator(), Length(max=255)])
+    area = StringField("Área", validators=[DataRequired(), Length(max=255)])
     disponibilidade = StringField("Disponibilidade", validators=[OptionalValidator(), Length(max=255)])
-    mensagem = TextAreaField("Mensagem", validators=[OptionalValidator()])
+    descricao = TextAreaField("Descrição", validators=[OptionalValidator()])
     submit = SubmitField("Salvar")
 
 
