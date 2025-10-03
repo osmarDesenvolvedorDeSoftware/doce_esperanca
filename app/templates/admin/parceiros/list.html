@@ -40,6 +40,7 @@
                 <td class="text-end">
                   <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('admin.parceiros_edit', parceiro_id=parceiro.id) }}">Editar</a>
                   <form class="d-inline" method="post" action="{{ url_for('admin.parceiros_delete', parceiro_id=parceiro.id) }}" onsubmit="return confirm('Deseja realmente excluir este parceiro?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button class="btn btn-sm btn-outline-danger" type="submit">Excluir</button>
                   </form>
                 </td>
