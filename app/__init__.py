@@ -9,6 +9,7 @@ from flask_login import LoginManager
 db = SQLAlchemy()
 migrate = Migrate()
 login_manager = LoginManager()
+login_manager.login_view = "admin.admin_index"
 
 
 def _ensure_directory(path) -> None:
@@ -55,6 +56,19 @@ def create_app(config_class=None):
     app.register_blueprint(admin_bp, url_prefix="/admin")
 
     return app
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    from app.models import User
+
+    if user_id is None:
+        return None
+
+    try:
+        return User.query.get(int(user_id))
+    except (TypeError, ValueError):
+        return None
 
 
 __all__ = ["create_app", "db", "migrate", "login_manager"]
