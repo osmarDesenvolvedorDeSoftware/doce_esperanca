@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 from datetime import date, datetime, time
 from pathlib import Path
-from typing import Callable, Dict, Iterable, Optional, Sequence
+from typing import Any, Callable, Dict, Iterable, Optional, Sequence
 
 from flask import (
     Blueprint,
@@ -307,6 +307,7 @@ def textos_list():
 @login_required
 def textos_create():
     form = TextoInstitucionalForm()
+    _ensure_content_image_hint(form.imagem)
     if form.validate_on_submit():
         if form.slug.data in INSTITUTIONAL_SLUGS:
             form.slug.errors.append("Esse slug é reservado para conteúdos institucionais fixos.")
@@ -318,9 +319,15 @@ def textos_create():
                 conteudo=form.conteudo.data,
             )
             if form.imagem.data:
-                relative_path = _save_file(
-                    form.imagem.data, current_app.config["IMAGE_UPLOAD_FOLDER"]
-                )
+                try:
+                    relative_path = _save_file(
+                        form.imagem.data,
+                        current_app.config["IMAGE_UPLOAD_FOLDER"],
+                        processor=_content_image_processor,
+                    )
+                except ValueError as exc:
+                    form.imagem.errors.append(str(exc))
+                    return render_template("admin/textos/form.html", form=form, texto=None)
                 texto.imagem_path = relative_path
 
             db.session.add(texto)
@@ -354,6 +361,8 @@ def textos_edit(texto_id: int):
         if section_info.get("image_help"):
             form.imagem.description = section_info["image_help"]
 
+    _ensure_content_image_hint(form.imagem)
+
     if request.method == "GET":
         form.conteudo.data = texto.conteudo
         form.slug.data = texto.slug
@@ -369,8 +378,17 @@ def textos_edit(texto_id: int):
         texto.conteudo = form.conteudo.data
 
         if form.imagem.data:
+            try:
+                new_path = _save_file(
+                    form.imagem.data,
+                    current_app.config["IMAGE_UPLOAD_FOLDER"],
+                    processor=_content_image_processor,
+                )
+            except ValueError as exc:
+                form.imagem.errors.append(str(exc))
+                return render_template("admin/textos/form.html", form=form, texto=texto)
             _delete_file(texto.imagem_path)
-            texto.imagem_path = _save_file(form.imagem.data, current_app.config["IMAGE_UPLOAD_FOLDER"])
+            texto.imagem_path = new_path
 
         try:
             db.session.commit()
@@ -518,6 +536,23 @@ def _banner_processor(storage, path: Path) -> None:
     _process_image(storage, path, size=(1200, 400))
 
 
+CONTENT_IMAGE_TARGET_SIZE = (1200, 800)
+CONTENT_IMAGE_SIZE_HINT = (
+    f"As imagens serão redimensionadas para {CONTENT_IMAGE_TARGET_SIZE[0]}x{CONTENT_IMAGE_TARGET_SIZE[1]} pixels."
+)
+
+
+def _content_image_processor(storage, path: Path) -> None:
+    _process_image(storage, path, size=CONTENT_IMAGE_TARGET_SIZE)
+
+
+def _ensure_content_image_hint(field: Any) -> None:
+    size_hint = CONTENT_IMAGE_SIZE_HINT
+    existing = getattr(field, "description", None) or ""
+    if size_hint not in existing:
+        field.description = f"{existing} {size_hint}".strip()
+
+
 @admin_bp.route("/banners")
 @login_required
 def banners_list():
@@ -663,16 +698,26 @@ def galeria_list():
 @login_required
 def galeria_create():
     form = GaleriaForm()
+    _ensure_content_image_hint(form.imagem)
     if form.validate_on_submit():
         if not form.imagem.data:
             form.imagem.errors.append("Envie uma imagem para a galeria.")
         else:
+            try:
+                imagem_path = _save_file(
+                    form.imagem.data,
+                    current_app.config["IMAGE_UPLOAD_FOLDER"],
+                    processor=_content_image_processor,
+                )
+            except ValueError as exc:
+                form.imagem.errors.append(str(exc))
+                return render_template("admin/galeria/form.html", form=form, item=None)
             item = Galeria(
                 titulo=form.titulo.data,
                 slug=form.slug.data,
                 descricao=form.descricao.data,
                 publicado_em=_combine_date_with_min_time(form.publicado_em.data) or datetime.utcnow(),
-                imagem_path=_save_file(form.imagem.data, current_app.config["IMAGE_UPLOAD_FOLDER"]),
+                imagem_path=imagem_path,
             )
             db.session.add(item)
             try:
@@ -690,6 +735,7 @@ def galeria_create():
 def galeria_edit(item_id: int):
     item = Galeria.query.get_or_404(item_id)
     form = GaleriaForm(obj=item)
+    _ensure_content_image_hint(form.imagem)
     if item.publicado_em:
         form.publicado_em.data = item.publicado_em.date()
     if form.validate_on_submit():
@@ -698,8 +744,17 @@ def galeria_edit(item_id: int):
         item.descricao = form.descricao.data
         item.publicado_em = _combine_date_with_min_time(form.publicado_em.data) or item.publicado_em
         if form.imagem.data:
+            try:
+                new_path = _save_file(
+                    form.imagem.data,
+                    current_app.config["IMAGE_UPLOAD_FOLDER"],
+                    processor=_content_image_processor,
+                )
+            except ValueError as exc:
+                form.imagem.errors.append(str(exc))
+                return render_template("admin/galeria/form.html", form=form, item=item)
             _delete_file(item.imagem_path)
-            item.imagem_path = _save_file(form.imagem.data, current_app.config["IMAGE_UPLOAD_FOLDER"])
+            item.imagem_path = new_path
         elif not item.imagem_path:
             form.imagem.errors.append("Envie uma imagem para a galeria.")
             return render_template("admin/galeria/form.html", form=form, item=item)
