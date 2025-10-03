@@ -4,7 +4,7 @@
 
 {% block header_image %}
   {% set imagem_sobre = texto_sobre.imagem_path if texto_sobre else 'img/sobre.jpg' %}
-  <img src="{{ url_for('static', filename=imagem_sobre) }}" alt="{{ texto_sobre.titulo or content_placeholder }}">
+  <img src="{{ static_url(imagem_sobre) }}" alt="{{ texto_sobre.titulo or content_placeholder }}">
 {% endblock %}
 
 {% block content %}
