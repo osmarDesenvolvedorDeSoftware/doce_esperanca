@@ -25,7 +25,9 @@
           <button type="button" onclick="window.location.href='{{ url_for('public.contato') }}'">Quero ajudar</button>
         </article>
       {% else %}
-        <p>Ainda não temos produtos disponíveis para compra on-line. Entre em contato para outras formas de apoio.</p>
+        <p class="texto-placeholder">
+          {{ (produtos_placeholder.conteudo if produtos_placeholder and produtos_placeholder.conteudo else content_placeholder) | safe }}
+        </p>
       {% endfor %}
     </div>
   </section>
@@ -46,7 +48,9 @@
         {% endfor %}
       </ul>
     {% else %}
-      <p>Em breve divulgaremos relatórios e prestações de contas.</p>
+      <p class="texto-placeholder">
+        {{ (transparencia_placeholder.conteudo if transparencia_placeholder and transparencia_placeholder.conteudo else content_placeholder) | safe }}
+      </p>
     {% endif %}
   </section>
 {% endblock %}

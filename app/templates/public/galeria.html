@@ -24,7 +24,9 @@
         </figcaption>
       </figure>
     {% else %}
-      <p>Ainda não temos registros publicados na galeria. Volte em breve!</p>
+      <p class="texto-placeholder">
+        {{ (galeria_placeholder.conteudo if galeria_placeholder and galeria_placeholder.conteudo else content_placeholder) | safe }}
+      </p>
     {% endfor %}
   </div>
 {% endblock %}

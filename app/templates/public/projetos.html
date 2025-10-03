@@ -25,7 +25,9 @@
         {% endfor %}
       </ul>
     {% else %}
-      <p>Nenhum parceiro cadastrado ainda.</p>
+      <p class="texto-placeholder">
+        {{ (parceiros_placeholder.conteudo if parceiros_placeholder and parceiros_placeholder.conteudo else content_placeholder) | safe }}
+      </p>
     {% endif %}
   </section>
 
@@ -41,7 +43,9 @@
         {% endfor %}
       </ul>
     {% else %}
-      <p>Nenhum apoio cadastrado ainda.</p>
+      <p class="texto-placeholder">
+        {{ (apoios_placeholder.conteudo if apoios_placeholder and apoios_placeholder.conteudo else content_placeholder) | safe }}
+      </p>
     {% endif %}
   </section>
 
@@ -65,7 +69,9 @@
         {% endfor %}
       </ul>
     {% else %}
-      <p>Nenhum voluntário cadastrado ainda.</p>
+      <p class="texto-placeholder">
+        {{ (voluntarios_placeholder.conteudo if voluntarios_placeholder and voluntarios_placeholder.conteudo else content_placeholder) | safe }}
+      </p>
     {% endif %}
   </section>
 
@@ -85,7 +91,9 @@
         {% endfor %}
       </ul>
     {% else %}
-      <p>Nenhum documento de transparência cadastrado ainda.</p>
+      <p class="texto-placeholder">
+        {{ (transparencia_placeholder.conteudo if transparencia_placeholder and transparencia_placeholder.conteudo else content_placeholder) | safe }}
+      </p>
     {% endif %}
   </section>
 {% endblock %}
