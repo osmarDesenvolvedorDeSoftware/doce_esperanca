@@ -4,6 +4,13 @@ Este repositório contém a aplicação Flask da ONG Doce Esperança.
 
 ## Deploy com Gunicorn
 
+Antes do deploy, instale as dependências listadas no `requirements.txt` (incluindo o
+driver PostgreSQL `psycopg2-binary`) com o comando:
+
+```bash
+pip install -r requirements.txt
+```
+
 Para executar a aplicação em produção utilizando o Gunicorn, certifique-se de que as
 dependências estão instaladas e execute o comando abaixo no diretório raiz do projeto:
 
