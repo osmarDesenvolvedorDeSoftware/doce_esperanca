@@ -9,7 +9,8 @@ from flask_login import LoginManager
 db = SQLAlchemy()
 migrate = Migrate()
 login_manager = LoginManager()
-login_manager.login_view = "admin.admin_index"
+login_manager.login_view = "admin.login"
+login_manager.login_message_category = "warning"
 
 
 def _ensure_directory(path) -> None:
@@ -53,7 +54,7 @@ def create_app(config_class=None):
     from app.routes import admin_bp, public_bp
 
     app.register_blueprint(public_bp)
-    app.register_blueprint(admin_bp, url_prefix="/admin")
+    app.register_blueprint(admin_bp)
 
     return app
 

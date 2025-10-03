@@ -1,0 +1,57 @@
+{% extends 'admin/base.html' %}
+{% block title %}Parceiros - Painel Administrativo{% endblock %}
+{% block content %}
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">Parceiros</h1>
+    <a class="btn btn-primary" href="{{ url_for('admin.parceiros_create') }}">Novo parceiro</a>
+  </div>
+  <div class="card shadow-sm">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Nome</th>
+              <th>Slug</th>
+              <th>Website</th>
+              <th>Logo</th>
+              <th class="text-end">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for parceiro in parceiros %}
+              <tr>
+                <td>{{ parceiro.nome }}</td>
+                <td>{{ parceiro.slug }}</td>
+                <td>
+                  {% if parceiro.website %}
+                    <a href="{{ parceiro.website }}" target="_blank" rel="noopener">{{ parceiro.website }}</a>
+                  {% else %}
+                    -
+                  {% endif %}
+                </td>
+                <td>
+                  {% if parceiro.logo_path %}
+                    <a href="{{ url_for('admin.send_upload', filename=parceiro.logo_path) }}" target="_blank">Ver logo</a>
+                  {% else %}
+                    -
+                  {% endif %}
+                </td>
+                <td class="text-end">
+                  <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('admin.parceiros_edit', parceiro_id=parceiro.id) }}">Editar</a>
+                  <form class="d-inline" method="post" action="{{ url_for('admin.parceiros_delete', parceiro_id=parceiro.id) }}" onsubmit="return confirm('Deseja realmente excluir este parceiro?');">
+                    <button class="btn btn-sm btn-outline-danger" type="submit">Excluir</button>
+                  </form>
+                </td>
+              </tr>
+            {% else %}
+              <tr>
+                <td colspan="5" class="text-center py-4">Nenhum parceiro cadastrado.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+{% endblock %}
