@@ -1,0 +1,91 @@
+{% extends "public/base.html" %}
+
+{% block title %}Projetos e Parcerias - Doce Esperança{% endblock %}
+
+{% block content %}
+  <section>
+    <h2>Parcerias</h2>
+    {% if parceiros %}
+      <ul class="parceiros">
+        {% for parceiro in parceiros %}
+          <li>
+            {% if parceiro.logo_path %}
+              <img src="{{ url_for('static', filename=parceiro.logo_path) }}" alt="{{ parceiro.nome }}">
+            {% endif %}
+            <h4>{{ parceiro.nome }}</h4>
+            {% if parceiro.descricao %}
+              <p>{{ parceiro.descricao }}</p>
+            {% endif %}
+            {% if parceiro.website %}
+              <a href="{{ parceiro.website }}" target="_blank" rel="noopener">
+                {{ parceiro.website }}
+              </a>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>Nenhum parceiro cadastrado ainda.</p>
+    {% endif %}
+  </section>
+
+  <section>
+    <h2>Apoio</h2>
+    {% if apoios %}
+      <ul class="parceiros">
+        {% for apoio in apoios %}
+          <li>
+            <h4>{{ apoio.titulo }}</h4>
+            <p>{{ apoio.descricao }}</p>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>Nenhum apoio cadastrado ainda.</p>
+    {% endif %}
+  </section>
+
+  <section>
+    <h2>Voluntariado</h2>
+    {% if voluntarios %}
+      <ul class="parceiros">
+        {% for voluntario in voluntarios %}
+          <li>
+            <h4>{{ voluntario.nome }}</h4>
+            {% if voluntario.area %}
+              <p><strong>Área de atuação:</strong> {{ voluntario.area }}</p>
+            {% endif %}
+            {% if voluntario.disponibilidade %}
+              <p><strong>Disponibilidade:</strong> {{ voluntario.disponibilidade }}</p>
+            {% endif %}
+            {% if voluntario.descricao %}
+              <p>{{ voluntario.descricao }}</p>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>Nenhum voluntário cadastrado ainda.</p>
+    {% endif %}
+  </section>
+
+  <section>
+    <h2>Portal da Transparência</h2>
+    {% if documentos %}
+      <ul>
+        {% for documento in documentos %}
+          <li>
+            <a href="{{ url_for('static', filename=documento.arquivo_path) }}" target="_blank" rel="noopener">
+              {{ documento.titulo }}
+            </a>
+            {% if documento.descricao %}
+              <p>{{ documento.descricao }}</p>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>Nenhum documento de transparência cadastrado ainda.</p>
+    {% endif %}
+  </section>
+{% endblock %}
