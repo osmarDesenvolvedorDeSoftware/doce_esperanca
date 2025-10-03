@@ -41,12 +41,20 @@ def create_app(config_class=None):
     image_upload_folder = app.config.setdefault(
         "IMAGE_UPLOAD_FOLDER", os.path.join(upload_folder, "images")
     )
+    banner_upload_folder = app.config.setdefault(
+        "BANNER_UPLOAD_FOLDER", os.path.join(upload_folder, "banners")
+    )
     doc_upload_folder = app.config.setdefault(
         "DOC_UPLOAD_FOLDER", os.path.join(upload_folder, "docs")
     )
     app.config.setdefault("MAX_CONTENT_LENGTH", 16 * 1024 * 1024)  # 16 MB default
 
-    for folder in (upload_folder, image_upload_folder, doc_upload_folder):
+    for folder in (
+        upload_folder,
+        image_upload_folder,
+        banner_upload_folder,
+        doc_upload_folder,
+    ):
         _ensure_directory(folder)
 
     db.init_app(app)

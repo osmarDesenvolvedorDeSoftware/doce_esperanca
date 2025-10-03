@@ -1,0 +1,45 @@
+{% extends 'admin/base.html' %}
+{% block title %}Banners - Painel Administrativo{% endblock %}
+{% block content %}
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">Banners</h1>
+    <a class="btn btn-primary" href="{{ url_for('admin.banners_create') }}">Novo banner</a>
+  </div>
+  <p class="text-muted">Envie imagens no tamanho 1200x400 px para destacar campanhas e mensagens na página inicial.</p>
+  <div class="card shadow-sm">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Título</th>
+              <th>Ordem</th>
+              <th>Atualizado em</th>
+              <th class="text-end">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for banner in banners %}
+              <tr>
+                <td>{{ banner.titulo }}</td>
+                <td>{{ banner.ordem }}</td>
+                <td>{{ banner.updated_at.strftime('%d/%m/%Y %H:%M') if banner.updated_at else '-' }}</td>
+                <td class="text-end">
+                  <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('admin.banners_edit', banner_id=banner.id) }}">Editar</a>
+                  <form class="d-inline" method="post" action="{{ url_for('admin.banners_delete', banner_id=banner.id) }}" onsubmit="return confirm('Deseja realmente excluir este banner?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="btn btn-sm btn-outline-danger" type="submit">Excluir</button>
+                  </form>
+                </td>
+              </tr>
+            {% else %}
+              <tr>
+                <td colspan="4" class="text-center py-4">Nenhum banner cadastrado.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+{% endblock %}

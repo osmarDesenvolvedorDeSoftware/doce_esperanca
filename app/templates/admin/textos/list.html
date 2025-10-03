@@ -3,8 +3,9 @@
 {% block content %}
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h1 class="h3 mb-0">Textos Institucionais</h1>
-    <a class="btn btn-primary" href="{{ url_for('admin.textos_create') }}">Novo texto</a>
+    <a class="btn btn-primary" href="{{ url_for('admin.textos_create') }}">Adicionar texto</a>
   </div>
+  <p class="text-muted">Os conteúdos principais do site podem ser editados abaixo. Itens marcados como "Conteúdo principal" são exibidos nas páginas públicas e não podem ser excluídos.</p>
   <div class="card shadow-sm">
     <div class="card-body p-0">
       <div class="table-responsive">
@@ -20,15 +21,27 @@
           <tbody>
             {% for texto in textos %}
               <tr>
-                <td>{{ texto.titulo }}</td>
-                <td>{{ texto.slug }}</td>
+                <td>
+                  {{ texto.titulo or texto.slug }}
+                  {% if texto.slug in institutional_slugs %}
+                    <span class="badge text-bg-primary ms-2">Conteúdo principal</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {{ texto.slug }}
+                  {% if texto.slug in sections_map %}
+                    <div class="text-muted small">{{ sections_map[texto.slug]['label'] }}</div>
+                  {% endif %}
+                </td>
                 <td>{{ texto.updated_at.strftime('%d/%m/%Y %H:%M') if texto.updated_at else '-' }}</td>
                 <td class="text-end">
                   <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('admin.textos_edit', texto_id=texto.id) }}">Editar</a>
-                  <form class="d-inline" method="post" action="{{ url_for('admin.textos_delete', texto_id=texto.id) }}" onsubmit="return confirm('Deseja realmente excluir este texto?');">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button class="btn btn-sm btn-outline-danger" type="submit">Excluir</button>
-                  </form>
+                  {% if texto.slug not in institutional_slugs %}
+                    <form class="d-inline" method="post" action="{{ url_for('admin.textos_delete', texto_id=texto.id) }}" onsubmit="return confirm('Deseja realmente excluir este texto?');">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <button class="btn btn-sm btn-outline-danger" type="submit">Excluir</button>
+                    </form>
+                  {% endif %}
                 </td>
               </tr>
             {% else %}

@@ -1,17 +1,11 @@
 from __future__ import annotations
 
-from typing import Dict
+from typing import Dict, Optional
 
 from flask import Blueprint, render_template
 
-from app.models import (
-    Apoio,
-    Galeria,
-    Parceiro,
-    TextoInstitucional,
-    Transparencia,
-    Voluntario,
-)
+from app.content import CONTENT_PLACEHOLDER, INSTITUTIONAL_SECTION_MAP
+from app.models import Apoio, Banner, Galeria, Parceiro, TextoInstitucional, Transparencia, Voluntario
 
 
 public_bp = Blueprint("public", __name__)
@@ -21,38 +15,19 @@ public_bp = Blueprint("public", __name__)
 def inject_public_defaults() -> Dict[str, object]:
     """Share default context data across public templates."""
 
-    social_links = [
-        {
-            "name": "Instagram",
-            "url": "https://www.instagram.com/associacao.doceesperanca?igsh=eHJzdDV5bzVpcnpq",
-            "icon_path": "img/Instagram.jpeg",
-        },
-        {
-            "name": "Facebook",
-            "url": "https://www.facebook.com/share/1MF7W2e9g6/",
-            "icon_path": "img/facee.png",
-        },
-        {
-            "name": "WhatsApp",
-            "url": "https://wa.me/qr/H35632XZAYX2F1",
-            "icon_path": "img/whatsapp4.jpg",
-        },
-        {
-            "name": "E-mail",
-            "url": "mailto:dinarigo@hotmail.com",
-            "icon_path": "img/email.png",
-        },
-    ]
+    contato_texto = TextoInstitucional.query.filter_by(slug="contato").first()
+    inicio_texto = TextoInstitucional.query.filter_by(slug="inicio").first()
 
-    contact_info = {
-        "email": "dinarigo@hotmail.com",
-        "phone": "11 94855-1497",
-        "address": "Rua Julio Andre Correia, 173 - Jardim Umuarama, São Paulo - SP",
-        "zip_code": "04650-170",
-        "office_hours": "Seg a Sex das 10h às 17h",
+    site_identity = CONTENT_PLACEHOLDER
+    if inicio_texto and inicio_texto.titulo:
+        site_identity = inicio_texto.titulo
+
+    return {
+        "footer_contact": contato_texto,
+        "site_identity": site_identity,
+        "content_placeholder": CONTENT_PLACEHOLDER,
+        "institutional_sections": INSTITUTIONAL_SECTION_MAP,
     }
-
-    return {"social_links": social_links, "contact_info": contact_info}
 
 
 def _collect_textos(*slugs: str) -> Dict[str, TextoInstitucional]:
@@ -71,22 +46,12 @@ def _collect_textos(*slugs: str) -> Dict[str, TextoInstitucional]:
 def index() -> str:
     textos = _collect_textos("inicio", "missao", "principios")
     parceiros = Parceiro.query.order_by(Parceiro.nome.asc()).all()
-    estatuto_pontos = [
-        "Desenvolver atividades educacionais, recreativas, sociais, habitacionais, esportivas, culturais e de promoção à saúde, visando ao bem-estar integral.",
-        "Organizar trabalhos para orientação e formação de mão de obra por meio de cursos educacionais e profissionais.",
-        "Orientar cooperativas e oficinas profissionalizantes que fomentem inclusão e geração de renda.",
-        "Pleitear junto ao poder público soluções para as necessidades do bairro e da comunidade atendida.",
-        "Promover assistência a crianças, adolescentes e idosos com foco em inclusão e qualidade de vida.",
-        "Oferecer cursos e palestras sobre temas como saúde, cidadania, profissionalização e prevenção às drogas.",
-        "Proteger o patrimônio artístico, histórico, paisagístico e o meio ambiente.",
-        "Captar recursos de entidades nacionais e internacionais para manutenção das atividades sociais.",
-        "Participar de seleções públicas e privadas para financiamento de projetos sociais e educacionais.",
-    ]
+    banners = Banner.query.order_by(Banner.ordem.asc(), Banner.created_at.desc()).all()
     return render_template(
         "public/inicio.html",
         textos=textos,
         parceiros=parceiros,
-        estatuto_pontos=estatuto_pontos,
+        banners=banners,
         active_page="inicio",
     )
 
@@ -152,8 +117,13 @@ def projetos() -> str:
 @public_bp.route("/contato/")
 def contato() -> str:
     textos = _collect_textos("contato")
+    texto_contato = textos.get("contato")
+    contact_email: Optional[str] = None
+    if texto_contato and texto_contato.resumo:
+        contact_email = texto_contato.resumo.strip()
     return render_template(
         "public/contato.html",
-        texto_contato=textos.get("contato"),
+        texto_contato=texto_contato,
+        contact_email=contact_email,
         active_page="contato",
     )

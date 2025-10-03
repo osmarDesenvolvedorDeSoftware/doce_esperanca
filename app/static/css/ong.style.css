@@ -44,6 +44,18 @@ footer address {
   line-height: 1.6;
 }
 
+.footer-content {
+  max-width: 720px;
+  margin: 16px auto;
+  line-height: 1.6;
+}
+
+.footer-content p,
+.footer-content ul {
+  margin: 0 0 12px;
+  padding: 0;
+}
+
 nav {
   display: flex;
   flex-wrap: wrap;
@@ -155,6 +167,41 @@ textarea:focus {
   margin-top: 0;
   margin-bottom: 8px;
 }
+
+.banner-destaque {
+  display: grid;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.banner-destaque figure {
+  margin: 0;
+  background: #23232e;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4);
+}
+
+.banner-destaque img {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+}
+
+.banner-destaque figcaption {
+  padding: 16px;
+}
+
+.banner-destaque h3 {
+  margin: 0 0 8px;
+  color: #fafafa;
+}
+
+.banner-destaque p {
+  margin: 0;
+  color: #d8d8d8;
+}
 .contato {
   max-width: 480px;
   margin: 40px auto;
@@ -211,6 +258,11 @@ textarea:focus {
   border-top: 1px solid #333545;
   padding-top: 18px;
   font-size: 1rem;
+}
+
+.texto-placeholder {
+  color: #c5c5c5;
+  font-style: italic;
 }
 
 .doacao h2 {

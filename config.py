@@ -13,6 +13,7 @@ class BaseConfig:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     UPLOAD_FOLDER = str(BASE_DIR / "app" / "static" / "uploads")
     IMAGE_UPLOAD_FOLDER = str(Path(UPLOAD_FOLDER) / "images")
+    BANNER_UPLOAD_FOLDER = str(Path(UPLOAD_FOLDER) / "banners")
     DOC_UPLOAD_FOLDER = str(Path(UPLOAD_FOLDER) / "docs")
     MAX_CONTENT_LENGTH = DEFAULT_MAX_CONTENT_LENGTH
 

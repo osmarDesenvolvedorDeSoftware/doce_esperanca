@@ -6,7 +6,15 @@ from typing import Iterable, Optional
 from flask import current_app
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileAllowed, FileField
-from wtforms import BooleanField, DateField, PasswordField, StringField, SubmitField, TextAreaField
+from wtforms import (
+    BooleanField,
+    DateField,
+    IntegerField,
+    PasswordField,
+    StringField,
+    SubmitField,
+    TextAreaField,
+)
 from wtforms.validators import DataRequired, Length, Optional as OptionalValidator, URL, ValidationError
 
 ALLOWED_IMAGE_EXTENSIONS: Iterable[str] = ("jpg", "jpeg", "png")
@@ -136,4 +144,21 @@ class TransparenciaForm(FlaskForm):
 class ApoioForm(FlaskForm):
     titulo = StringField("Título", validators=[DataRequired(), Length(max=255)])
     descricao = TextAreaField("Descrição", validators=[DataRequired()])
+    submit = SubmitField("Salvar")
+
+
+class BannerForm(FlaskForm):
+    titulo = StringField("Título", validators=[DataRequired(), Length(max=255)])
+    descricao = TextAreaField(
+        "Descrição", validators=[OptionalValidator(), Length(max=512)]
+    )
+    ordem = IntegerField("Ordem", validators=[OptionalValidator()], default=0)
+    imagem = FileField(
+        "Imagem",
+        validators=[
+            OptionalValidator(),
+            FileAllowed(ALLOWED_IMAGE_EXTENSIONS, "Somente imagens são permitidas."),
+            FileSize(),
+        ],
+    )
     submit = SubmitField("Salvar")

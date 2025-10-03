@@ -4,25 +4,25 @@
 
 {% block header_image %}
   {% set imagem_sobre = texto_sobre.imagem_path if texto_sobre else 'img/sobre.jpg' %}
-  <img src="{{ url_for('static', filename=imagem_sobre) }}" alt="{{ texto_sobre.titulo if texto_sobre else 'Sobre a Doce Esperança' }}">
+  <img src="{{ url_for('static', filename=imagem_sobre) }}" alt="{{ texto_sobre.titulo or content_placeholder }}">
 {% endblock %}
 
 {% block content %}
   <section>
-    <h2>{{ texto_sobre.titulo if texto_sobre else 'Sobre Nós' }}</h2>
-    {% if texto_sobre %}
+    <h2>{{ texto_sobre.titulo or content_placeholder }}</h2>
+    {% if texto_sobre and texto_sobre.conteudo %}
       {{ texto_sobre.conteudo | safe }}
     {% else %}
-      <p>Desde 2012, a Associação Doce Esperança oferece acolhimento, atividades educativas e apoio integral para famílias e pessoas com deficiência, sempre com afeto e responsabilidade.</p>
+      <p>{{ content_placeholder }}</p>
     {% endif %}
   </section>
 
   <section>
-    <h3>{{ texto_missao.titulo if texto_missao else 'Nossa Missão' }}</h3>
-    {% if texto_missao %}
+    <h3>{{ texto_missao.titulo or content_placeholder }}</h3>
+    {% if texto_missao and texto_missao.conteudo %}
       {{ texto_missao.conteudo | safe }}
     {% else %}
-      <p>Promover apoio, inclusão e oportunidades de crescimento para crianças com deficiência e suas famílias, transformando realidades por meio do amor e da esperança.</p>
+      <p>{{ content_placeholder }}</p>
     {% endif %}
   </section>
 {% endblock %}

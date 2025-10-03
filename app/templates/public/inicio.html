@@ -8,38 +8,51 @@
 
 {% block header_image %}
   {% set imagem_inicio = texto_inicio.imagem_path if texto_inicio else None %}
-  <img src="{{ url_for('static', filename=imagem_inicio or 'img/Todos.jpg') }}" alt="{{ texto_inicio.titulo if texto_inicio else 'Doce Esperança' }}">
+  <img src="{{ url_for('static', filename=imagem_inicio or 'img/Todos.jpg') }}" alt="{{ texto_inicio.titulo or content_placeholder }}">
 {% endblock %}
 
 {% block content %}
+  <section class="banner-destaque">
+    {% if banners %}
+      {% for banner in banners %}
+        <figure>
+          <img src="{{ url_for('static', filename=banner.imagem_path) }}" alt="{{ banner.titulo or content_placeholder }}">
+          {% if banner.titulo or banner.descricao %}
+            <figcaption>
+              {% if banner.titulo %}<h3>{{ banner.titulo }}</h3>{% endif %}
+              {% if banner.descricao %}<p>{{ banner.descricao }}</p>{% endif %}
+            </figcaption>
+          {% endif %}
+        </figure>
+      {% endfor %}
+    {% else %}
+      <p class="texto-placeholder">{{ content_placeholder }}</p>
+    {% endif %}
+  </section>
   <section>
-    <h2>{{ texto_inicio.titulo if texto_inicio else 'Bem-vindo(a) ao Projeto Doce Esperança' }}</h2>
-    {% if texto_inicio %}
+    <h2>{{ texto_inicio.titulo or content_placeholder }}</h2>
+    {% if texto_inicio and texto_inicio.conteudo %}
       {{ texto_inicio.conteudo | safe }}
     {% else %}
-      <p>O Projeto "Doce Esperança" é dedicado ao bem-estar e à adaptação de crianças com deficiência, seus familiares, amigos e animais de estimação. Nosso objetivo é criar um ambiente inclusivo e acolhedor onde todos se sintam aceitos e apoiados.</p>
+      <p>{{ content_placeholder }}</p>
     {% endif %}
   </section>
 
   <section>
-    <h3>{{ texto_missao.titulo if texto_missao else 'Nossa Missão' }}</h3>
-    {% if texto_missao %}
+    <h3>{{ texto_missao.titulo or content_placeholder }}</h3>
+    {% if texto_missao and texto_missao.conteudo %}
       {{ texto_missao.conteudo | safe }}
     {% else %}
-      <p>Promover apoio, inclusão e oportunidades de crescimento para crianças com deficiência e suas famílias.</p>
+      <p>{{ content_placeholder }}</p>
     {% endif %}
   </section>
 
   <section>
-    <h3>Princípios e Atuações</h3>
-    {% if texto_principios %}
+    <h3>{{ texto_principios.titulo or (institutional_sections['principios']['label'] if 'principios' in institutional_sections else content_placeholder) }}</h3>
+    {% if texto_principios and texto_principios.conteudo %}
       {{ texto_principios.conteudo | safe }}
     {% else %}
-      <ul>
-        {% for ponto in estatuto_pontos %}
-          <li>{{ ponto }}</li>
-        {% endfor %}
-      </ul>
+      <p>{{ content_placeholder }}</p>
     {% endif %}
   </section>
 

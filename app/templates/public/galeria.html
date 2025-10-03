@@ -4,11 +4,11 @@
 
 {% block content %}
   <section>
-    <h2>{{ texto_galeria.titulo if texto_galeria else 'Galeria de Fotos' }}</h2>
-    {% if texto_galeria %}
+    <h2>{{ texto_galeria.titulo or content_placeholder }}</h2>
+    {% if texto_galeria and texto_galeria.conteudo %}
       {{ texto_galeria.conteudo | safe }}
     {% else %}
-      <p>Conheça alguns dos momentos especiais que vivemos com a nossa comunidade.</p>
+      <p>{{ content_placeholder }}</p>
     {% endif %}
   </section>
 
