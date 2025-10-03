@@ -18,13 +18,12 @@ from flask import (
 )
 from flask_login import current_user, login_required, login_user, logout_user
 from sqlalchemy.exc import IntegrityError
-from urllib.parse import urljoin
-
-from werkzeug.urls import url_parse
+from urllib.parse import urljoin, urlparse
 from werkzeug.utils import secure_filename
 
 from app import db, login_manager
 from app.forms import (
+    ApoioForm,
     GaleriaForm,
     LoginForm,
     ParceiroForm,
@@ -32,7 +31,7 @@ from app.forms import (
     TransparenciaForm,
     VoluntarioForm,
 )
-from app.models import Galeria, Parceiro, TextoInstitucional, Transparencia, User, Voluntario
+from app.models import Apoio, Galeria, Parceiro, TextoInstitucional, Transparencia, User, Voluntario
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
 
@@ -97,8 +96,8 @@ def _combine_date_with_min_time(value: Optional[datetime | date]) -> Optional[da
 def _is_safe_redirect_target(target: Optional[str]) -> bool:
     if not target:
         return False
-    ref_url = url_parse(request.host_url)
-    test_url = url_parse(urljoin(request.host_url, target))
+    ref_url = urlparse(request.host_url)
+    test_url = urlparse(urljoin(request.host_url, target))
     return test_url.scheme in ("http", "https") and ref_url.netloc == test_url.netloc
 
 
@@ -160,6 +159,7 @@ def dashboard():
         "voluntarios": Voluntario.query.count(),
         "galerias": Galeria.query.count(),
         "transparencias": Transparencia.query.count(),
+        "apoios": Apoio.query.count(),
     }
     return render_template("admin/dashboard.html", stats=stats)
 
@@ -313,6 +313,53 @@ def parceiros_delete(parceiro_id: int):
     db.session.commit()
     flash("Parceiro excluído com sucesso.", "success")
     return redirect(url_for("admin.parceiros_list"))
+
+
+# ----- Apoios -----
+
+
+@admin_bp.route("/apoios")
+@login_required
+def apoios_list():
+    apoios = Apoio.query.order_by(Apoio.created_at.desc()).all()
+    return render_template("admin/apoios/list.html", apoios=apoios)
+
+
+@admin_bp.route("/apoios/criar", methods=["GET", "POST"])
+@login_required
+def apoios_create():
+    form = ApoioForm()
+    if form.validate_on_submit():
+        apoio = Apoio(titulo=form.titulo.data, descricao=form.descricao.data)
+        db.session.add(apoio)
+        db.session.commit()
+        flash("Apoio criado com sucesso.", "success")
+        return redirect(url_for("admin.apoios_list"))
+    return render_template("admin/apoios/form.html", form=form, apoio=None)
+
+
+@admin_bp.route("/apoios/<int:apoio_id>/editar", methods=["GET", "POST"])
+@login_required
+def apoios_edit(apoio_id: int):
+    apoio = Apoio.query.get_or_404(apoio_id)
+    form = ApoioForm(obj=apoio)
+    if form.validate_on_submit():
+        apoio.titulo = form.titulo.data
+        apoio.descricao = form.descricao.data
+        db.session.commit()
+        flash("Apoio atualizado com sucesso.", "success")
+        return redirect(url_for("admin.apoios_list"))
+    return render_template("admin/apoios/form.html", form=form, apoio=apoio)
+
+
+@admin_bp.route("/apoios/<int:apoio_id>/excluir", methods=["POST"])
+@login_required
+def apoios_delete(apoio_id: int):
+    apoio = Apoio.query.get_or_404(apoio_id)
+    db.session.delete(apoio)
+    db.session.commit()
+    flash("Apoio excluído com sucesso.", "success")
+    return redirect(url_for("admin.apoios_list"))
 
 
 # ----- Voluntários -----
