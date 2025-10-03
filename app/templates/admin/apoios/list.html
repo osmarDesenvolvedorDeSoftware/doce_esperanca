@@ -1,0 +1,41 @@
+{% extends 'admin/base.html' %}
+{% block title %}Apoios - Painel Administrativo{% endblock %}
+{% block content %}
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">Apoios</h1>
+    <a class="btn btn-primary" href="{{ url_for('admin.apoios_create') }}">Novo apoio</a>
+  </div>
+  <div class="card shadow-sm">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Título</th>
+              <th>Descrição</th>
+              <th class="text-end">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for apoio in apoios %}
+              <tr>
+                <td>{{ apoio.titulo }}</td>
+                <td class="text-break">{{ apoio.descricao }}</td>
+                <td class="text-end">
+                  <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('admin.apoios_edit', apoio_id=apoio.id) }}">Editar</a>
+                  <form class="d-inline" method="post" action="{{ url_for('admin.apoios_delete', apoio_id=apoio.id) }}" onsubmit="return confirm('Deseja realmente excluir este apoio?');">
+                    <button class="btn btn-sm btn-outline-danger" type="submit">Excluir</button>
+                  </form>
+                </td>
+              </tr>
+            {% else %}
+              <tr>
+                <td colspan="3" class="text-center py-4">Nenhum apoio cadastrado.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+{% endblock %}

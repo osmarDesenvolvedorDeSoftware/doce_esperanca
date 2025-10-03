@@ -88,6 +88,17 @@ class Transparencia(db.Model, TimestampMixin):
         return f"<Transparencia {self.slug!r}>"
 
 
+class Apoio(db.Model, TimestampMixin):
+    __tablename__ = "apoios"
+
+    id = db.Column(db.Integer, primary_key=True)
+    titulo = db.Column(db.String(255), nullable=False)
+    descricao = db.Column(db.Text, nullable=False)
+
+    def __repr__(self) -> str:  # pragma: no cover - debug helper
+        return f"<Apoio {self.titulo!r}>"
+
+
 class User(db.Model, UserMixin, TimestampMixin):
     __tablename__ = "users"
 

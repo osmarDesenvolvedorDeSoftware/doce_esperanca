@@ -133,3 +133,9 @@ class TransparenciaForm(FlaskForm):
         ],
     )
     submit = SubmitField("Salvar")
+
+
+class ApoioForm(FlaskForm):
+    titulo = StringField("Título", validators=[DataRequired(), Length(max=255)])
+    descricao = TextAreaField("Descrição", validators=[DataRequired()])
+    submit = SubmitField("Salvar")
