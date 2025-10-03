@@ -28,6 +28,7 @@
                 <td class="text-end">
                   <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('admin.voluntarios_edit', voluntario_id=voluntario.id) }}">Editar</a>
                   <form class="d-inline" method="post" action="{{ url_for('admin.voluntarios_delete', voluntario_id=voluntario.id) }}" onsubmit="return confirm('Deseja realmente excluir este voluntário?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button class="btn btn-sm btn-outline-danger" type="submit">Excluir</button>
                   </form>
                 </td>

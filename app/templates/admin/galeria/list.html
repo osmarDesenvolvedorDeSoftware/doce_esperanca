@@ -30,6 +30,7 @@
                 <td class="text-end">
                   <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('admin.galeria_edit', item_id=item.id) }}">Editar</a>
                   <form class="d-inline" method="post" action="{{ url_for('admin.galeria_delete', item_id=item.id) }}" onsubmit="return confirm('Deseja realmente excluir este item?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button class="btn btn-sm btn-outline-danger" type="submit">Excluir</button>
                   </form>
                 </td>
