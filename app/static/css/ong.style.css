@@ -14,6 +14,36 @@ footer {
   text-align: center;
 }
 
+header img {
+  width: 100%;
+  max-height: 360px;
+  object-fit: cover;
+  margin-top: 16px;
+  border-radius: 12px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4);
+}
+
+footer ul {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px;
+}
+
+footer ul li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+footer address {
+  font-style: normal;
+  line-height: 1.6;
+}
+
 nav a {
   color: #42aaff;
   margin: 0 15px;
@@ -22,6 +52,9 @@ nav a {
   transition: color 0.3s;
 }
 nav a:hover {
+  color: #fff;
+}
+nav a.is-active {
   color: #fff;
 }
 
@@ -33,6 +66,33 @@ h1,
 h2,
 h3 {
   color: #42aaff;
+}
+
+.parceiros {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 24px;
+}
+
+.parceiros li {
+  background: #23232e;
+  padding: 16px;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+  text-align: center;
+}
+
+.parceiros img {
+  max-width: 160px;
+  height: auto;
+  margin-bottom: 12px;
+}
+
+.parceiros h4 {
+  margin: 8px 0;
+  color: #fafafa;
 }
 
 a {
@@ -60,24 +120,31 @@ textarea:focus {
 
 .galeria {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
 }
+
+.galeria figure {
+  background: #23232e;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+}
+
 .galeria img {
   width: 100%;
   height: auto;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba (0, 0, 0, 0.2);
-}
-.contato {
-  max-width: 480px;
-  margin: 40px auto;
-  background: #23232e;
-  padding: 32px;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  display: block;
 }
 
+.galeria figcaption {
+  padding: 12px 16px 20px;
+}
+
+.galeria figcaption h3 {
+  margin-top: 0;
+  margin-bottom: 8px;
+}
 .contato {
   max-width: 480px;
   margin: 40px auto;
@@ -148,7 +215,7 @@ textarea:focus {
 
 .produtos {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 24px;
 }
 

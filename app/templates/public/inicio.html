@@ -1,0 +1,69 @@
+{% extends "public/base.html" %}
+
+{% block title %}Início - Doce Esperança{% endblock %}
+
+{% set texto_inicio = textos.get('inicio') %}
+{% set texto_missao = textos.get('missao') %}
+{% set texto_principios = textos.get('principios') %}
+
+{% block header_image %}
+  {% set imagem_inicio = texto_inicio.imagem_path if texto_inicio else None %}
+  <img src="{{ url_for('static', filename=imagem_inicio or 'img/Todos.jpg') }}" alt="{{ texto_inicio.titulo if texto_inicio else 'Doce Esperança' }}">
+{% endblock %}
+
+{% block content %}
+  <section>
+    <h2>{{ texto_inicio.titulo if texto_inicio else 'Bem-vindo(a) ao Projeto Doce Esperança' }}</h2>
+    {% if texto_inicio %}
+      {{ texto_inicio.conteudo | safe }}
+    {% else %}
+      <p>O Projeto "Doce Esperança" é dedicado ao bem-estar e à adaptação de crianças com deficiência, seus familiares, amigos e animais de estimação. Nosso objetivo é criar um ambiente inclusivo e acolhedor onde todos se sintam aceitos e apoiados.</p>
+    {% endif %}
+  </section>
+
+  <section>
+    <h3>{{ texto_missao.titulo if texto_missao else 'Nossa Missão' }}</h3>
+    {% if texto_missao %}
+      {{ texto_missao.conteudo | safe }}
+    {% else %}
+      <p>Promover apoio, inclusão e oportunidades de crescimento para crianças com deficiência e suas famílias.</p>
+    {% endif %}
+  </section>
+
+  <section>
+    <h3>Princípios e Atuações</h3>
+    {% if texto_principios %}
+      {{ texto_principios.conteudo | safe }}
+    {% else %}
+      <ul>
+        {% for ponto in estatuto_pontos %}
+          <li>{{ ponto }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  </section>
+
+  <section>
+    <h3>Parceiros</h3>
+    {% if parceiros %}
+      <ul class="parceiros">
+        {% for parceiro in parceiros %}
+          <li>
+            {% if parceiro.logo_path %}
+              <img src="{{ url_for('static', filename=parceiro.logo_path) }}" alt="{{ parceiro.nome }}" width="160">
+            {% endif %}
+            <h4>{{ parceiro.nome }}</h4>
+            {% if parceiro.descricao %}
+              <p>{{ parceiro.descricao }}</p>
+            {% endif %}
+            {% if parceiro.website %}
+              <a href="{{ parceiro.website }}" target="_blank" rel="noopener">{{ parceiro.website }}</a>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>Em breve compartilharemos nossos parceiros e apoiadores.</p>
+    {% endif %}
+  </section>
+{% endblock %}

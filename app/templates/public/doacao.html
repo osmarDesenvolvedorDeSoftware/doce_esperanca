@@ -1,0 +1,52 @@
+{% extends "public/base.html" %}
+
+{% block title %}Doação - Doce Esperança{% endblock %}
+
+{% block content %}
+  <section class="doacao">
+    <h2>{{ texto_doacao.titulo if texto_doacao else 'Doe e transforme vidas' }}</h2>
+    {% if texto_doacao %}
+      {{ texto_doacao.conteudo | safe }}
+    {% else %}
+      <p>Ao adquirir as peças artesanais produzidas pelas famílias atendidas, você contribui diretamente para a manutenção das atividades da Associação Doce Esperança.</p>
+    {% endif %}
+  </section>
+
+  <section>
+    <h3>Produtos artesanais</h3>
+    <div class="produtos">
+      {% for item in materiais %}
+        <article class="produto">
+          <img src="{{ url_for('static', filename=item.imagem_path) }}" alt="{{ item.titulo }}">
+          <p>{{ item.titulo }}</p>
+          {% if item.descricao %}
+            <p>{{ item.descricao }}</p>
+          {% endif %}
+          <button type="button" onclick="window.location.href='{{ url_for('public.contato') }}'">Quero ajudar</button>
+        </article>
+      {% else %}
+        <p>Ainda não temos produtos disponíveis para compra on-line. Entre em contato para outras formas de apoio.</p>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section>
+    <h3>Transparência</h3>
+    {% if documentos %}
+      <ul>
+        {% for documento in documentos %}
+          <li>
+            <a href="{{ url_for('static', filename=documento.arquivo_path) }}" target="_blank" rel="noopener">
+              {{ documento.titulo }}
+            </a>
+            {% if documento.descricao %}
+              <p>{{ documento.descricao }}</p>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>Em breve divulgaremos relatórios e prestações de contas.</p>
+    {% endif %}
+  </section>
+{% endblock %}
