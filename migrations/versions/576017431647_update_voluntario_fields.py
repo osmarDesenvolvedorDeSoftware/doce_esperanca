@@ -1,8 +1,10 @@
-"""Update voluntario fields."""
+"""update voluntario fields
 
 Revision ID: 576017431647
 Revises: b9cf3df7f2f4
 Create Date: 2025-10-03 17:09:17.391440
+
+"""
 
 from alembic import op
 import sqlalchemy as sa
