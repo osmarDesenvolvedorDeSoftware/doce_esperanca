@@ -9,6 +9,13 @@ from alembic import op
 import sqlalchemy as sa
 
 
+# revision identifiers, used by Alembic.
+revision = "c8f6cf53f4a1"
+down_revision = "576017431647"
+branch_labels = None
+depends_on = None
+
+
 def upgrade() -> None:
     op.create_table(
         "banners",
