@@ -26,3 +26,7 @@ gunicorn --bind 0.0.0.0:8000 wsgi:app
 ```
 
 O módulo `wsgi.py` carrega a aplicação com a configuração de produção (`config.ProdConfig`).
+
+## Configuração de variáveis de ambiente
+
+Defina o `SECRET_KEY` em um arquivo `.env` ou diretamente no ambiente antes de iniciar a aplicação. Utilize um valor forte e aleatório; consulte o guia em `docs/secret_key_rotation.md` para instruções de geração e rotação.
