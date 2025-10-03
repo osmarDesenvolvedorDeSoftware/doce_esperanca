@@ -18,25 +18,9 @@
             {% endfor %}
           </div>
           <div class="col-md-6">
-            {{ form.email.label(class="form-label") }}
-            {{ form.email(class="form-control") }}
-            {% for error in form.email.errors %}
-              <div class="text-danger small">{{ error }}</div>
-            {% endfor %}
-          </div>
-        </div>
-        <div class="row g-3 mt-1">
-          <div class="col-md-6">
-            {{ form.telefone.label(class="form-label") }}
-            {{ form.telefone(class="form-control") }}
-            {% for error in form.telefone.errors %}
-              <div class="text-danger small">{{ error }}</div>
-            {% endfor %}
-          </div>
-          <div class="col-md-6">
-            {{ form.area_interesse.label(class="form-label") }}
-            {{ form.area_interesse(class="form-control") }}
-            {% for error in form.area_interesse.errors %}
+            {{ form.area.label(class="form-label") }}
+            {{ form.area(class="form-control") }}
+            {% for error in form.area.errors %}
               <div class="text-danger small">{{ error }}</div>
             {% endfor %}
           </div>
@@ -49,9 +33,9 @@
           {% endfor %}
         </div>
         <div class="mt-3">
-          {{ form.mensagem.label(class="form-label") }}
-          {{ form.mensagem(class="form-control", rows=4) }}
-          {% for error in form.mensagem.errors %}
+          {{ form.descricao.label(class="form-label") }}
+          {{ form.descricao(class="form-control", rows=4) }}
+          {% for error in form.descricao.errors %}
             <div class="text-danger small">{{ error }}</div>
           {% endfor %}
         </div>

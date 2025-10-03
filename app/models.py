@@ -50,11 +50,9 @@ class Voluntario(db.Model, TimestampMixin):
 
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(255), nullable=False)
-    email = db.Column(db.String(255), nullable=False)
-    telefone = db.Column(db.String(50))
-    area_interesse = db.Column(db.String(255))
+    area = db.Column(db.String(255))
     disponibilidade = db.Column(db.String(255))
-    mensagem = db.Column(db.Text)
+    descricao = db.Column(db.Text)
 
     def __repr__(self) -> str:  # pragma: no cover - debug helper
         return f"<Voluntario {self.nome!r}>"
