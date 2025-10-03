@@ -1,0 +1,30 @@
+{% extends "public/base.html" %}
+
+{% block title %}Galeria - Doce Esperança{% endblock %}
+
+{% block content %}
+  <section>
+    <h2>{{ texto_galeria.titulo if texto_galeria else 'Galeria de Fotos' }}</h2>
+    {% if texto_galeria %}
+      {{ texto_galeria.conteudo | safe }}
+    {% else %}
+      <p>Conheça alguns dos momentos especiais que vivemos com a nossa comunidade.</p>
+    {% endif %}
+  </section>
+
+  <div class="galeria">
+    {% for item in itens %}
+      <figure>
+        <img src="{{ url_for('static', filename=item.imagem_path) }}" alt="{{ item.titulo }}">
+        <figcaption>
+          <h3>{{ item.titulo }}</h3>
+          {% if item.descricao %}
+            <p>{{ item.descricao }}</p>
+          {% endif %}
+        </figcaption>
+      </figure>
+    {% else %}
+      <p>Ainda não temos registros publicados na galeria. Volte em breve!</p>
+    {% endfor %}
+  </div>
+{% endblock %}

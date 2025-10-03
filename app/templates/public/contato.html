@@ -1,0 +1,44 @@
+{% extends "public/base.html" %}
+
+{% block title %}Contato - Doce Esperança{% endblock %}
+
+{% block content %}
+  {% set whatsapp_link = (social_links | selectattr('name', 'equalto', 'WhatsApp') | list | first) %}
+  <section class="contato">
+    <h2>Fale Conosco</h2>
+    {% if texto_contato %}
+      {{ texto_contato.conteudo | safe }}
+    {% else %}
+      <p>Preencha o formulário ou utilize nossos canais de comunicação para falar com a equipe da Associação Doce Esperança.</p>
+    {% endif %}
+
+    <form action="mailto:{{ contact_info.email }}" method="post">
+      <label for="nome">Nome</label>
+      <input id="nome" name="nome" type="text" required>
+
+      <label for="email">E-mail</label>
+      <input id="email" name="email" type="email" required>
+
+      <label for="mensagem">Mensagem</label>
+      <textarea id="mensagem" name="mensagem" rows="5" required></textarea>
+
+      <button type="submit">Enviar</button>
+    </form>
+
+    <div class="contato-info">
+      <p><strong>Telefone:</strong> {{ contact_info.phone }}</p>
+      {% if whatsapp_link %}
+        <p>
+          <strong>WhatsApp:</strong>
+          <a href="{{ whatsapp_link.url }}" target="_blank" rel="noopener">Conversar pelo WhatsApp</a>
+        </p>
+      {% endif %}
+      <p>
+        <strong>E-mail:</strong>
+        <a href="mailto:{{ contact_info.email }}">{{ contact_info.email }}</a>
+      </p>
+      <p><strong>Endereço:</strong> {{ contact_info.address }} - CEP {{ contact_info.zip_code }}</p>
+      <p><strong>Horário de atendimento:</strong> {{ contact_info.office_hours }}</p>
+    </div>
+  </section>
+{% endblock %}
