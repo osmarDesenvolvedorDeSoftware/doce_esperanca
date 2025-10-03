@@ -1,0 +1,47 @@
+{% extends 'admin/base.html' %}
+{% block title %}Galeria - Painel Administrativo{% endblock %}
+{% block content %}
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">Galeria</h1>
+    <a class="btn btn-primary" href="{{ url_for('admin.galeria_create') }}">Novo item</a>
+  </div>
+  <div class="card shadow-sm">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Título</th>
+              <th>Slug</th>
+              <th>Publicado em</th>
+              <th>Imagem</th>
+              <th class="text-end">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in itens %}
+              <tr>
+                <td>{{ item.titulo }}</td>
+                <td>{{ item.slug }}</td>
+                <td>{{ item.publicado_em.strftime('%d/%m/%Y') if item.publicado_em else '-' }}</td>
+                <td>
+                  <a href="{{ url_for('admin.send_upload', filename=item.imagem_path) }}" target="_blank">Ver imagem</a>
+                </td>
+                <td class="text-end">
+                  <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('admin.galeria_edit', item_id=item.id) }}">Editar</a>
+                  <form class="d-inline" method="post" action="{{ url_for('admin.galeria_delete', item_id=item.id) }}" onsubmit="return confirm('Deseja realmente excluir este item?');">
+                    <button class="btn btn-sm btn-outline-danger" type="submit">Excluir</button>
+                  </form>
+                </td>
+              </tr>
+            {% else %}
+              <tr>
+                <td colspan="5" class="text-center py-4">Nenhum item cadastrado.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+{% endblock %}

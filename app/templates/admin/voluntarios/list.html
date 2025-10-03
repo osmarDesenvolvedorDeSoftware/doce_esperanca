@@ -1,0 +1,45 @@
+{% extends 'admin/base.html' %}
+{% block title %}Voluntários - Painel Administrativo{% endblock %}
+{% block content %}
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">Voluntários</h1>
+    <a class="btn btn-primary" href="{{ url_for('admin.voluntarios_create') }}">Novo voluntário</a>
+  </div>
+  <div class="card shadow-sm">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Nome</th>
+              <th>Email</th>
+              <th>Área de Interesse</th>
+              <th>Disponibilidade</th>
+              <th class="text-end">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for voluntario in voluntarios %}
+              <tr>
+                <td>{{ voluntario.nome }}</td>
+                <td>{{ voluntario.email }}</td>
+                <td>{{ voluntario.area_interesse or '-' }}</td>
+                <td>{{ voluntario.disponibilidade or '-' }}</td>
+                <td class="text-end">
+                  <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('admin.voluntarios_edit', voluntario_id=voluntario.id) }}">Editar</a>
+                  <form class="d-inline" method="post" action="{{ url_for('admin.voluntarios_delete', voluntario_id=voluntario.id) }}" onsubmit="return confirm('Deseja realmente excluir este voluntário?');">
+                    <button class="btn btn-sm btn-outline-danger" type="submit">Excluir</button>
+                  </form>
+                </td>
+              </tr>
+            {% else %}
+              <tr>
+                <td colspan="5" class="text-center py-4">Nenhum voluntário cadastrado.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+{% endblock %}

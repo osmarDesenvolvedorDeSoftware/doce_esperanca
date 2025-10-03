@@ -1,15 +1,6 @@
-from flask import Blueprint
+from __future__ import annotations
 
+from .admin import admin_bp
+from .public import public_bp
 
-public_bp = Blueprint("public", __name__)
-admin_bp = Blueprint("admin", __name__)
-
-
-@public_bp.route("/")
-def index():
-    return "Public Home"
-
-
-@admin_bp.route("/")
-def admin_index():
-    return "Admin Home"
+__all__ = ["admin_bp", "public_bp"]
