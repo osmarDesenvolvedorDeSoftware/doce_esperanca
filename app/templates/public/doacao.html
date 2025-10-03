@@ -4,11 +4,11 @@
 
 {% block content %}
   <section class="doacao">
-    <h2>{{ texto_doacao.titulo if texto_doacao else 'Doe e transforme vidas' }}</h2>
-    {% if texto_doacao %}
+    <h2>{{ texto_doacao.titulo or content_placeholder }}</h2>
+    {% if texto_doacao and texto_doacao.conteudo %}
       {{ texto_doacao.conteudo | safe }}
     {% else %}
-      <p>Ao adquirir as peças artesanais produzidas pelas famílias atendidas, você contribui diretamente para a manutenção das atividades da Associação Doce Esperança.</p>
+      <p>{{ content_placeholder }}</p>
     {% endif %}
   </section>
 

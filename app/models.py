@@ -97,6 +97,19 @@ class Apoio(db.Model, TimestampMixin):
         return f"<Apoio {self.titulo!r}>"
 
 
+class Banner(db.Model, TimestampMixin):
+    __tablename__ = "banners"
+
+    id = db.Column(db.Integer, primary_key=True)
+    titulo = db.Column(db.String(255), nullable=False)
+    descricao = db.Column(db.String(512))
+    ordem = db.Column(db.Integer, nullable=False, default=0)
+    imagem_path = db.Column(db.String(512), nullable=False)
+
+    def __repr__(self) -> str:  # pragma: no cover - debug helper
+        return f"<Banner {self.titulo!r}>"
+
+
 class User(db.Model, UserMixin, TimestampMixin):
     __tablename__ = "users"
 

@@ -19,6 +19,9 @@
         <div class="mb-3">
           {{ form.slug.label(class="form-label") }}
           {{ form.slug(class="form-control") }}
+          {% if form.slug.description %}
+            <div class="form-text">{{ form.slug.description }}</div>
+          {% endif %}
           {% for error in form.slug.errors %}
             <div class="text-danger small">{{ error }}</div>
           {% endfor %}
@@ -26,6 +29,9 @@
         <div class="mb-3">
           {{ form.resumo.label(class="form-label") }}
           {{ form.resumo(class="form-control") }}
+          {% if form.resumo.description %}
+            <div class="form-text">{{ form.resumo.description }}</div>
+          {% endif %}
           {% for error in form.resumo.errors %}
             <div class="text-danger small">{{ error }}</div>
           {% endfor %}
@@ -34,6 +40,9 @@
           {{ form.conteudo.label(class="form-label") }}
           <div class="quill-editor rich-text-container" data-rich-text data-target="{{ form.conteudo.id }}"></div>
           {{ form.conteudo(class="form-control d-none") }}
+          {% if form.conteudo.description %}
+            <div class="form-text">{{ form.conteudo.description }}</div>
+          {% endif %}
           {% for error in form.conteudo.errors %}
             <div class="text-danger small">{{ error }}</div>
           {% endfor %}
@@ -43,6 +52,9 @@
           {{ form.imagem(class="form-control") }}
           {% if texto and texto.imagem_path %}
             <div class="form-text">Imagem atual: <a href="{{ url_for('admin.send_upload', filename=texto.imagem_path) }}" target="_blank">visualizar</a></div>
+          {% endif %}
+          {% if form.imagem.description %}
+            <div class="form-text">{{ form.imagem.description }}</div>
           {% endif %}
           {% for error in form.imagem.errors %}
             <div class="text-danger small">{{ error }}</div>

@@ -9,7 +9,7 @@
   </head>
   <body>
     <header>
-      <h1>Doce Esperança</h1>
+      <h1>{{ site_identity or content_placeholder }}</h1>
       <nav>
         <a href="{{ url_for('public.index') }}" class="{% if active_page == 'inicio' %}is-active{% endif %}">Início</a>
         <a href="{{ url_for('public.sobre') }}" class="{% if active_page == 'sobre' %}is-active{% endif %}">Sobre</a>
@@ -24,26 +24,19 @@
       {% block content %}{% endblock %}
     </main>
     <footer>
-      <p>Nossas Redes Sociais e Contatos</p>
-      <ul>
-        {% for link in social_links %}
-          <li>
-            <a href="{{ link.url }}" target="_blank" rel="noopener">
-              {% if link.icon_path %}
-                <img src="{{ url_for('static', filename=link.icon_path) }}" alt="{{ link.name }}" width="40">
-              {% endif %}
-              <span>{{ link.name }}</span>
-            </a>
-          </li>
-        {% endfor %}
-      </ul>
-      <address>
-        <p>{{ contact_info.address }}</p>
-        <p>CEP: {{ contact_info.zip_code }}</p>
-        <p>Telefone: {{ contact_info.phone }}</p>
-        <p>E-mail: <a href="mailto:{{ contact_info.email }}">{{ contact_info.email }}</a></p>
-        <p>{{ contact_info.office_hours }}</p>
-      </address>
+      <h2>{{ (footer_contact.titulo if footer_contact else None) or content_placeholder }}</h2>
+      <div class="footer-content">
+        {% if footer_contact and footer_contact.conteudo %}
+          {{ footer_contact.conteudo | safe }}
+        {% else %}
+          <p>{{ content_placeholder }}</p>
+        {% endif %}
+      </div>
+      {% if footer_contact and footer_contact.resumo %}
+        <p>
+          <a href="mailto:{{ footer_contact.resumo }}">{{ footer_contact.resumo }}</a>
+        </p>
+      {% endif %}
     </footer>
   </body>
 </html>

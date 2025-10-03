@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 from datetime import date, datetime, time
 from pathlib import Path
-from typing import Iterable, Optional
+from typing import Callable, Dict, Iterable, Optional, Sequence
 
 from flask import (
     Blueprint,
@@ -21,9 +21,12 @@ from sqlalchemy.exc import IntegrityError
 from urllib.parse import urljoin, urlparse
 from werkzeug.utils import secure_filename
 
+from PIL import Image, ImageOps, UnidentifiedImageError
+
 from app import db, login_manager
 from app.forms import (
     ApoioForm,
+    BannerForm,
     GaleriaForm,
     LoginForm,
     ParceiroForm,
@@ -31,7 +34,21 @@ from app.forms import (
     TransparenciaForm,
     VoluntarioForm,
 )
-from app.models import Apoio, Galeria, Parceiro, TextoInstitucional, Transparencia, User, Voluntario
+from app.content import (
+    INSTITUTIONAL_SECTION_MAP,
+    INSTITUTIONAL_SECTIONS,
+    INSTITUTIONAL_SLUGS,
+)
+from app.models import (
+    Apoio,
+    Banner,
+    Galeria,
+    Parceiro,
+    TextoInstitucional,
+    Transparencia,
+    User,
+    Voluntario,
+)
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
 
@@ -40,7 +57,11 @@ def _ensure_directory(path: Path) -> None:
     path.mkdir(parents=True, exist_ok=True)
 
 
-def _save_file(field_storage, base_folder: str) -> Optional[str]:
+def _save_file(
+    field_storage,
+    base_folder: str,
+    processor: Optional[Callable[[object, Path], None]] = None,
+) -> Optional[str]:
     if not field_storage:
         return None
 
@@ -56,7 +77,18 @@ def _save_file(field_storage, base_folder: str) -> Optional[str]:
     _ensure_directory(target_folder)
 
     file_path = target_folder / final_name
-    field_storage.save(file_path)
+    try:
+        if processor:
+            processor(field_storage, file_path)
+        else:
+            field_storage.save(file_path)
+    except ValueError:
+        if file_path.exists():
+            try:
+                file_path.unlink()
+            except OSError:
+                pass
+        raise
 
     relative_path = os.path.relpath(file_path, start=current_app.static_folder)
     return relative_path.replace(os.sep, "/")
@@ -80,6 +112,46 @@ def _delete_file(relative_path: Optional[str]) -> None:
         candidate.unlink()
 
 
+def _process_image(
+    field_storage,
+    destination: Path,
+    size: Optional[Sequence[int]] = None,
+) -> None:
+    stream = getattr(field_storage, "stream", field_storage)
+    if hasattr(stream, "seek"):
+        stream.seek(0)
+
+    try:
+        with Image.open(stream) as image:
+            image = ImageOps.exif_transpose(image)
+            if size:
+                resample = getattr(Image, "Resampling", Image).LANCZOS
+                image = ImageOps.fit(image, size, method=resample)
+
+            extension = destination.suffix.lower()
+            save_kwargs: Dict[str, object] = {}
+
+            if extension in {".jpg", ".jpeg"}:
+                image = image.convert("RGB")
+                save_kwargs.setdefault("format", "JPEG")
+                save_kwargs.setdefault("quality", 90)
+            elif extension == ".png":
+                if image.mode not in ("RGB", "RGBA", "LA", "L"):
+                    image = image.convert("RGBA")
+                save_kwargs.setdefault("format", "PNG")
+            else:
+                if image.mode not in ("RGB", "RGBA", "LA", "L"):
+                    image = image.convert("RGB")
+                save_kwargs.setdefault("format", image.format or "PNG")
+
+            image.save(destination, **save_kwargs)
+    except UnidentifiedImageError as exc:
+        raise ValueError("O arquivo enviado não é uma imagem válida.") from exc
+    finally:
+        if hasattr(stream, "seek"):
+            stream.seek(0)
+
+
 def _combine_date_with_min_time(value: Optional[datetime | date]) -> Optional[datetime]:
     if value is None:
         return None
@@ -99,6 +171,37 @@ def _is_safe_redirect_target(target: Optional[str]) -> bool:
     ref_url = urlparse(request.host_url)
     test_url = urlparse(urljoin(request.host_url, target))
     return test_url.scheme in ("http", "https") and ref_url.netloc == test_url.netloc
+
+
+def _ensure_institutional_texts() -> Dict[str, TextoInstitucional]:
+    existing = {
+        texto.slug: texto
+        for texto in TextoInstitucional.query.filter(
+            TextoInstitucional.slug.in_(INSTITUTIONAL_SLUGS)
+        ).all()
+    }
+
+    missing = [
+        section for section in INSTITUTIONAL_SECTIONS if section["slug"] not in existing
+    ]
+    if missing:
+        for section in missing:
+            db.session.add(
+                TextoInstitucional(
+                    titulo=section.get("default_title") or section["label"],
+                    slug=section["slug"],
+                    conteudo="",
+                )
+            )
+        db.session.commit()
+        existing = {
+            texto.slug: texto
+            for texto in TextoInstitucional.query.filter(
+                TextoInstitucional.slug.in_(INSTITUTIONAL_SLUGS)
+            ).all()
+        }
+
+    return existing
 
 
 @admin_bp.before_request
@@ -160,6 +263,7 @@ def dashboard():
         "galerias": Galeria.query.count(),
         "transparencias": Transparencia.query.count(),
         "apoios": Apoio.query.count(),
+        "banners": Banner.query.count(),
     }
     return render_template("admin/dashboard.html", stats=stats)
 
@@ -179,8 +283,24 @@ def send_upload(filename: str):
 @admin_bp.route("/textos")
 @login_required
 def textos_list():
-    textos = TextoInstitucional.query.order_by(TextoInstitucional.created_at.desc()).all()
-    return render_template("admin/textos/list.html", textos=textos)
+    featured_map = _ensure_institutional_texts()
+
+    todos_textos = TextoInstitucional.query.order_by(TextoInstitucional.updated_at.desc()).all()
+    ordered_featured = [
+        featured_map[slug] for slug in INSTITUTIONAL_SLUGS if slug in featured_map
+    ]
+    outros_textos = [
+        texto for texto in todos_textos if texto.slug not in featured_map
+    ]
+    outros_textos.sort(key=lambda item: (item.titulo or item.slug or "").lower())
+
+    textos = ordered_featured + outros_textos
+    return render_template(
+        "admin/textos/list.html",
+        textos=textos,
+        institutional_slugs=set(INSTITUTIONAL_SLUGS),
+        sections_map=INSTITUTIONAL_SECTION_MAP,
+    )
 
 
 @admin_bp.route("/textos/criar", methods=["GET", "POST"])
@@ -188,37 +308,63 @@ def textos_list():
 def textos_create():
     form = TextoInstitucionalForm()
     if form.validate_on_submit():
-        texto = TextoInstitucional(
-            titulo=form.titulo.data,
-            slug=form.slug.data,
-            resumo=form.resumo.data,
-            conteudo=form.conteudo.data,
-        )
-        if form.imagem.data:
-            relative_path = _save_file(form.imagem.data, current_app.config["IMAGE_UPLOAD_FOLDER"])
-            texto.imagem_path = relative_path
+        if form.slug.data in INSTITUTIONAL_SLUGS:
+            form.slug.errors.append("Esse slug é reservado para conteúdos institucionais fixos.")
+        else:
+            texto = TextoInstitucional(
+                titulo=form.titulo.data,
+                slug=form.slug.data,
+                resumo=form.resumo.data,
+                conteudo=form.conteudo.data,
+            )
+            if form.imagem.data:
+                relative_path = _save_file(
+                    form.imagem.data, current_app.config["IMAGE_UPLOAD_FOLDER"]
+                )
+                texto.imagem_path = relative_path
 
-        db.session.add(texto)
-        try:
-            db.session.commit()
-            flash("Texto criado com sucesso.", "success")
-            return redirect(url_for("admin.textos_list"))
-        except IntegrityError:
-            db.session.rollback()
-            flash("Erro ao salvar texto. Verifique se o slug já está em uso.", "danger")
+            db.session.add(texto)
+            try:
+                db.session.commit()
+                flash("Texto criado com sucesso.", "success")
+                return redirect(url_for("admin.textos_list"))
+            except IntegrityError:
+                db.session.rollback()
+                flash("Erro ao salvar texto. Verifique se o slug já está em uso.", "danger")
     return render_template("admin/textos/form.html", form=form, texto=None)
 
 
 @admin_bp.route("/textos/<int:texto_id>/editar", methods=["GET", "POST"])
 @login_required
 def textos_edit(texto_id: int):
+    _ensure_institutional_texts()
     texto = TextoInstitucional.query.get_or_404(texto_id)
     form = TextoInstitucionalForm(obj=texto)
+    section_info = INSTITUTIONAL_SECTION_MAP.get(texto.slug)
+
+    if section_info:
+        render_kw = dict(form.slug.render_kw or {})
+        render_kw.update({"readonly": True})
+        form.slug.render_kw = render_kw
+        form.slug.description = section_info.get("label")
+        if section_info.get("resumo_help"):
+            form.resumo.description = section_info["resumo_help"]
+        if section_info.get("content_help"):
+            form.conteudo.description = section_info["content_help"]
+        if section_info.get("image_help"):
+            form.imagem.description = section_info["image_help"]
+
     if request.method == "GET":
         form.conteudo.data = texto.conteudo
+        form.slug.data = texto.slug
+    elif section_info:
+        form.slug.data = texto.slug
     if form.validate_on_submit():
         texto.titulo = form.titulo.data
-        texto.slug = form.slug.data
+        if section_info is None:
+            texto.slug = form.slug.data
+        else:
+            form.slug.data = texto.slug
         texto.resumo = form.resumo.data
         texto.conteudo = form.conteudo.data
 
@@ -240,6 +386,9 @@ def textos_edit(texto_id: int):
 @login_required
 def textos_delete(texto_id: int):
     texto = TextoInstitucional.query.get_or_404(texto_id)
+    if texto.slug in INSTITUTIONAL_SLUGS:
+        flash("Este texto institucional não pode ser excluído.", "warning")
+        return redirect(url_for("admin.textos_list"))
     _delete_file(texto.imagem_path)
     db.session.delete(texto)
     db.session.commit()
@@ -360,6 +509,90 @@ def apoios_delete(apoio_id: int):
     db.session.commit()
     flash("Apoio excluído com sucesso.", "success")
     return redirect(url_for("admin.apoios_list"))
+
+
+# ----- Banners -----
+
+
+def _banner_processor(storage, path: Path) -> None:
+    _process_image(storage, path, size=(1200, 400))
+
+
+@admin_bp.route("/banners")
+@login_required
+def banners_list():
+    banners = Banner.query.order_by(Banner.ordem.asc(), Banner.created_at.desc()).all()
+    return render_template("admin/banners/list.html", banners=banners)
+
+
+@admin_bp.route("/banners/criar", methods=["GET", "POST"])
+@login_required
+def banners_create():
+    form = BannerForm()
+    if form.validate_on_submit():
+        if not form.imagem.data:
+            form.imagem.errors.append("Envie uma imagem para o banner.")
+        else:
+            banner = Banner(
+                titulo=form.titulo.data,
+                descricao=form.descricao.data,
+                ordem=form.ordem.data or 0,
+            )
+            try:
+                banner.imagem_path = _save_file(
+                    form.imagem.data,
+                    current_app.config["BANNER_UPLOAD_FOLDER"],
+                    processor=_banner_processor,
+                )
+            except ValueError as exc:
+                form.imagem.errors.append(str(exc))
+                return render_template("admin/banners/form.html", form=form, banner=None)
+
+            db.session.add(banner)
+            db.session.commit()
+            flash("Banner criado com sucesso.", "success")
+            return redirect(url_for("admin.banners_list"))
+    return render_template("admin/banners/form.html", form=form, banner=None)
+
+
+@admin_bp.route("/banners/<int:banner_id>/editar", methods=["GET", "POST"])
+@login_required
+def banners_edit(banner_id: int):
+    banner = Banner.query.get_or_404(banner_id)
+    form = BannerForm(obj=banner)
+    if form.validate_on_submit():
+        banner.titulo = form.titulo.data
+        banner.descricao = form.descricao.data
+        banner.ordem = form.ordem.data or 0
+
+        if form.imagem.data:
+            try:
+                new_path = _save_file(
+                    form.imagem.data,
+                    current_app.config["BANNER_UPLOAD_FOLDER"],
+                    processor=_banner_processor,
+                )
+            except ValueError as exc:
+                form.imagem.errors.append(str(exc))
+                return render_template("admin/banners/form.html", form=form, banner=banner)
+            _delete_file(banner.imagem_path)
+            banner.imagem_path = new_path
+
+        db.session.commit()
+        flash("Banner atualizado com sucesso.", "success")
+        return redirect(url_for("admin.banners_list"))
+    return render_template("admin/banners/form.html", form=form, banner=banner)
+
+
+@admin_bp.route("/banners/<int:banner_id>/excluir", methods=["POST"])
+@login_required
+def banners_delete(banner_id: int):
+    banner = Banner.query.get_or_404(banner_id)
+    _delete_file(banner.imagem_path)
+    db.session.delete(banner)
+    db.session.commit()
+    flash("Banner excluído com sucesso.", "success")
+    return redirect(url_for("admin.banners_list"))
 
 
 # ----- Voluntários -----
