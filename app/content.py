@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Dict, List
 
-CONTENT_PLACEHOLDER = "Conteúdo em atualização."
+CONTENT_PLACEHOLDER = "Conteúdo em atualização"
 
 INSTITUTIONAL_SECTIONS: List[Dict[str, str]] = [
     {
