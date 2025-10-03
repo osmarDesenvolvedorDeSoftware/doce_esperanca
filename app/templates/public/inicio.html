@@ -76,7 +76,9 @@
         {% endfor %}
       </ul>
     {% else %}
-      <p>Em breve compartilharemos nossos parceiros e apoiadores.</p>
+      <p class="texto-placeholder">
+        {{ (parceiros_placeholder.conteudo if parceiros_placeholder and parceiros_placeholder.conteudo else content_placeholder) | safe }}
+      </p>
     {% endif %}
   </section>
 {% endblock %}

@@ -44,7 +44,12 @@ def _collect_textos(*slugs: str) -> Dict[str, TextoInstitucional]:
 
 @public_bp.route("/")
 def index() -> str:
-    textos = _collect_textos("inicio", "missao", "principios")
+    textos = _collect_textos(
+        "inicio",
+        "missao",
+        "principios",
+        "placeholder_parceiros",
+    )
     parceiros = Parceiro.query.order_by(Parceiro.nome.asc()).all()
     banners = Banner.query.order_by(Banner.ordem.asc(), Banner.created_at.desc()).all()
     return render_template(
@@ -52,6 +57,7 @@ def index() -> str:
         textos=textos,
         parceiros=parceiros,
         banners=banners,
+        parceiros_placeholder=textos.get("placeholder_parceiros"),
         active_page="inicio",
     )
 
@@ -69,11 +75,12 @@ def sobre() -> str:
 
 @public_bp.route("/galeria/")
 def galeria() -> str:
-    textos = _collect_textos("galeria")
+    textos = _collect_textos("galeria", "placeholder_galeria")
     itens = Galeria.query.order_by(Galeria.publicado_em.desc(), Galeria.id.desc()).all()
     return render_template(
         "public/galeria.html",
         texto_galeria=textos.get("galeria"),
+        galeria_placeholder=textos.get("placeholder_galeria"),
         itens=itens,
         active_page="galeria",
     )
@@ -81,7 +88,11 @@ def galeria() -> str:
 
 @public_bp.route("/doacao/")
 def doacao() -> str:
-    textos = _collect_textos("doacao")
+    textos = _collect_textos(
+        "doacao",
+        "placeholder_produtos",
+        "placeholder_transparencia",
+    )
     materiais = Galeria.query.order_by(Galeria.publicado_em.desc(), Galeria.id.desc()).all()
     documentos = (
         Transparencia.query.order_by(Transparencia.publicado_em.desc(), Transparencia.id.desc()).all()
@@ -91,12 +102,20 @@ def doacao() -> str:
         texto_doacao=textos.get("doacao"),
         materiais=materiais,
         documentos=documentos,
+        produtos_placeholder=textos.get("placeholder_produtos"),
+        transparencia_placeholder=textos.get("placeholder_transparencia"),
         active_page="doacao",
     )
 
 
 @public_bp.route("/projetos/")
 def projetos() -> str:
+    placeholders = _collect_textos(
+        "placeholder_parceiros",
+        "placeholder_apoios",
+        "placeholder_voluntarios",
+        "placeholder_transparencia",
+    )
     parceiros = Parceiro.query.order_by(Parceiro.nome.asc()).all()
     apoios = Apoio.query.order_by(Apoio.titulo.asc()).all()
     voluntarios = Voluntario.query.order_by(Voluntario.nome.asc()).all()
@@ -110,6 +129,10 @@ def projetos() -> str:
         apoios=apoios,
         voluntarios=voluntarios,
         documentos=documentos,
+        parceiros_placeholder=placeholders.get("placeholder_parceiros"),
+        apoios_placeholder=placeholders.get("placeholder_apoios"),
+        voluntarios_placeholder=placeholders.get("placeholder_voluntarios"),
+        transparencia_placeholder=placeholders.get("placeholder_transparencia"),
         active_page="projetos",
     )
 

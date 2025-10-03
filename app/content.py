@@ -38,6 +38,42 @@ INSTITUTIONAL_SECTIONS: List[Dict[str, str]] = [
         "content_help": "Inclua endereço, horários, canais de contato e links úteis. Esse conteúdo também aparece no rodapé.",
         "resumo_help": "Informe o e-mail principal para receber mensagens do formulário de contato.",
     },
+    {
+        "slug": "placeholder_parceiros",
+        "label": "Mensagem - parceiros indisponíveis",
+        "default_title": "Parcerias em atualização",
+        "content_help": "Mensagem exibida quando não há parceiros cadastrados nas páginas Início e Projetos.",
+    },
+    {
+        "slug": "placeholder_produtos",
+        "label": "Mensagem - produtos artesanais indisponíveis",
+        "default_title": "Produtos em atualização",
+        "content_help": "Mensagem exibida quando não há materiais ou produtos artesanais cadastrados na página Doação.",
+    },
+    {
+        "slug": "placeholder_transparencia",
+        "label": "Mensagem - documentos de transparência indisponíveis",
+        "default_title": "Transparência em atualização",
+        "content_help": "Mensagem exibida quando não há documentos de transparência publicados.",
+    },
+    {
+        "slug": "placeholder_apoios",
+        "label": "Mensagem - apoios indisponíveis",
+        "default_title": "Apoios em atualização",
+        "content_help": "Mensagem exibida quando não há registros de apoio cadastrados na página Projetos.",
+    },
+    {
+        "slug": "placeholder_voluntarios",
+        "label": "Mensagem - voluntariado indisponível",
+        "default_title": "Voluntariado em atualização",
+        "content_help": "Mensagem exibida quando não há voluntários cadastrados na página Projetos.",
+    },
+    {
+        "slug": "placeholder_galeria",
+        "label": "Mensagem - galeria vazia",
+        "default_title": "Galeria em atualização",
+        "content_help": "Mensagem exibida quando não há itens publicados na galeria de fotos.",
+    },
 ]
 
 INSTITUTIONAL_SECTION_MAP: Dict[str, Dict[str, str]] = {
