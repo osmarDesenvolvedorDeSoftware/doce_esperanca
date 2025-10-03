@@ -36,7 +36,7 @@ def make_shell_context():
 cli = FlaskGroup(create_app=_create_cli_app)
 
 
-@cli.command("create-admin")
+@app.cli.command("create-admin")
 def create_admin():
     """Create or update the default admin user."""
 
