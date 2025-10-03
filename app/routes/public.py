@@ -4,7 +4,14 @@ from typing import Dict
 
 from flask import Blueprint, render_template
 
-from app.models import Galeria, Parceiro, TextoInstitucional, Transparencia
+from app.models import (
+    Apoio,
+    Galeria,
+    Parceiro,
+    TextoInstitucional,
+    Transparencia,
+    Voluntario,
+)
 
 
 public_bp = Blueprint("public", __name__)
@@ -120,6 +127,25 @@ def doacao() -> str:
         materiais=materiais,
         documentos=documentos,
         active_page="doacao",
+    )
+
+
+@public_bp.route("/projetos/")
+def projetos() -> str:
+    parceiros = Parceiro.query.order_by(Parceiro.nome.asc()).all()
+    apoios = Apoio.query.order_by(Apoio.titulo.asc()).all()
+    voluntarios = Voluntario.query.order_by(Voluntario.nome.asc()).all()
+    documentos = (
+        Transparencia.query.order_by(Transparencia.publicado_em.desc(), Transparencia.id.desc()).all()
+    )
+
+    return render_template(
+        "public/projetos.html",
+        parceiros=parceiros,
+        apoios=apoios,
+        voluntarios=voluntarios,
+        documentos=documentos,
+        active_page="projetos",
     )
 
 
