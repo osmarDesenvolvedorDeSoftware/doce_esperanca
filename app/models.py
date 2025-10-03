@@ -18,7 +18,7 @@ class TimestampMixin:
 
 
 class TextoInstitucional(db.Model, TimestampMixin):
-    __tablename__ = "textos_institucionais"
+    __tablename__ = "textos"
 
     id = db.Column(db.Integer, primary_key=True)
     titulo = db.Column(db.String(255), nullable=False)
@@ -59,7 +59,7 @@ class Voluntario(db.Model, TimestampMixin):
 
 
 class Galeria(db.Model, TimestampMixin):
-    __tablename__ = "galerias"
+    __tablename__ = "galeria"
 
     id = db.Column(db.Integer, primary_key=True)
     titulo = db.Column(db.String(255), nullable=False)
@@ -73,7 +73,7 @@ class Galeria(db.Model, TimestampMixin):
 
 
 class Transparencia(db.Model, TimestampMixin):
-    __tablename__ = "transparencias"
+    __tablename__ = "transparencia"
 
     id = db.Column(db.Integer, primary_key=True)
     titulo = db.Column(db.String(255), nullable=False)
