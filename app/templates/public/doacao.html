@@ -17,7 +17,7 @@
     <div class="produtos">
       {% for item in materiais %}
         <article class="produto">
-          <img src="{{ url_for('static', filename=item.imagem_path) }}" alt="{{ item.titulo }}">
+          <img src="{{ static_url(item.imagem_path) }}" alt="{{ item.titulo }}">
           <p>{{ item.titulo }}</p>
           {% if item.descricao %}
             <p>{{ item.descricao }}</p>
@@ -38,7 +38,7 @@
       <ul>
         {% for documento in documentos %}
           <li>
-            <a href="{{ url_for('static', filename=documento.arquivo_path) }}" target="_blank" rel="noopener">
+            <a href="{{ static_url(documento.arquivo_path) }}" target="_blank" rel="noopener">
               {{ documento.titulo }}
             </a>
             {% if documento.descricao %}

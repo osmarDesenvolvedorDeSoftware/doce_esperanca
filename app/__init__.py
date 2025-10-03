@@ -1,6 +1,9 @@
 import os
 from os import fspath
-from flask import Flask
+from pathlib import Path
+from typing import Optional
+
+from flask import Flask, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
@@ -20,6 +23,15 @@ def _ensure_directory(path) -> None:
     resolved_path = fspath(path)
     if resolved_path and not os.path.exists(resolved_path):
         os.makedirs(resolved_path, exist_ok=True)
+
+
+def _static_file_version(static_folder: str, filename: str) -> Optional[str]:
+    """Return a version identifier for a static file based on its modification time."""
+    file_path = Path(static_folder, filename)
+    try:
+        return str(int(file_path.stat().st_mtime))
+    except FileNotFoundError:
+        return None
 
 
 def create_app(config_class=None):
@@ -66,6 +78,17 @@ def create_app(config_class=None):
 
     app.register_blueprint(public_bp)
     app.register_blueprint(admin_bp)
+
+    @app.context_processor
+    def inject_static_url_helper():
+        def static_url(filename: str, **kwargs) -> str:
+            """Generate versioned URLs for static assets."""
+            version = _static_file_version(app.static_folder, filename)
+            if version:
+                kwargs.setdefault("v", version)
+            return url_for("static", filename=filename, **kwargs)
+
+        return {"static_url": static_url}
 
     return app
 

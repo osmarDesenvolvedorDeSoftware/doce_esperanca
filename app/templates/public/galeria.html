@@ -15,7 +15,7 @@
   <div class="galeria">
     {% for item in itens %}
       <figure>
-        <img src="{{ url_for('static', filename=item.imagem_path) }}" alt="{{ item.titulo }}">
+        <img src="{{ static_url(item.imagem_path) }}" alt="{{ item.titulo }}">
         <figcaption>
           <h3>{{ item.titulo }}</h3>
           {% if item.descricao %}

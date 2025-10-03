@@ -8,7 +8,7 @@
 
 {% block header_image %}
   {% set imagem_inicio = texto_inicio.imagem_path if texto_inicio else None %}
-  <img src="{{ url_for('static', filename=imagem_inicio or 'img/Todos.jpg') }}" alt="{{ texto_inicio.titulo or content_placeholder }}">
+  <img src="{{ static_url(imagem_inicio or 'img/Todos.jpg') }}" alt="{{ texto_inicio.titulo or content_placeholder }}">
 {% endblock %}
 
 {% block content %}
@@ -16,7 +16,7 @@
     {% if banners %}
       {% for banner in banners %}
         <figure>
-          <img src="{{ url_for('static', filename=banner.imagem_path) }}" alt="{{ banner.titulo or content_placeholder }}">
+          <img src="{{ static_url(banner.imagem_path) }}" alt="{{ banner.titulo or content_placeholder }}">
           {% if banner.titulo or banner.descricao %}
             <figcaption>
               {% if banner.titulo %}<h3>{{ banner.titulo }}</h3>{% endif %}
@@ -63,7 +63,7 @@
         {% for parceiro in parceiros %}
           <li>
             {% if parceiro.logo_path %}
-              <img src="{{ url_for('static', filename=parceiro.logo_path) }}" alt="{{ parceiro.nome }}" width="160">
+              <img src="{{ static_url(parceiro.logo_path) }}" alt="{{ parceiro.nome }}" width="160">
             {% endif %}
             <h4>{{ parceiro.nome }}</h4>
             {% if parceiro.descricao %}
