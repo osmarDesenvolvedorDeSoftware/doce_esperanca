@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Painel Administrativo{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <style>
+      :root {
+        --admin-navbar-height: 4.5rem;
+      }
+
+      body {
+        padding-top: var(--admin-navbar-height);
+        background-color: #f8f9fa;
+      }
+
+      .navbar-brand span {
+        font-weight: 600;
+        letter-spacing: 0.02em;
+      }
+
+      .sidebar-nav .nav-link {
+        border-radius: 0.5rem;
+        margin: 0.1rem 0.75rem;
+        color: #495057;
+        font-weight: 500;
+      }
+
+      .sidebar-nav .nav-link:hover {
+        background-color: #e9ecef;
+        color: #0d6efd;
+      }
+
+      .sidebar-nav .nav-link.active {
+        background-color: #e0e7ff;
+        color: #0d6efd;
+        box-shadow: inset 0 0 0 1px rgba(13, 110, 253, 0.2);
+      }
+
+      .sidebar-nav .section-title {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-weight: 600;
+        color: #adb5bd;
+        padding: 0.75rem 1.5rem 0.25rem;
+      }
+
+      main.admin-main {
+        min-height: calc(100vh - var(--admin-navbar-height));
+      }
+
+      .quill-editor {
+        background-color: #fff;
+      }
+
+      .rich-text-container {
+        min-height: 200px;
+      }
+
+      @media (min-width: 768px) {
+        .sidebar-fixed {
+          position: sticky;
+          top: var(--admin-navbar-height);
+        }
+      }
+    </style>
+    {% block extra_css %}{% endblock %}
+  </head>
+  <body>
+    {% macro render_sidebar_links() %}
+      {% set current_endpoint = request.endpoint or '' %}
+      {% set nav_items = [
+        ('Visão geral', 'bi-speedometer2', 'admin.dashboard', 'admin.dashboard'),
+        ('Textos', 'bi-journal-richtext', 'admin.textos_list', 'admin.textos'),
+        ('Banners', 'bi-image', 'admin.banners_list', 'admin.banners'),
+        ('Parceiros', 'bi-people-fill', 'admin.parceiros_list', 'admin.parceiros'),
+        ('Apoios', 'bi-hand-thumbs-up', 'admin.apoios_list', 'admin.apoios'),
+        ('Voluntários', 'bi-person-hearts', 'admin.voluntarios_list', 'admin.voluntarios'),
+        ('Galeria', 'bi-images', 'admin.galeria_list', 'admin.galeria'),
+        ('Transparência', 'bi-file-earmark-text', 'admin.transparencia_list', 'admin.transparencia')
+      ] %}
+      {% if current_app.view_functions.get('admin.settings') %}
+        {% set nav_items = nav_items + [('Configurações', 'bi-gear-fill', 'admin.settings', 'admin.settings')] %}
+      {% elif current_app.view_functions.get('admin.configuracoes') %}
+        {% set nav_items = nav_items + [('Configurações', 'bi-gear-fill', 'admin.configuracoes', 'admin.configuracoes')] %}
+      {% endif %}
+      <div class="sidebar-nav">
+        <div class="section-title">Gerenciamento</div>
+        <ul class="nav flex-column mb-3">
+          {% for label, icon, endpoint, prefix in nav_items %}
+            {% set is_exact = current_endpoint == prefix %}
+            {% set is_prefixed = current_endpoint.startswith(prefix ~ '_') %}
+            {% set is_active = is_exact or is_prefixed %}
+            <li class="nav-item">
+              <a class="nav-link d-flex align-items-center gap-2 py-2 {% if is_active %}active{% endif %}" href="{{ url_for(endpoint) }}">
+                <i class="bi {{ icon }} fs-5"></i>
+                <span>{{ label }}</span>
+              </a>
+            </li>
+          {% endfor %}
+        </ul>
+        <div class="section-title">Sessão</div>
+        <ul class="nav flex-column mb-0 pb-3">
+          <li class="nav-item">
+            <a class="nav-link d-flex align-items-center gap-2 py-2" href="{{ url_for('admin.logout') }}">
+              <i class="bi bi-box-arrow-right fs-5"></i>
+              <span>Sair</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    {% endmacro %}
+
+    <nav class="navbar navbar-dark bg-dark fixed-top shadow-sm">
+      <div class="container-fluid">
+        <button class="btn btn-outline-light d-md-none me-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar" aria-label="Abrir menu">
+          <i class="bi bi-list"></i>
+        </button>
+        <a class="navbar-brand d-flex align-items-center gap-2" href="{{ url_for('admin.dashboard') }}">
+          <i class="bi bi-flower1 fs-4"></i>
+          <span>{{ config.get('PROJECT_NAME', 'Doce Esperança') }} • Admin</span>
+        </a>
+        <div class="ms-auto d-flex align-items-center gap-2">
+          <a class="btn btn-outline-light d-none d-md-inline-flex" href="{{ url_for('admin.logout') }}">
+            <i class="bi bi-box-arrow-right me-1"></i>
+            <span>Sair</span>
+          </a>
+        </div>
+      </div>
+    </nav>
+
+    <div class="offcanvas offcanvas-start" tabindex="-1" id="mobileSidebar" aria-labelledby="mobileSidebarLabel">
+      <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="mobileSidebarLabel">Painel administrativo</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+      </div>
+      <div class="offcanvas-body p-0">
+        {{ render_sidebar_links() }}
+      </div>
+    </div>
+
+    <div class="container-fluid">
+      <div class="row">
+        <aside class="col-md-3 col-lg-2 d-none d-md-flex flex-column bg-light border-end vh-100 sidebar-fixed p-0">
+          {{ render_sidebar_links() }}
+        </aside>
+        <main class="col-12 col-md-9 col-lg-10 ms-auto px-3 px-md-4 py-4 admin-main">
+          {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+              {% set icon_map = {
+                'success': 'bi-check-circle-fill text-success',
+                'danger': 'bi-exclamation-octagon-fill text-danger',
+                'error': 'bi-exclamation-octagon-fill text-danger',
+                'warning': 'bi-exclamation-triangle-fill text-warning',
+                'info': 'bi-info-circle-fill text-info',
+                'primary': 'bi-info-circle-fill text-primary',
+                'secondary': 'bi-info-circle-fill text-secondary',
+                'light': 'bi-info-circle',
+                'dark': 'bi-info-circle-fill text-dark'
+              } %}
+              <div class="mb-4">
+                {% for category, message in messages %}
+                  {% set normalized = 'danger' if category == 'error' else category %}
+                  {% set icon_class = icon_map.get(normalized, 'bi-info-circle-fill text-primary') %}
+                  <div class="alert alert-{{ normalized }} alert-dismissible fade show d-flex align-items-start gap-3" role="alert">
+                    <i class="bi {{ icon_class }} fs-4"></i>
+                    <div class="flex-grow-1">{{ message }}</div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                  </div>
+                {% endfor %}
+              </div>
+            {% endif %}
+          {% endwith %}
+          {% block content %}{% endblock %}
+        </main>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('[data-rich-text]').forEach(function (wrapper) {
+          const targetId = wrapper.getAttribute('data-target');
+          const hiddenField = document.getElementById(targetId);
+          if (!hiddenField) {
+            console.warn('[Quill Setup:' + targetId + '] Campo oculto não encontrado.');
+            return;
+          }
+
+          const quill = new Quill(wrapper, { theme: 'snow' });
+
+          if (hiddenField.value) {
+            quill.root.innerHTML = hiddenField.value;
+          }
+
+          const syncHiddenField = function () {
+            hiddenField.value = quill.root.innerHTML;
+          };
+
+          syncHiddenField();
+
+          quill.on('text-change', function () {
+            syncHiddenField();
+          });
+
+          const form = hiddenField.closest('form');
+          if (form) {
+            form.addEventListener('submit', function () {
+              syncHiddenField();
+              console.log('[Quill Submit:' + targetId + ']', hiddenField.value);
+            });
+          }
+        });
+      });
+    </script>
+    {% block extra_js %}{% endblock %}
+  </body>
+</html>
