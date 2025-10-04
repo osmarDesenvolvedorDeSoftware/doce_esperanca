@@ -68,13 +68,31 @@
           if (!hiddenField) {
             return;
           }
+
           const quill = new Quill(wrapper, { theme: 'snow' });
+
           if (hiddenField.value) {
             quill.root.innerHTML = hiddenField.value;
           }
-          wrapper.closest('form').addEventListener('submit', function () {
+
+          const syncHiddenField = function () {
             hiddenField.value = quill.root.innerHTML;
+            console.debug('[Quill Sync:' + targetId + ']', hiddenField.value);
+          };
+
+          syncHiddenField();
+
+          quill.on('text-change', function () {
+            syncHiddenField();
           });
+
+          const form = wrapper.closest('form');
+          if (form) {
+            form.addEventListener('submit', function () {
+              console.debug('[Quill Submit:' + targetId + ']', quill.root.innerHTML);
+              hiddenField.value = quill.root.innerHTML;
+            });
+          }
         });
       });
     </script>
