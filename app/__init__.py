@@ -90,6 +90,13 @@ def create_app(config_class=None):
 
         return {"static_url": static_url}
 
+    @app.context_processor
+    def inject_endpoint_helper():
+        def has_endpoint(endpoint_name: str) -> bool:
+            return bool(app.view_functions.get(endpoint_name))
+
+        return {"has_endpoint": has_endpoint}
+
     return app
 
 
