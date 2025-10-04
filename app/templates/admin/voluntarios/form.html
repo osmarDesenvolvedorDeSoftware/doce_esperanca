@@ -1,11 +1,10 @@
 {% extends 'admin/base_admin.html' %}
 {% block title %}{{ 'Editar' if voluntario else 'Criar' }} Voluntário - Painel Administrativo{% endblock %}
 {% block content %}
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h3 mb-0">{{ 'Editar' if voluntario else 'Novo' }} voluntário</h1>
-    <a class="btn btn-outline-secondary" href="{{ url_for('admin.voluntarios_list') }}">Voltar</a>
-  </div>
-  <div class="card shadow-sm">
+  <div class="card shadow-lg">
+    <div class="card-header bg-primary text-white">
+      <h1 class="h4 mb-0">{{ 'Editar' if voluntario else 'Novo' }} voluntário</h1>
+    </div>
     <div class="card-body">
       <form method="post">
         {{ form.hidden_tag() }}
@@ -39,9 +38,12 @@
             <div class="text-danger small">{{ error }}</div>
           {% endfor %}
         </div>
-        <div class="d-flex justify-content-end gap-2 mt-3">
+        <div class="d-flex justify-content-end gap-2 mt-4">
           <a class="btn btn-outline-secondary" href="{{ url_for('admin.voluntarios_list') }}">Cancelar</a>
-          {{ form.submit(class="btn btn-primary") }}
+          {{ form.submit(class="d-none") }}
+          <button type="submit" class="btn btn-success">
+            <i class="bi bi-save me-2"></i>Salvar
+          </button>
         </div>
       </form>
     </div>
