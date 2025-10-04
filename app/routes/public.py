@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import re
 from typing import Dict, Optional
 
 from flask import Blueprint, current_app, render_template
+from markupsafe import Markup
 
 from app.content import CONTENT_PLACEHOLDER, INSTITUTIONAL_SECTION_MAP
 from app.models import Apoio, Banner, Galeria, Parceiro, TextoInstitucional, Transparencia, Voluntario
@@ -230,9 +232,81 @@ def contato() -> str:
     contact_email: Optional[str] = None
     if texto_contato and texto_contato.resumo:
         contact_email = texto_contato.resumo.strip()
+    contact_channels: Dict[str, Dict[str, str]] = {}
+    contact_description: Optional[Markup] = None
+    map_embed: Optional[Markup] = None
+    if texto_contato and texto_contato.conteudo:
+        raw_html = texto_contato.conteudo
+        cleaned_html = raw_html
+
+        anchor_pattern = re.compile(
+            r"<a\\b[^>]*href\\s*=\\s*\"(?P<href>[^\"]+)\"[^>]*>(?P<label>.*?)</a>",
+            re.IGNORECASE | re.DOTALL,
+        )
+        for match in anchor_pattern.finditer(raw_html):
+            href = match.group("href").strip()
+            label_markup = Markup(match.group("label"))
+            label = label_markup.striptags().strip() or href
+            href_lower = href.lower()
+            channel_key: Optional[str] = None
+
+            if href_lower.startswith("tel:"):
+                channel_key = "phone"
+                href = f"tel:{href.split(':', 1)[1]}"
+            elif "wa.me" in href_lower or "api.whatsapp.com" in href_lower:
+                channel_key = "whatsapp"
+                if href_lower.startswith("//"):
+                    href = f"https:{href}"
+                elif href_lower.startswith("wa.me"):
+                    href = f"https://{href}"
+                elif href_lower.startswith("http://"):
+                    href = f"https://{href[7:]}"
+                elif not href_lower.startswith("https://"):
+                    href = f"https://wa.me/{href.split('/')[-1]}"
+            elif href_lower.startswith("mailto:"):
+                channel_key = "email"
+                href = f"mailto:{href.split(':', 1)[1]}"
+
+            if channel_key and channel_key not in contact_channels:
+                contact_channels[channel_key] = {"href": href, "label": label}
+                cleaned_html = cleaned_html.replace(match.group(0), label, 1)
+
+        map_pattern = re.compile(
+            r"(<iframe\\b[^>]*src=\"[^\"]*google\\.com/maps[^\"]*\"[^>]*></iframe>)",
+            re.IGNORECASE | re.DOTALL,
+        )
+        map_match = map_pattern.search(cleaned_html)
+        if map_match:
+            iframe_html = map_match.group(1)
+            if "class=" in iframe_html:
+                iframe_html = re.sub(
+                    r"class=\"",
+                    'class="border-0 w-100 h-100 ',
+                    iframe_html,
+                    count=1,
+                )
+            else:
+                iframe_html = iframe_html.replace(
+                    "<iframe", '<iframe class="border-0 w-100 h-100"', 1
+                )
+            map_embed = Markup(iframe_html)
+            cleaned_html = cleaned_html.replace(map_match.group(1), "", 1)
+
+        cleaned_html = cleaned_html.strip()
+        if cleaned_html:
+            contact_description = Markup(cleaned_html)
+
+    if "email" not in contact_channels and contact_email:
+        contact_channels["email"] = {
+            "href": f"mailto:{contact_email}",
+            "label": contact_email,
+        }
     return render_template(
         "public/contato.html",
         texto_contato=texto_contato,
         contact_email=contact_email,
+        contact_channels=contact_channels,
+        contact_description=contact_description,
+        map_embed=map_embed,
         active_page="contato",
     )
