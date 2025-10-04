@@ -366,9 +366,25 @@ def textos_edit(texto_id: int):
     if request.method == "GET":
         form.conteudo.data = texto.conteudo
         form.slug.data = texto.slug
+    elif request.method == "POST":
+        current_app.logger.debug(
+            "textos_edit POST received - request_form_snapshot=%s",
+            request.form.to_dict(flat=False),
+        )
+        if section_info:
+            form.slug.data = texto.slug
     elif section_info:
         form.slug.data = texto.slug
-    if form.validate_on_submit():
+
+    is_valid_submission = form.validate_on_submit()
+    current_app.logger.debug(
+        "textos_edit form validation executed - is_valid=%s, errors=%s, conteudo_data=%r",
+        is_valid_submission,
+        form.errors,
+        form.conteudo.data,
+    )
+
+    if is_valid_submission:
         conteudo_value = form.conteudo.data or ""
         conteudo_preview = conteudo_value[:200]
         if len(conteudo_value) > 200:
@@ -440,6 +456,13 @@ def textos_edit(texto_id: int):
         except IntegrityError:
             db.session.rollback()
             flash("Erro ao atualizar texto. Verifique se o slug já está em uso.", "danger")
+    else:
+        if request.method == "POST":
+            current_app.logger.debug(
+                "textos_edit form validation failed - errors=%s, conteudo_data=%r",
+                form.errors,
+                form.conteudo.data,
+            )
     return render_template("admin/textos/form.html", form=form, texto=texto)
 
 
