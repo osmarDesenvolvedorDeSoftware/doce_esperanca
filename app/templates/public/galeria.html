@@ -3,30 +3,102 @@
 {% block title %}Galeria - Doce Esperança{% endblock %}
 
 {% block content %}
-  <section>
-    <h2>{{ texto_galeria.titulo or content_placeholder }}</h2>
-    {% if texto_galeria and texto_galeria.conteudo %}
-      {{ texto_galeria.conteudo | safe }}
-    {% else %}
-      <p>{{ content_placeholder }}</p>
-    {% endif %}
-  </section>
+  <div class="container py-5">
+    <section class="mb-5 text-center">
+      <h2 class="mb-3">{{ texto_galeria.titulo or content_placeholder }}</h2>
+      {% if texto_galeria and texto_galeria.conteudo %}
+        <div class="mx-auto" style="max-width: 720px;">
+          {{ texto_galeria.conteudo | safe }}
+        </div>
+      {% else %}
+        <p class="mx-auto" style="max-width: 720px;">{{ content_placeholder }}</p>
+      {% endif %}
+    </section>
 
-  <div class="galeria">
-    {% for item in itens %}
-      <figure>
-        <img src="{{ static_url(item.imagem_path) }}" alt="{{ item.titulo }}">
-        <figcaption>
-          <h3>{{ item.titulo }}</h3>
-          {% if item.descricao %}
-            <p>{{ item.descricao }}</p>
-          {% endif %}
-        </figcaption>
-      </figure>
+    {% if itens %}
+      <div class="row g-3">
+        {% for item in itens %}
+          <div class="col-6 col-md-3">
+            <figure class="h-100 d-flex flex-column align-items-center text-center">
+              <a
+                href="#"
+                class="d-block w-100 gallery-trigger text-decoration-none"
+                data-bs-toggle="modal"
+                data-bs-target="#galleryModal"
+                data-gallery-src="{{ static_url(item.imagem_path) }}"
+                data-gallery-alt="{{ item.titulo }}"
+                data-gallery-title="{{ item.titulo }}"
+                data-gallery-description="{{ item.descricao | default('', true) | striptags | e }}"
+              >
+                <div class="ratio ratio-1x1 overflow-hidden rounded shadow">
+                  <img
+                    src="{{ static_url(item.imagem_path) }}"
+                    alt="{{ item.titulo }}"
+                    class="w-100 h-100 object-fit-cover"
+                  >
+                </div>
+              </a>
+              <figcaption class="mt-3 w-100">
+                <h3 class="h6 mb-1">{{ item.titulo }}</h3>
+                {% if item.descricao %}
+                  <p class="small text-muted mb-0">{{ item.descricao }}</p>
+                {% endif %}
+              </figcaption>
+            </figure>
+          </div>
+        {% endfor %}
+      </div>
     {% else %}
-      <p class="texto-placeholder">
+      <p class="texto-placeholder text-center">
         {{ (galeria_placeholder.conteudo if galeria_placeholder and galeria_placeholder.conteudo else content_placeholder) | safe }}
       </p>
-    {% endfor %}
+    {% endif %}
   </div>
+
+  <div class="modal fade" id="galleryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"></h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          <img id="galleryModalImage" src="" alt="" class="img-fluid rounded mb-3">
+          <p id="galleryModalDescription" class="mb-0 text-muted d-none"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var galleryModal = document.getElementById('galleryModal');
+      if (!galleryModal) {
+        return;
+      }
+
+      galleryModal.addEventListener('show.bs.modal', function (event) {
+        var trigger = event.relatedTarget;
+        if (!trigger) {
+          return;
+        }
+
+        var modalTitle = galleryModal.querySelector('.modal-title');
+        var modalImage = galleryModal.querySelector('#galleryModalImage');
+        var modalDescription = galleryModal.querySelector('#galleryModalDescription');
+
+        var title = trigger.getAttribute('data-gallery-title') || '';
+        var description = trigger.getAttribute('data-gallery-description') || '';
+        var src = trigger.getAttribute('data-gallery-src') || '';
+        var alt = trigger.getAttribute('data-gallery-alt') || title;
+
+        modalTitle.textContent = title;
+        modalImage.src = src;
+        modalImage.alt = alt;
+
+        modalDescription.textContent = description;
+        modalDescription.classList.toggle('d-none', description.trim() === '');
+      });
+    });
+  </script>
 {% endblock %}
