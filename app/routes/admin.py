@@ -369,6 +369,28 @@ def textos_edit(texto_id: int):
     elif section_info:
         form.slug.data = texto.slug
     if form.validate_on_submit():
+        conteudo_value = form.conteudo.data or ""
+        conteudo_preview = conteudo_value[:200]
+        if len(conteudo_value) > 200:
+            conteudo_preview += "..."
+
+        planned_slug = form.slug.data if section_info is None else texto.slug
+        planned_summary = {
+            "id": texto.id,
+            "slug": planned_slug,
+            "titulo": form.titulo.data,
+            "resumo": form.resumo.data,
+            "imagem_path": texto.imagem_path,
+            "conteudo_preview": conteudo_preview,
+        }
+
+        current_app.logger.debug(
+            "textos_edit before assignment - request_form=%s, conteudo_preview=%r, updated_texto=%s",
+            request.form.to_dict(flat=False),
+            conteudo_preview,
+            planned_summary,
+        )
+
         texto.titulo = form.titulo.data
         if section_info is None:
             texto.slug = form.slug.data
@@ -389,6 +411,27 @@ def textos_edit(texto_id: int):
                 return render_template("admin/textos/form.html", form=form, texto=texto)
             _delete_file(texto.imagem_path)
             texto.imagem_path = new_path
+
+        updated_conteudo = texto.conteudo or ""
+        updated_preview = updated_conteudo[:200]
+        if len(updated_conteudo) > 200:
+            updated_preview += "..."
+
+        updated_summary = {
+            "id": texto.id,
+            "slug": texto.slug,
+            "titulo": texto.titulo,
+            "resumo": texto.resumo,
+            "imagem_path": texto.imagem_path,
+            "conteudo_preview": updated_preview,
+        }
+
+        current_app.logger.debug(
+            "textos_edit before commit - request_form=%s, conteudo_preview=%r, updated_texto=%s",
+            request.form.to_dict(flat=False),
+            updated_preview,
+            updated_summary,
+        )
 
         try:
             db.session.commit()
