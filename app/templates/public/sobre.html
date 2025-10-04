@@ -2,27 +2,40 @@
 
 {% block title %}Sobre - Doce Esperança{% endblock %}
 
-{% block header_image %}
-  {% set imagem_sobre = texto_sobre.imagem_path if texto_sobre else 'img/sobre.jpg' %}
-  <img src="{{ static_url(imagem_sobre) }}" alt="{{ texto_sobre.titulo or content_placeholder }}">
-{% endblock %}
+{% block header_image %}{% endblock %}
 
 {% block content %}
-  <section>
-    <h2>{{ texto_sobre.titulo or content_placeholder }}</h2>
-    {% if texto_sobre and texto_sobre.conteudo %}
-      {{ texto_sobre.conteudo | safe }}
-    {% else %}
-      <p>{{ content_placeholder }}</p>
-    {% endif %}
-  </section>
+  <section class="container py-5">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-6 text-center">
+        {% set imagem_sobre = texto_sobre.imagem_path if texto_sobre else 'img/sobre.jpg' %}
+        <img
+          src="{{ static_url(imagem_sobre) }}"
+          alt="{{ texto_sobre.titulo or content_placeholder }}"
+          class="img-fluid rounded shadow"
+        >
+      </div>
+      <div class="col-lg-6">
+        <h2 class="fw-bold mb-4">{{ texto_sobre.titulo or content_placeholder }}</h2>
+        <div class="fs-5">
+          {% if texto_sobre and texto_sobre.conteudo %}
+            {{ texto_sobre.conteudo | safe }}
+          {% else %}
+            <p class="lead mb-4">{{ content_placeholder }}</p>
+          {% endif %}
+        </div>
 
-  <section>
-    <h3>{{ texto_missao.titulo or content_placeholder }}</h3>
-    {% if texto_missao and texto_missao.conteudo %}
-      {{ texto_missao.conteudo | safe }}
-    {% else %}
-      <p>{{ content_placeholder }}</p>
-    {% endif %}
+        <div class="mt-4">
+          <h3 class="h4 fw-semibold mb-3">{{ texto_missao.titulo or content_placeholder }}</h3>
+          <blockquote class="blockquote border-start border-3 ps-3">
+            {% if texto_missao and texto_missao.conteudo %}
+              <div class="lead mb-0">{{ texto_missao.conteudo | safe }}</div>
+            {% else %}
+              <p class="lead mb-0">{{ content_placeholder }}</p>
+            {% endif %}
+          </blockquote>
+        </div>
+      </div>
+    </div>
   </section>
 {% endblock %}
