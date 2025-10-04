@@ -83,9 +83,9 @@
         ('Galeria', 'bi-images', 'admin.galeria_list', 'admin.galeria'),
         ('Transparência', 'bi-file-earmark-text', 'admin.transparencia_list', 'admin.transparencia')
       ] %}
-      {% if current_app.view_functions.get('admin.settings') %}
+      {% if has_endpoint('admin.settings') %}
         {% set nav_items = nav_items + [('Configurações', 'bi-gear-fill', 'admin.settings', 'admin.settings')] %}
-      {% elif current_app.view_functions.get('admin.configuracoes') %}
+      {% elif has_endpoint('admin.configuracoes') %}
         {% set nav_items = nav_items + [('Configurações', 'bi-gear-fill', 'admin.configuracoes', 'admin.configuracoes')] %}
       {% endif %}
       <div class="sidebar-nav">
