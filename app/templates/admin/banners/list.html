@@ -6,40 +6,56 @@
     <a class="btn btn-primary" href="{{ url_for('admin.banners_create') }}">Novo banner</a>
   </div>
   <p class="text-muted">Envie imagens no tamanho 1200x400 px para destacar campanhas e mensagens na página inicial.</p>
-  <div class="card shadow-sm">
-    <div class="card-body p-0">
-      <div class="table-responsive">
-        <table class="table table-hover mb-0">
-          <thead class="table-light">
-            <tr>
-              <th>Título</th>
-              <th>Ordem</th>
-              <th>Atualizado em</th>
-              <th class="text-end">Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for banner in banners %}
-              <tr>
-                <td>{{ banner.titulo }}</td>
-                <td>{{ banner.ordem }}</td>
-                <td>{{ banner.updated_at.strftime('%d/%m/%Y %H:%M') if banner.updated_at else '-' }}</td>
-                <td class="text-end">
-                  <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('admin.banners_edit', banner_id=banner.id) }}">Editar</a>
-                  <form class="d-inline" method="post" action="{{ url_for('admin.banners_delete', banner_id=banner.id) }}" onsubmit="return confirm('Deseja realmente excluir este banner?');">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button class="btn btn-sm btn-outline-danger" type="submit">Excluir</button>
-                  </form>
-                </td>
-              </tr>
-            {% else %}
-              <tr>
-                <td colspan="4" class="text-center py-4">Nenhum banner cadastrado.</td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+  <div class="row g-3">
+    {% for banner in banners %}
+      <div class="col-sm-6 col-md-4 col-xl-3">
+        <div class="card h-100 shadow-sm">
+          {% if banner.imagem_path %}
+            <img
+              class="card-img-top"
+              style="height:200px;object-fit:cover;"
+              src="{{ url_for('admin.send_upload', filename=banner.imagem_path) }}"
+              alt="{{ banner.titulo }}"
+            >
+          {% endif %}
+          <div class="card-body">
+            <h2 class="card-title h5 mb-2">{{ banner.titulo }}</h2>
+            <div class="text-muted small">
+              <div>Ordem: {{ banner.ordem }}</div>
+              <div>
+                Atualizado em:
+                {{ banner.updated_at.strftime('%d/%m/%Y %H:%M') if banner.updated_at else '-' }}
+              </div>
+            </div>
+            {% if banner.descricao %}
+              <p class="text-body-secondary small mb-0 mt-3">{{ banner.descricao }}</p>
+            {% endif %}
+          </div>
+          <div class="card-footer">
+            <div class="d-flex gap-2">
+              <a class="btn btn-warning btn-sm d-flex align-items-center gap-1" href="{{ url_for('admin.banners_edit', banner_id=banner.id) }}">
+                <i class="bi bi-pencil-square"></i>
+                <span>Editar</span>
+              </a>
+              <form method="post" action="{{ url_for('admin.banners_delete', banner_id=banner.id) }}" onsubmit="return confirm('Deseja realmente excluir este banner?');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-danger btn-sm d-flex align-items-center gap-1" type="submit">
+                  <i class="bi bi-trash"></i>
+                  <span>Excluir</span>
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+    {% else %}
+      <div class="col-12">
+        <div class="card border-0 bg-light">
+          <div class="card-body text-center py-5 text-muted">
+            Nenhum banner cadastrado.
+          </div>
+        </div>
+      </div>
+    {% endfor %}
   </div>
 {% endblock %}
