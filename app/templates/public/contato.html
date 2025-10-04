@@ -3,31 +3,133 @@
 {% block title %}Contato - Doce Esperança{% endblock %}
 
 {% block content %}
-  <section class="contato">
-    <h2>{{ texto_contato.titulo or content_placeholder }}</h2>
-    <div class="contato-info">
-      {% if texto_contato and texto_contato.conteudo %}
-        {{ texto_contato.conteudo | safe }}
-      {% else %}
-        <p class="texto-placeholder">{{ content_placeholder }}</p>
-      {% endif %}
+  <div class="container py-5">
+    <div class="row g-5 align-items-start">
+      <div class="col-12 col-lg-5">
+        <div class="d-flex flex-column gap-4">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4">
+              <div class="d-flex align-items-center gap-3 mb-4">
+                <span class="text-primary fs-2"><i class="bi bi-chat-dots-fill" aria-hidden="true"></i></span>
+                <h1 class="h3 fw-bold mb-0">{{ texto_contato.titulo or content_placeholder }}</h1>
+              </div>
+              {% if contact_description %}
+                <div class="text-body-secondary mb-4">
+                  {{ contact_description }}
+                </div>
+              {% elif texto_contato and texto_contato.conteudo %}
+                <div class="text-body-secondary mb-4">
+                  {{ texto_contato.conteudo | safe }}
+                </div>
+              {% else %}
+                <p class="text-body-secondary mb-4">{{ content_placeholder }}</p>
+              {% endif %}
+
+              {% set phone = contact_channels.get('phone') %}
+              {% set whatsapp = contact_channels.get('whatsapp') %}
+              {% set email_channel = contact_channels.get('email') %}
+              {% if phone or whatsapp or email_channel %}
+                <ul class="list-unstyled mb-0 d-flex flex-column gap-3">
+                  {% if phone %}
+                    <li class="d-flex align-items-start gap-3">
+                      <span class="text-primary fs-4"><i class="bi bi-telephone-fill" aria-hidden="true"></i></span>
+                      <div>
+                        <span class="text-uppercase small text-muted fw-semibold d-block">Telefone</span>
+                        <a class="fw-semibold link-underline link-underline-opacity-0" href="{{ phone.href }}">{{ phone.label }}</a>
+                      </div>
+                    </li>
+                  {% endif %}
+                  {% if whatsapp %}
+                    <li class="d-flex align-items-start gap-3">
+                      <span class="text-success fs-4"><i class="bi bi-whatsapp" aria-hidden="true"></i></span>
+                      <div>
+                        <span class="text-uppercase small text-muted fw-semibold d-block">WhatsApp</span>
+                        <a class="fw-semibold link-underline link-underline-opacity-0" href="{{ whatsapp.href }}" target="_blank" rel="noopener">{{ whatsapp.label }}</a>
+                      </div>
+                    </li>
+                  {% endif %}
+                  {% if email_channel %}
+                    <li class="d-flex align-items-start gap-3">
+                      <span class="text-danger fs-4"><i class="bi bi-envelope-fill" aria-hidden="true"></i></span>
+                      <div>
+                        <span class="text-uppercase small text-muted fw-semibold d-block">E-mail</span>
+                        <a class="fw-semibold link-underline link-underline-opacity-0" href="{{ email_channel.href }}">{{ email_channel.label }}</a>
+                      </div>
+                    </li>
+                  {% endif %}
+                </ul>
+              {% else %}
+                <div class="alert alert-info mb-0" role="alert">
+                  Adicione links de telefone, WhatsApp ou e-mail no conteúdo institucional para exibi-los aqui automaticamente.
+                </div>
+              {% endif %}
+            </div>
+          </div>
+
+          {% if map_embed %}
+            <div class="card border-0 shadow-sm overflow-hidden">
+              <div class="ratio ratio-4x3">
+                {{ map_embed }}
+              </div>
+            </div>
+          {% else %}
+            <div class="alert alert-light border shadow-sm mb-0" role="alert">
+              Incorpore o mapa do Google Maps no texto institucional de contato para mostrar a localização da ONG.
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="col-12 col-lg-7">
+        {% set form_action = contact_email and ('mailto:' ~ contact_email) or '#' %}
+        <div class="card border-0 shadow-sm">
+          <div class="card-body p-4 p-lg-5">
+            <h2 class="h4 fw-bold mb-3">Envie uma mensagem</h2>
+            <p class="text-body-secondary mb-4">Preencha o formulário e retornaremos o contato assim que possível.</p>
+            <form id="contactForm" class="needs-validation" action="{{ form_action }}" method="post" novalidate>
+              <div class="mb-3">
+                <label class="form-label" for="nome">Nome</label>
+                <input class="form-control" id="nome" name="nome" type="text" placeholder="Como devemos te chamar?" required>
+                <div class="invalid-feedback">Informe seu nome completo.</div>
+              </div>
+              <div class="mb-3">
+                <label class="form-label" for="email">E-mail</label>
+                <input class="form-control" id="email" name="email" type="email" placeholder="seuemail@exemplo.com" required>
+                <div class="invalid-feedback">Informe um endereço de e-mail válido.</div>
+              </div>
+              <div class="mb-4">
+                <label class="form-label" for="mensagem">Mensagem</label>
+                <textarea class="form-control" id="mensagem" name="mensagem" rows="6" placeholder="Como podemos ajudar?" required></textarea>
+                <div class="invalid-feedback">Escreva uma mensagem para enviarmos à equipe.</div>
+              </div>
+              <div class="d-flex flex-column flex-md-row align-items-md-center gap-3">
+                <button class="btn btn-primary px-4" type="submit"{% if not contact_email %} disabled{% endif %}>Enviar mensagem</button>
+                <small class="text-body-secondary">Utilizamos seus dados apenas para retornar o contato.</small>
+              </div>
+            </form>
+            {% if not contact_email %}
+              <div class="alert alert-warning mt-4 mb-0" role="alert">
+                Informe um e-mail de contato no painel administrativo para habilitar o envio automático do formulário.
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
     </div>
+  </div>
 
-    {% set form_action = contact_email and ('mailto:' ~ contact_email) or '#' %}
-    <form action="{{ form_action }}" method="post">
-      <label for="nome">Nome</label>
-      <input id="nome" name="nome" type="text" required>
-
-      <label for="email">E-mail</label>
-      <input id="email" name="email" type="email" required>
-
-      <label for="mensagem">Mensagem</label>
-      <textarea id="mensagem" name="mensagem" rows="5" required></textarea>
-
-      <button type="submit"{% if not contact_email %} disabled{% endif %}>Enviar</button>
-    </form>
-    {% if not contact_email %}
-      <p class="texto-placeholder">Informe um e-mail de contato no painel administrativo para habilitar o envio automático do formulário.</p>
-    {% endif %}
-  </section>
+  <script>
+    (() => {
+      'use strict';
+      const form = document.getElementById('contactForm');
+      if (!form) return;
+      form.addEventListener('submit', event => {
+        if (!form.checkValidity()) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+        form.classList.add('was-validated');
+      });
+    })();
+  </script>
 {% endblock %}
