@@ -3,54 +3,191 @@
 {% block title %}Doação - Doce Esperança{% endblock %}
 
 {% block content %}
-  <section class="doacao">
-    <h2>{{ texto_doacao.titulo or content_placeholder }}</h2>
-    {% if texto_doacao and texto_doacao.conteudo %}
-      {{ texto_doacao.conteudo | safe }}
-    {% else %}
-      <p>{{ content_placeholder }}</p>
-    {% endif %}
-  </section>
+  <div class="container py-5">
+    <div class="row justify-content-center mb-5">
+      <div class="col-lg-10">
+        <div class="bg-light p-4 p-md-5 rounded-4 shadow-sm h-100">
+          <div class="d-flex flex-column flex-md-row align-items-start gap-4">
+            <div class="text-primary display-5">
+              <i class="bi bi-heart-fill" aria-hidden="true"></i>
+            </div>
+            <div>
+              <h1 class="h2 fw-bold mb-3">{{ texto_doacao.titulo or content_placeholder }}</h1>
+              {% if texto_doacao and texto_doacao.conteudo %}
+                <div class="lead mb-0">
+                  {{ texto_doacao.conteudo | safe }}
+                </div>
+              {% else %}
+                <p class="lead mb-0">{{ content_placeholder }}</p>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
-  <section>
-    <h3>Produtos artesanais</h3>
-    <div class="produtos">
-      {% for item in materiais %}
-        <article class="produto">
-          <img src="{{ static_url(item.imagem_path) }}" alt="{{ item.titulo }}">
-          <p>{{ item.titulo }}</p>
-          {% if item.descricao %}
-            <p>{{ item.descricao }}</p>
-          {% endif %}
-          <button type="button" onclick="window.location.href='{{ url_for('public.contato') }}'">Quero ajudar</button>
-        </article>
+    <section class="mb-5">
+      <h2 class="h4 text-center text-uppercase text-muted mb-4">Escolha como contribuir</h2>
+      <div class="row row-cols-1 row-cols-md-3 g-4">
+        <div class="col">
+          <div class="card h-100 shadow-sm border-0">
+            <div class="card-body d-flex flex-column text-center">
+              <div class="text-success display-6 mb-3">
+                <i class="bi bi-qr-code" aria-hidden="true"></i>
+              </div>
+              <h3 class="h5 fw-bold">Doação via PIX</h3>
+              <p class="flex-grow-1">Use o QR Code destacado abaixo ou copie a chave PIX disponibilizada pela nossa equipe.</p>
+              <a class="btn btn-success" href="#pix-qrcode">Ver QR Code</a>
+            </div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="card h-100 shadow-sm border-0">
+            <div class="card-body d-flex flex-column text-center">
+              <div class="text-primary display-6 mb-3">
+                <i class="bi bi-credit-card" aria-hidden="true"></i>
+              </div>
+              <h3 class="h5 fw-bold">Cartão de Crédito</h3>
+              <p class="flex-grow-1">Entre em contato para receber o link seguro do nosso parceiro financeiro e realizar sua contribuição.</p>
+              <a class="btn btn-primary" href="{{ url_for('public.contato') }}">Solicitar link</a>
+            </div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="card h-100 shadow-sm border-0">
+            <div class="card-body d-flex flex-column text-center">
+              <div class="text-warning display-6 mb-3">
+                <i class="bi bi-receipt" aria-hidden="true"></i>
+              </div>
+              <h3 class="h5 fw-bold">Boleto Bancário</h3>
+              <p class="flex-grow-1">Prefere boleto? Avise nossa equipe e enviaremos os dados para pagamento na data que for melhor para você.</p>
+              <a class="btn btn-outline-warning" href="{{ url_for('public.contato') }}">Falar com a equipe</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="mb-5" id="pix-qrcode">
+      {% if texto_doacao and texto_doacao.imagem_path %}
+        <div class="row justify-content-center">
+          <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+              <div class="row g-0 align-items-center">
+                <div class="col-md-6 p-4 text-center">
+                  <img
+                    src="{{ static_url(texto_doacao.imagem_path) }}"
+                    alt="QR Code para doações via PIX"
+                    class="img-fluid rounded"
+                  >
+                </div>
+                <div class="col-md-6 p-4">
+                  <h3 class="h5 fw-bold mb-3">Escaneie e doe em segundos</h3>
+                  <p>Abra o aplicativo do seu banco, escolha a opção PIX e aponte a câmera para o QR Code. Em instantes você contribui para as iniciativas da Doce Esperança.</p>
+                  <p class="mb-0 small text-muted">Se preferir, entre em contato para receber a chave PIX completa.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% else %}
+        <div class="row justify-content-center">
+          <div class="col-lg-8">
+            <div class="alert alert-info mb-0" role="alert">
+              Em breve disponibilizaremos o QR Code para doações via PIX. Enquanto isso, fale conosco para receber a chave PIX.
+            </div>
+          </div>
+        </div>
+      {% endif %}
+    </section>
+
+    <section class="mb-5">
+      <div class="d-flex align-items-center gap-3 mb-3">
+        <div class="text-secondary fs-3">
+          <i class="bi bi-basket" aria-hidden="true"></i>
+        </div>
+        <h3 class="h4 mb-0">Produtos artesanais</h3>
+      </div>
+      {% if materiais %}
+        <div class="row row-cols-1 row-cols-md-3 g-4">
+          {% for item in materiais %}
+            <div class="col">
+              <div class="card h-100 shadow-sm">
+                <img
+                  src="{{ static_url(item.imagem_path) }}"
+                  class="card-img-top"
+                  alt="{{ item.titulo }}"
+                  style="height: 220px; object-fit: cover;"
+                >
+                <div class="card-body d-flex flex-column">
+                  <h4 class="h6 fw-bold">{{ item.titulo }}</h4>
+                  {% if item.descricao %}
+                    <p class="flex-grow-1 mb-3">{{ item.descricao }}</p>
+                  {% endif %}
+                  <a class="btn btn-outline-primary mt-auto" href="{{ url_for('public.contato') }}">Quero ajudar</a>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
       {% else %}
         <p class="texto-placeholder">
           {{ (produtos_placeholder.conteudo if produtos_placeholder and produtos_placeholder.conteudo else content_placeholder) | safe }}
         </p>
-      {% endfor %}
-    </div>
-  </section>
+      {% endif %}
+    </section>
 
-  <section>
-    <h3>Transparência</h3>
-    {% if documentos %}
-      <ul>
-        {% for documento in documentos %}
-          <li>
-            <a href="{{ static_url(documento.arquivo_path) }}" target="_blank" rel="noopener">
-              {{ documento.titulo }}
-            </a>
-            {% if documento.descricao %}
-              <p>{{ documento.descricao }}</p>
-            {% endif %}
-          </li>
-        {% endfor %}
-      </ul>
-    {% else %}
-      <p class="texto-placeholder">
-        {{ (transparencia_placeholder.conteudo if transparencia_placeholder and transparencia_placeholder.conteudo else content_placeholder) | safe }}
-      </p>
-    {% endif %}
-  </section>
+    <section>
+      <div class="d-flex align-items-center gap-3 mb-3">
+        <div class="text-secondary fs-3">
+          <i class="bi bi-file-earmark-text" aria-hidden="true"></i>
+        </div>
+        <h3 class="h4 mb-0">Transparência</h3>
+      </div>
+      {% if documentos %}
+        <div class="accordion" id="transparenciaAccordion">
+          {% for documento in documentos %}
+            <div class="accordion-item">
+              <h4 class="accordion-header" id="transparenciaHeading{{ loop.index }}">
+                <button
+                  class="accordion-button{% if not loop.first %} collapsed{% endif %}"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#transparenciaCollapse{{ loop.index }}"
+                  aria-expanded="{{ 'true' if loop.first else 'false' }}"
+                  aria-controls="transparenciaCollapse{{ loop.index }}"
+                >
+                  {{ documento.titulo }}
+                </button>
+              </h4>
+              <div
+                id="transparenciaCollapse{{ loop.index }}"
+                class="accordion-collapse collapse{% if loop.first %} show{% endif %}"
+                aria-labelledby="transparenciaHeading{{ loop.index }}"
+                data-bs-parent="#transparenciaAccordion"
+              >
+                <div class="accordion-body">
+                  {% if documento.descricao %}
+                    <p>{{ documento.descricao }}</p>
+                  {% endif %}
+                  <a
+                    class="btn btn-link p-0"
+                    href="{{ static_url(documento.arquivo_path) }}"
+                    target="_blank"
+                    rel="noopener"
+                  >
+                    Acessar documento
+                  </a>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="texto-placeholder">
+          {{ (transparencia_placeholder.conteudo if transparencia_placeholder and transparencia_placeholder.conteudo else content_placeholder) | safe }}
+        </p>
+      {% endif %}
+    </section>
+  </div>
 {% endblock %}
