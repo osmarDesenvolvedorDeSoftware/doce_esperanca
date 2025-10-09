@@ -51,14 +51,36 @@
       {% if apoios %}
         <div class="row g-4">
           {% for apoio in apoios %}
+            {% set descricao = apoio.descricao or '' %}
+            {% set has_link = descricao.lower().startswith('http://') or descricao.lower().startswith('https://') %}
             <div class="col-md-4">
-              <div class="card h-100 shadow-sm">
+              <div class="card h-100 shadow-sm apoio-card">
+                {% if apoio.imagem_path %}
+                  <img
+                    src="{{ static_url(apoio.imagem_path) }}"
+                    alt="{{ apoio.titulo }}"
+                    class="card-img-top img-fluid object-fit-contain p-4 apoio-card__image"
+                    style="height: 180px;"
+                  >
+                {% else %}
+                  <div class="apoio-card__placeholder text-center text-muted d-flex align-items-center justify-content-center p-4">
+                    <span>Imagem não disponível</span>
+                  </div>
+                {% endif %}
                 <div class="card-body d-flex flex-column">
                   <h5 class="card-title">{{ apoio.titulo }}</h5>
-                  <p class="card-text">{{ apoio.descricao }}</p>
-                  <span class="btn btn-outline-secondary disabled mt-auto" tabindex="-1" role="button" aria-disabled="true">
-                    Ver detalhes
-                  </span>
+                  {% if descricao and not has_link %}
+                    <p class="card-text">{{ descricao }}</p>
+                  {% endif %}
+                  {% if has_link %}
+                    <a class="btn btn-outline-primary mt-auto" href="{{ descricao }}" target="_blank" rel="noopener">
+                      Visitar apoiador
+                    </a>
+                  {% else %}
+                    <span class="btn btn-outline-secondary disabled mt-auto" tabindex="-1" role="button" aria-disabled="true">
+                      Conheça em breve
+                    </span>
+                  {% endif %}
                 </div>
               </div>
             </div>

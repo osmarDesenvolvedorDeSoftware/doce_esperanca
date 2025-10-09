@@ -59,6 +59,15 @@ def create_app(config_class=None):
     doc_upload_folder = app.config.setdefault(
         "DOC_UPLOAD_FOLDER", os.path.join(upload_folder, "docs")
     )
+    apoio_upload_folder = app.config.setdefault(
+        "APOIO_UPLOAD_FOLDER", os.path.join(upload_folder, "apoios")
+    )
+    video_upload_folder = app.config.setdefault(
+        "VIDEO_UPLOAD_FOLDER", os.path.join(upload_folder, "videos")
+    )
+    qrcode_upload_folder = app.config.setdefault(
+        "QRCODE_UPLOAD_FOLDER", os.path.join(upload_folder, "qrcodes")
+    )
     app.config.setdefault("MAX_CONTENT_LENGTH", 16 * 1024 * 1024)  # 16 MB default
 
     for folder in (
@@ -66,6 +75,9 @@ def create_app(config_class=None):
         image_upload_folder,
         banner_upload_folder,
         doc_upload_folder,
+        apoio_upload_folder,
+        video_upload_folder,
+        qrcode_upload_folder,
     ):
         _ensure_directory(folder)
 

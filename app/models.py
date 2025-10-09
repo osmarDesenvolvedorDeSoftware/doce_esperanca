@@ -92,6 +92,7 @@ class Apoio(db.Model, TimestampMixin):
     id = db.Column(db.Integer, primary_key=True)
     titulo = db.Column(db.String(255), nullable=False)
     descricao = db.Column(db.Text, nullable=False)
+    imagem_path = db.Column(db.String(255))
 
     def __repr__(self) -> str:  # pragma: no cover - debug helper
         return f"<Apoio {self.titulo!r}>"
@@ -145,3 +146,15 @@ class User(db.Model, UserMixin, TimestampMixin):
         user = cls(username=username, email=email, **kwargs)
         user.set_password(password)
         return user
+
+
+class Depoimento(db.Model, TimestampMixin):
+    __tablename__ = "depoimentos"
+
+    id = db.Column(db.Integer, primary_key=True)
+    titulo = db.Column(db.String(150), nullable=False)
+    descricao = db.Column(db.Text)
+    video = db.Column(db.String(255), nullable=False)
+
+    def __repr__(self) -> str:  # pragma: no cover - debug helper
+        return f"<Depoimento {self.titulo!r}>"

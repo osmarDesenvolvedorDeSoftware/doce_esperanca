@@ -11,6 +11,7 @@
         <table class="table table-hover mb-0">
           <thead class="table-light">
             <tr>
+              <th>Logo</th>
               <th>Título</th>
               <th>Descrição</th>
               <th class="text-end">Ações</th>
@@ -19,6 +20,18 @@
           <tbody>
             {% for apoio in apoios %}
               <tr>
+                <td>
+                  {% if apoio.imagem_path %}
+                    <img
+                      src="{{ static_url(apoio.imagem_path) }}"
+                      alt="Imagem de {{ apoio.titulo }}"
+                      class="img-thumbnail"
+                      style="max-width: 96px; max-height: 64px; object-fit: contain;"
+                    >
+                  {% else %}
+                    <span class="text-muted small">Sem imagem</span>
+                  {% endif %}
+                </td>
                 <td>{{ apoio.titulo }}</td>
                 <td class="text-break">{{ apoio.descricao }}</td>
                 <td class="text-end">

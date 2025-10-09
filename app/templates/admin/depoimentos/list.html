@@ -1,0 +1,49 @@
+{% extends 'admin/base_admin.html' %}
+{% block title %}Depoimentos - Painel Administrativo{% endblock %}
+{% block content %}
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">Depoimentos</h1>
+    <a class="btn btn-primary" href="{{ url_for('admin.depoimentos_create') }}">Novo depoimento</a>
+  </div>
+  <div class="card shadow-sm">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0 align-middle">
+          <thead class="table-light">
+            <tr>
+              <th style="width: 180px;">Prévia</th>
+              <th>Título</th>
+              <th>Descrição</th>
+              <th class="text-end">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for depoimento in depoimentos %}
+              <tr>
+                <td>
+                  <video class="rounded border" preload="metadata" controls style="max-width: 160px; max-height: 120px;">
+                    <source src="{{ static_url(depoimento.video) }}">
+                    Seu navegador não suporta a reprodução de vídeo.
+                  </video>
+                </td>
+                <td>{{ depoimento.titulo }}</td>
+                <td class="text-break">{{ depoimento.descricao or '-' }}</td>
+                <td class="text-end">
+                  <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('admin.depoimentos_edit', depoimento_id=depoimento.id) }}">Editar</a>
+                  <form class="d-inline" method="post" action="{{ url_for('admin.depoimentos_delete', depoimento_id=depoimento.id) }}" onsubmit="return confirm('Deseja realmente excluir este depoimento?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="btn btn-sm btn-outline-danger" type="submit">Excluir</button>
+                  </form>
+                </td>
+              </tr>
+            {% else %}
+              <tr>
+                <td colspan="4" class="text-center py-4">Nenhum depoimento cadastrado.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+{% endblock %}

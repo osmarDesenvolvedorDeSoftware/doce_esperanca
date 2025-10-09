@@ -19,6 +19,7 @@ from wtforms.validators import DataRequired, Length, Optional as OptionalValidat
 
 ALLOWED_IMAGE_EXTENSIONS: Iterable[str] = ("jpg", "jpeg", "png")
 ALLOWED_DOC_EXTENSIONS: Iterable[str] = ("pdf",)
+ALLOWED_VIDEO_EXTENSIONS: Iterable[str] = ("mp4", "mov", "avi")
 
 
 class FileSize:
@@ -144,6 +145,14 @@ class TransparenciaForm(FlaskForm):
 class ApoioForm(FlaskForm):
     titulo = StringField("Título", validators=[DataRequired(), Length(max=255)])
     descricao = TextAreaField("Descrição", validators=[DataRequired()])
+    imagem = FileField(
+        "Imagem",
+        validators=[
+            OptionalValidator(),
+            FileAllowed(ALLOWED_IMAGE_EXTENSIONS, "Somente imagens são permitidas."),
+            FileSize(),
+        ],
+    )
     submit = SubmitField("Salvar")
 
 
@@ -158,6 +167,20 @@ class BannerForm(FlaskForm):
         validators=[
             OptionalValidator(),
             FileAllowed(ALLOWED_IMAGE_EXTENSIONS, "Somente imagens são permitidas."),
+            FileSize(),
+        ],
+    )
+    submit = SubmitField("Salvar")
+
+
+class DepoimentoForm(FlaskForm):
+    titulo = StringField("Título", validators=[DataRequired(), Length(max=150)])
+    descricao = TextAreaField("Descrição", validators=[OptionalValidator()])
+    video = FileField(
+        "Vídeo",
+        validators=[
+            OptionalValidator(),
+            FileAllowed(ALLOWED_VIDEO_EXTENSIONS, "Somente vídeos são permitidos."),
             FileSize(),
         ],
     )

@@ -1,9 +1,9 @@
 {% extends 'admin/base_admin.html' %}
-{% block title %}{{ 'Editar' if apoio else 'Criar' }} Apoio - Painel Administrativo{% endblock %}
+{% block title %}{{ 'Editar' if depoimento else 'Criar' }} Depoimento - Painel Administrativo{% endblock %}
 {% block content %}
   <div class="card shadow-lg">
     <div class="card-header bg-primary text-white">
-      <h1 class="h4 mb-0">{{ 'Editar' if apoio else 'Novo' }} apoio</h1>
+      <h1 class="h4 mb-0">{{ 'Editar' if depoimento else 'Novo' }} depoimento</h1>
     </div>
     <div class="card-body">
       <form method="post" enctype="multipart/form-data">
@@ -23,27 +23,27 @@
           {% endfor %}
         </div>
         <div class="mb-3">
-          {{ form.imagem.label(class="form-label") }}
-          {% if apoio and apoio.imagem_path %}
+          {{ form.video.label(class="form-label") }}
+          {% if depoimento and depoimento.video %}
             <div class="mb-2">
-              <img
-                src="{{ static_url(apoio.imagem_path) }}"
-                alt="Imagem do apoio {{ apoio.titulo }}"
-                class="img-fluid rounded border"
-                style="max-width: 220px; object-fit: contain;"
-              >
+              <video class="w-100 rounded border" controls preload="metadata" style="max-height: 240px;">
+                <source src="{{ static_url(depoimento.video) }}">
+                Seu navegador não suporta a reprodução de vídeo.
+              </video>
             </div>
           {% endif %}
-          {{ form.imagem(class="form-control", accept="image/*") }}
-          {% if form.imagem.description %}
-            <div class="form-text">{{ form.imagem.description }}</div>
+          {{ form.video(class="form-control", accept="video/*") }}
+          {% if not depoimento %}
+            <div class="form-text">Envie um arquivo de vídeo nos formatos MP4, MOV ou AVI.</div>
+          {% else %}
+            <div class="form-text">Envie um novo arquivo caso deseje substituir o vídeo atual.</div>
           {% endif %}
-          {% for error in form.imagem.errors %}
+          {% for error in form.video.errors %}
             <div class="text-danger small">{{ error }}</div>
           {% endfor %}
         </div>
         <div class="d-flex justify-content-end gap-2 mt-4">
-          <a class="btn btn-outline-secondary" href="{{ url_for('admin.apoios_list') }}">Cancelar</a>
+          <a class="btn btn-outline-secondary" href="{{ url_for('admin.depoimentos_list') }}">Cancelar</a>
           {{ form.submit(class="d-none") }}
           <button type="submit" class="btn btn-success">
             <i class="bi bi-save me-2"></i>Salvar

@@ -132,3 +132,25 @@ section.py-5 {
 .alert a:hover {
   text-decoration: underline;
 }
+
+.apoio-card__placeholder {
+  height: 180px;
+  background-color: #f1f5f9;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  font-weight: 500;
+}
+
+.apoio-card__image {
+  object-fit: contain !important;
+  background-color: #ffffff;
+}
+
+.depoimento-card video {
+  object-fit: cover;
+  border-top-left-radius: 0.75rem;
+  border-top-right-radius: 0.75rem;
+}
+
+.pix-qrcode-img {
+  max-width: 220px;
+}
