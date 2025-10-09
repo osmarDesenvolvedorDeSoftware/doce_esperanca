@@ -9,6 +9,8 @@ from flask_migrate import Migrate
 from flask_login import LoginManager
 from flask_wtf import CSRFProtect
 
+from .logging_config import configure_logging
+
 
 db = SQLAlchemy()
 migrate = Migrate()
@@ -45,6 +47,8 @@ def create_app(config_class=None):
         app.config.from_object(config_class)
     else:
         app.config.from_object(config_class)
+
+    configure_logging(app)
 
     # Ensure upload directories are configured and exist
     upload_folder = app.config.setdefault(
