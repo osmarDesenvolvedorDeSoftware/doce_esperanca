@@ -27,6 +27,7 @@ from app import db, login_manager
 from app.forms import (
     ApoioForm,
     BannerForm,
+    DepoimentoForm,
     GaleriaForm,
     LoginForm,
     ParceiroForm,
@@ -42,6 +43,7 @@ from app.content import (
 from app.models import (
     Apoio,
     Banner,
+    Depoimento,
     Galeria,
     Parceiro,
     TextoInstitucional,
@@ -127,6 +129,48 @@ def _process_image(
             if size:
                 resample = getattr(Image, "Resampling", Image).LANCZOS
                 image = ImageOps.fit(image, size, method=resample)
+
+            extension = destination.suffix.lower()
+            save_kwargs: Dict[str, object] = {}
+
+            if extension in {".jpg", ".jpeg"}:
+                image = image.convert("RGB")
+                save_kwargs.setdefault("format", "JPEG")
+                save_kwargs.setdefault("quality", 90)
+            elif extension == ".png":
+                if image.mode not in ("RGB", "RGBA", "LA", "L"):
+                    image = image.convert("RGBA")
+                save_kwargs.setdefault("format", "PNG")
+            else:
+                if image.mode not in ("RGB", "RGBA", "LA", "L"):
+                    image = image.convert("RGB")
+                save_kwargs.setdefault("format", image.format or "PNG")
+
+            image.save(destination, **save_kwargs)
+    except UnidentifiedImageError as exc:
+        raise ValueError("O arquivo enviado não é uma imagem válida.") from exc
+    finally:
+        if hasattr(stream, "seek"):
+            stream.seek(0)
+
+
+def _process_image_with_max_width(
+    field_storage,
+    destination: Path,
+    max_width: int = 800,
+) -> None:
+    stream = getattr(field_storage, "stream", field_storage)
+    if hasattr(stream, "seek"):
+        stream.seek(0)
+
+    try:
+        with Image.open(stream) as image:
+            image = ImageOps.exif_transpose(image)
+            width, height = image.size
+            if max_width and width > max_width:
+                resample = getattr(Image, "Resampling", Image).LANCZOS
+                new_height = int(height * (max_width / float(width)))
+                image = image.resize((max_width, max(new_height, 1)), resample)
 
             extension = destination.suffix.lower()
             save_kwargs: Dict[str, object] = {}
@@ -263,6 +307,7 @@ def dashboard():
         "galerias": Galeria.query.count(),
         "transparencias": Transparencia.query.count(),
         "apoios": Apoio.query.count(),
+        "depoimentos": Depoimento.query.count(),
         "banners": Banner.query.count(),
     }
     return render_template("admin/dashboard.html", stats=stats)
@@ -564,6 +609,17 @@ def apoios_create():
     form = ApoioForm()
     if form.validate_on_submit():
         apoio = Apoio(titulo=form.titulo.data, descricao=form.descricao.data)
+        if form.imagem.data:
+            try:
+                relative_path = _save_file(
+                    form.imagem.data,
+                    current_app.config["APOIO_UPLOAD_FOLDER"],
+                    processor=_apoio_image_processor,
+                )
+            except ValueError as exc:
+                form.imagem.errors.append(str(exc))
+                return render_template("admin/apoios/form.html", form=form, apoio=None)
+            apoio.imagem_path = relative_path
         db.session.add(apoio)
         db.session.commit()
         flash("Apoio criado com sucesso.", "success")
@@ -579,6 +635,18 @@ def apoios_edit(apoio_id: int):
     if form.validate_on_submit():
         apoio.titulo = form.titulo.data
         apoio.descricao = form.descricao.data
+        if form.imagem.data:
+            try:
+                relative_path = _save_file(
+                    form.imagem.data,
+                    current_app.config["APOIO_UPLOAD_FOLDER"],
+                    processor=_apoio_image_processor,
+                )
+            except ValueError as exc:
+                form.imagem.errors.append(str(exc))
+                return render_template("admin/apoios/form.html", form=form, apoio=apoio)
+            _delete_file(apoio.imagem_path)
+            apoio.imagem_path = relative_path
         db.session.commit()
         flash("Apoio atualizado com sucesso.", "success")
         return redirect(url_for("admin.apoios_list"))
@@ -589,10 +657,87 @@ def apoios_edit(apoio_id: int):
 @login_required
 def apoios_delete(apoio_id: int):
     apoio = Apoio.query.get_or_404(apoio_id)
+    _delete_file(apoio.imagem_path)
     db.session.delete(apoio)
     db.session.commit()
     flash("Apoio excluído com sucesso.", "success")
     return redirect(url_for("admin.apoios_list"))
+
+
+# ----- Depoimentos -----
+
+
+@admin_bp.route("/depoimentos")
+@login_required
+def depoimentos_list():
+    depoimentos = Depoimento.query.order_by(Depoimento.created_at.desc()).all()
+    return render_template("admin/depoimentos/list.html", depoimentos=depoimentos)
+
+
+@admin_bp.route("/depoimentos/criar", methods=["GET", "POST"])
+@login_required
+def depoimentos_create():
+    form = DepoimentoForm()
+    if form.validate_on_submit():
+        if not form.video.data:
+            form.video.errors.append("Envie um arquivo de vídeo.")
+        else:
+            try:
+                video_path = _save_file(
+                    form.video.data,
+                    current_app.config["VIDEO_UPLOAD_FOLDER"],
+                )
+            except ValueError as exc:
+                form.video.errors.append(str(exc))
+            else:
+                depoimento = Depoimento(
+                    titulo=form.titulo.data,
+                    descricao=form.descricao.data,
+                    video=video_path,
+                )
+                db.session.add(depoimento)
+                db.session.commit()
+                flash("Depoimento criado com sucesso.", "success")
+                return redirect(url_for("admin.depoimentos_list"))
+    return render_template("admin/depoimentos/form.html", form=form, depoimento=None)
+
+
+@admin_bp.route("/depoimentos/<int:depoimento_id>/editar", methods=["GET", "POST"])
+@login_required
+def depoimentos_edit(depoimento_id: int):
+    depoimento = Depoimento.query.get_or_404(depoimento_id)
+    form = DepoimentoForm(obj=depoimento)
+    if form.validate_on_submit():
+        depoimento.titulo = form.titulo.data
+        depoimento.descricao = form.descricao.data
+        if form.video.data:
+            try:
+                video_path = _save_file(
+                    form.video.data,
+                    current_app.config["VIDEO_UPLOAD_FOLDER"],
+                )
+            except ValueError as exc:
+                form.video.errors.append(str(exc))
+                return render_template(
+                    "admin/depoimentos/form.html", form=form, depoimento=depoimento
+                )
+            _delete_file(depoimento.video)
+            depoimento.video = video_path
+        db.session.commit()
+        flash("Depoimento atualizado com sucesso.", "success")
+        return redirect(url_for("admin.depoimentos_list"))
+    return render_template("admin/depoimentos/form.html", form=form, depoimento=depoimento)
+
+
+@admin_bp.route("/depoimentos/<int:depoimento_id>/excluir", methods=["POST"])
+@login_required
+def depoimentos_delete(depoimento_id: int):
+    depoimento = Depoimento.query.get_or_404(depoimento_id)
+    _delete_file(depoimento.video)
+    db.session.delete(depoimento)
+    db.session.commit()
+    flash("Depoimento excluído com sucesso.", "success")
+    return redirect(url_for("admin.depoimentos_list"))
 
 
 # ----- Banners -----
@@ -600,6 +745,10 @@ def apoios_delete(apoio_id: int):
 
 def _banner_processor(storage, path: Path) -> None:
     _process_image(storage, path, size=(1200, 400))
+
+
+def _apoio_image_processor(storage, path: Path) -> None:
+    _process_image_with_max_width(storage, path, max_width=800)
 
 
 CONTENT_IMAGE_TARGET_SIZE = (1200, 800)

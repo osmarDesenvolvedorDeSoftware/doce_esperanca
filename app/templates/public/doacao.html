@@ -69,36 +69,53 @@
     </section>
 
     <section class="mb-5" id="pix-qrcode">
-      {% if texto_doacao and texto_doacao.imagem_path %}
-        <div class="row justify-content-center">
-          <div class="col-lg-8">
-            <div class="card border-0 shadow-sm">
-              <div class="row g-0 align-items-center">
-                <div class="col-md-6 p-4 text-center">
+      <div class="row justify-content-center">
+        <div class="col-lg-8">
+          <div class="card border-0 shadow-sm">
+            <div class="row g-0 align-items-center">
+              <div class="col-md-5 p-4 text-center">
+                {% if pix_qrcode_path %}
                   <img
-                    src="{{ static_url(texto_doacao.imagem_path) }}"
+                    src="{{ static_url(pix_qrcode_path) }}"
                     alt="QR Code para doações via PIX"
-                    class="img-fluid rounded"
+                    class="img-fluid rounded pix-qrcode-img"
                   >
+                  <p class="mt-3 mb-0 fw-semibold">Escaneie o QR Code para doar via PIX</p>
+                {% else %}
+                  <div class="alert alert-info mb-0" role="status">
+                    Em breve disponibilizaremos o QR Code para doações via PIX.
+                  </div>
+                {% endif %}
+              </div>
+              <div class="col-md-7 p-4">
+                <h3 class="h5 fw-bold mb-3">Contribua usando o PIX</h3>
+                <p>Utilize o aplicativo do seu banco para ler o QR Code ou copie a chave PIX da Doce Esperança. Cada contribuição fortalece nossos projetos sociais.</p>
+                <div class="mb-3">
+                  <span class="d-block small text-muted">Chave PIX (CNPJ)</span>
+                  <strong class="d-block fs-5">{{ pix_key }}</strong>
                 </div>
-                <div class="col-md-6 p-4">
-                  <h3 class="h5 fw-bold mb-3">Escaneie e doe em segundos</h3>
-                  <p>Abra o aplicativo do seu banco, escolha a opção PIX e aponte a câmera para o QR Code. Em instantes você contribui para as iniciativas da Doce Esperança.</p>
-                  <p class="mb-0 small text-muted">Se preferir, entre em contato para receber a chave PIX completa.</p>
+                <div class="d-flex flex-column flex-sm-row align-items-stretch align-items-sm-center gap-2">
+                  <button class="btn btn-outline-primary" type="button" data-copy-pix data-copy-value="{{ pix_key }}" data-original-label="Copiar chave PIX">
+                    <i class="bi bi-clipboard-check me-2"></i>Copiar chave PIX
+                  </button>
+                  <button class="btn btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#pix-copy-code" aria-expanded="false" aria-controls="pix-copy-code">
+                    <i class="bi bi-qr-code me-2"></i>Ver código copia e cola
+                  </button>
+                </div>
+                <div id="pix-copy-code" class="collapse mt-3">
+                  <p class="small text-muted mb-2">Código PIX copia e cola:</p>
+                  <div class="bg-light border rounded p-3 text-break small">
+                    {{ pix_copy_paste }}
+                  </div>
+                  <button class="btn btn-sm btn-outline-primary mt-2" type="button" data-copy-pix data-copy-value="{{ pix_copy_paste }}" data-original-label="Copiar código PIX completo">
+                    Copiar código PIX completo
+                  </button>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      {% else %}
-        <div class="row justify-content-center">
-          <div class="col-lg-8">
-            <div class="alert alert-info mb-0" role="alert">
-              Em breve disponibilizaremos o QR Code para doações via PIX. Enquanto isso, fale conosco para receber a chave PIX.
-            </div>
-          </div>
-        </div>
-      {% endif %}
+      </div>
     </section>
 
     <section class="mb-5">
@@ -190,4 +207,37 @@
       {% endif %}
     </section>
   </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const copyButtons = document.querySelectorAll('[data-copy-pix]');
+      copyButtons.forEach(function (button) {
+        const originalHTML = button.innerHTML;
+        const originalLabel = button.getAttribute('data-original-label') || button.textContent.trim();
+        button.addEventListener('click', function () {
+          const value = button.getAttribute('data-copy-value');
+          if (!value) {
+            return;
+          }
+          if (!navigator.clipboard || !navigator.clipboard.writeText) {
+            alert('Copie manualmente: ' + value);
+            return;
+          }
+          navigator.clipboard.writeText(value)
+            .then(function () {
+              button.classList.remove('btn-outline-primary');
+              button.classList.add('btn-success');
+              button.innerHTML = '<i class="bi bi-clipboard-check-fill me-2"></i>Copiado!';
+              setTimeout(function () {
+                button.classList.remove('btn-success');
+                button.classList.add('btn-outline-primary');
+                button.innerHTML = originalHTML || originalLabel;
+              }, 2000);
+            })
+            .catch(function () {
+              alert('Não foi possível copiar automaticamente. Copie manualmente: ' + value);
+            });
+        });
+      });
+    });
+  </script>
 {% endblock %}

@@ -1,16 +1,68 @@
 from __future__ import annotations
 
 import re
+from pathlib import Path
 from typing import Dict, Optional
+
+import qrcode
+from qrcode.constants import ERROR_CORRECT_M
 
 from flask import Blueprint, current_app, render_template
 from markupsafe import Markup
 
 from app.content import CONTENT_PLACEHOLDER, INSTITUTIONAL_SECTION_MAP
-from app.models import Apoio, Banner, Galeria, Parceiro, TextoInstitucional, Transparencia, Voluntario
+from app.models import (
+    Apoio,
+    Banner,
+    Depoimento,
+    Galeria,
+    Parceiro,
+    TextoInstitucional,
+    Transparencia,
+    Voluntario,
+)
 
 
 public_bp = Blueprint("public", __name__)
+
+
+PIX_KEY = "15657616000107"
+PIX_COPY_AND_PASTE = (
+    "00020126360014BR.GOV.BCB.PIX0114156576160001075204000053039865802BR5901N6001C62170513DoacaoViaSite630474C1"
+)
+PIX_QRCODE_FILENAME = "pix.png"
+
+
+def _ensure_pix_qrcode() -> Optional[str]:
+    """Generate the PIX QR code file if it doesn't exist and return its relative path."""
+
+    static_root = Path(current_app.static_folder)
+    qrcode_folder = Path(current_app.config.get("QRCODE_UPLOAD_FOLDER", static_root / "uploads" / "qrcodes"))
+    qrcode_folder.mkdir(parents=True, exist_ok=True)
+    target_path = qrcode_folder / PIX_QRCODE_FILENAME
+
+    if not target_path.exists():
+        qr = qrcode.QRCode(error_correction=ERROR_CORRECT_M, box_size=10, border=4)
+        qr.add_data(PIX_COPY_AND_PASTE)
+        qr.make(fit=True)
+        image = qr.make_image(fill_color="black", back_color="white")
+        try:
+            image.save(target_path)
+        except OSError:
+            current_app.logger.exception("Falha ao salvar o QR Code PIX em %s", target_path)
+            return None
+
+    try:
+        relative_path = target_path.relative_to(static_root)
+    except ValueError:
+        current_app.logger.warning(
+            "O diretório de QR Codes (%s) não está dentro da pasta estática (%s)",
+            qrcode_folder,
+            static_root,
+        )
+        relative_path = target_path
+
+    return str(relative_path).replace("\\", "/")
 
 
 @public_bp.context_processor
@@ -147,6 +199,26 @@ def galeria() -> str:
     )
 
 
+@public_bp.route("/depoimentos/")
+def depoimentos() -> str:
+    textos = _collect_textos("depoimentos")
+    requested_slugs = ["depoimentos"]
+    current_app.logger.debug(
+        "View 'depoimentos' requested institucional slugs: %s", requested_slugs
+    )
+    for slug in requested_slugs:
+        _log_texto_details(slug, textos.get(slug))
+    depoimentos_itens = Depoimento.query.order_by(
+        Depoimento.created_at.desc(), Depoimento.id.desc()
+    ).all()
+    return render_template(
+        "public/depoimentos.html",
+        texto_depoimentos=textos.get("depoimentos"),
+        depoimentos=depoimentos_itens,
+        active_page="depoimentos",
+    )
+
+
 @public_bp.route("/doacao/")
 def doacao() -> str:
     textos = _collect_textos(
@@ -168,6 +240,7 @@ def doacao() -> str:
     documentos = (
         Transparencia.query.order_by(Transparencia.publicado_em.desc(), Transparencia.id.desc()).all()
     )
+    pix_qrcode_path = _ensure_pix_qrcode()
     return render_template(
         "public/doacao.html",
         texto_doacao=textos.get("doacao"),
@@ -175,6 +248,9 @@ def doacao() -> str:
         documentos=documentos,
         produtos_placeholder=textos.get("placeholder_produtos"),
         transparencia_placeholder=textos.get("placeholder_transparencia"),
+        pix_qrcode_path=pix_qrcode_path,
+        pix_key=PIX_KEY,
+        pix_copy_paste=PIX_COPY_AND_PASTE,
         active_page="doacao",
     )
 

@@ -4,7 +4,7 @@ import click
 from flask.cli import FlaskGroup
 
 from app import create_app, db
-from app.models import User
+from app.models import Apoio, Depoimento, User
 from config import DevConfig, ProdConfig
 
 
@@ -30,7 +30,7 @@ app = _create_cli_app()
 
 @app.shell_context_processor
 def make_shell_context():
-    return {"db": db, "app": app, "User": User}
+    return {"db": db, "app": app, "User": User, "Apoio": Apoio, "Depoimento": Depoimento}
 
 
 cli = FlaskGroup(create_app=_create_cli_app)

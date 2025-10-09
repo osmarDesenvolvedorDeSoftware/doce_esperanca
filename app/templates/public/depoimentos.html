@@ -1,0 +1,48 @@
+{% extends "public/base.html" %}
+
+{% block title %}Depoimentos - Doce Esperança{% endblock %}
+
+{% block content %}
+  <div class="container py-5">
+    <div class="row justify-content-center mb-5">
+      <div class="col-lg-10 text-center">
+        <h1 class="fw-bold mb-3">{{ (texto_depoimentos.titulo if texto_depoimentos and texto_depoimentos.titulo else 'Depoimentos') }}</h1>
+        {% if texto_depoimentos and texto_depoimentos.conteudo %}
+          <div class="lead">{{ texto_depoimentos.conteudo | safe }}</div>
+        {% else %}
+          <p class="lead text-muted">Conheça histórias reais de pessoas impactadas pelos projetos da Doce Esperança.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if depoimentos %}
+      <div class="row row-cols-1 row-cols-md-2 g-4">
+        {% for depoimento in depoimentos %}
+          <div class="col">
+            <div class="card h-100 shadow-sm border-0 depoimento-card">
+              <div class="ratio ratio-16x9 bg-dark-subtle">
+                <video class="w-100 h-100 rounded-top" controls preload="metadata">
+                  <source src="{{ static_url(depoimento.video) }}">
+                  Seu navegador não suporta a reprodução de vídeo.
+                </video>
+              </div>
+              <div class="card-body d-flex flex-column">
+                <h2 class="h5 fw-bold">{{ depoimento.titulo }}</h2>
+                {% if depoimento.descricao %}
+                  <p class="text-muted">{{ depoimento.descricao }}</p>
+                {% endif %}
+                {% if depoimento.created_at %}
+                  <div class="mt-auto small text-muted">Publicado em {{ depoimento.created_at.strftime('%d/%m/%Y') }}</div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="alert alert-info shadow-sm" role="status">
+        Em breve compartilharemos depoimentos emocionantes de quem transforma vidas conosco.
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}
