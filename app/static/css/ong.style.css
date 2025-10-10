@@ -155,3 +155,82 @@ section.py-5 {
 .pix-qrcode-img {
   max-width: 220px;
 }
+
+.loja-hero {
+  background: linear-gradient(135deg, rgba(29, 78, 137, 0.1), rgba(66, 170, 255, 0.12));
+  border-radius: 1.5rem;
+  padding: 3rem 2rem;
+}
+
+.store-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.store-card {
+  border-radius: 1rem;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.store-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 1.5rem 3rem rgba(15, 23, 42, 0.15);
+}
+
+.store-card__media {
+  background-color: #f1f5f9;
+}
+
+.store-card__image {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+}
+
+.store-card__placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 220px;
+  color: #94a3b8;
+  font-size: 2rem;
+}
+
+.store-card__video {
+  border-radius: 0.75rem;
+  background-color: #000;
+}
+
+.store-card__price {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1d4e89;
+}
+
+.store-card__frete strong {
+  color: #0d6efd;
+}
+
+.btn-store {
+  background-color: #42aaff;
+  border-color: #42aaff;
+  color: #ffffff;
+  font-weight: 600;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.btn-store:hover,
+.btn-store:focus {
+  background-color: #1f7edb;
+  border-color: #1f7edb;
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 0.75rem 1.5rem rgba(31, 126, 219, 0.25);
+}
+
+.btn-store:focus-visible {
+  outline: 3px solid rgba(66, 170, 255, 0.35);
+  outline-offset: 2px;
+}

@@ -106,42 +106,6 @@
       </div>
     </section>
 
-    <section class="mb-5">
-      <div class="d-flex align-items-center gap-3 mb-3">
-        <div class="text-secondary fs-3">
-          <i class="bi bi-basket" aria-hidden="true"></i>
-        </div>
-        <h3 class="h4 mb-0">Produtos artesanais</h3>
-      </div>
-      {% if materiais %}
-        <div class="row row-cols-1 row-cols-md-3 g-4">
-          {% for item in materiais %}
-            <div class="col">
-              <div class="card h-100 shadow-sm">
-                <img
-                  src="{{ static_url(item.imagem_path) }}"
-                  class="card-img-top"
-                  alt="{{ item.titulo }}"
-                  style="height: 220px; object-fit: cover;"
-                >
-                <div class="card-body d-flex flex-column">
-                  <h4 class="h6 fw-bold">{{ item.titulo }}</h4>
-                  {% if item.descricao %}
-                    <p class="flex-grow-1 mb-3">{{ item.descricao }}</p>
-                  {% endif %}
-                  <a class="btn btn-outline-primary mt-auto" href="{{ url_for('public.contato') }}">Quero ajudar</a>
-                </div>
-              </div>
-            </div>
-          {% endfor %}
-        </div>
-      {% else %}
-        <p class="texto-placeholder">
-          {{ (produtos_placeholder.conteudo if produtos_placeholder and produtos_placeholder.conteudo else content_placeholder) | safe }}
-        </p>
-      {% endif %}
-    </section>
-
     <section>
       <div class="d-flex align-items-center gap-3 mb-3">
         <div class="text-secondary fs-3">

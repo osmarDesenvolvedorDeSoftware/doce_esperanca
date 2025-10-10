@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 import qrcode
 from qrcode.constants import ERROR_CORRECT_M
@@ -21,6 +21,7 @@ from app.models import (
     Transparencia,
     Voluntario,
 )
+from app.services.store import load_products as load_store_products
 
 
 public_bp = Blueprint("public", __name__)
@@ -63,6 +64,11 @@ def _ensure_pix_qrcode() -> Optional[str]:
         relative_path = target_path
 
     return str(relative_path).replace("\\", "/")
+
+
+def _format_currency(value: float) -> str:
+    formatted = f"R$ {value:,.2f}"
+    return formatted.replace(",", "_").replace(".", ",").replace("_", ".")
 
 
 @public_bp.context_processor
@@ -223,12 +229,10 @@ def depoimentos() -> str:
 def doacao() -> str:
     textos = _collect_textos(
         "doacao",
-        "placeholder_produtos",
         "placeholder_transparencia",
     )
     requested_slugs = [
         "doacao",
-        "placeholder_produtos",
         "placeholder_transparencia",
     ]
     current_app.logger.debug(
@@ -236,7 +240,6 @@ def doacao() -> str:
     )
     for slug in requested_slugs:
         _log_texto_details(slug, textos.get(slug))
-    materiais = Galeria.query.order_by(Galeria.publicado_em.desc(), Galeria.id.desc()).all()
     documentos = (
         Transparencia.query.order_by(Transparencia.publicado_em.desc(), Transparencia.id.desc()).all()
     )
@@ -244,14 +247,46 @@ def doacao() -> str:
     return render_template(
         "public/doacao.html",
         texto_doacao=textos.get("doacao"),
-        materiais=materiais,
         documentos=documentos,
-        produtos_placeholder=textos.get("placeholder_produtos"),
         transparencia_placeholder=textos.get("placeholder_transparencia"),
         pix_qrcode_path=pix_qrcode_path,
         pix_key=PIX_KEY,
         pix_copy_paste=PIX_COPY_AND_PASTE,
         active_page="doacao",
+    )
+
+
+@public_bp.route("/loja/")
+def loja() -> str:
+    produtos_raw = sorted(
+        load_store_products(),
+        key=lambda item: item.get("created_at") or "",
+        reverse=True,
+    )
+    produtos: List[Dict[str, object]] = []
+    for item in produtos_raw:
+        preco = max(float(item.get("preco", 0.0)), 0.0)
+        frete = max(float(item.get("frete", 0.0)), 0.0)
+        produtos.append(
+            {
+                "id": item.get("id"),
+                "nome": item.get("nome", ""),
+                "descricao": item.get("descricao", ""),
+                "imagem": item.get("imagem"),
+                "video": item.get("video"),
+                "preco": preco,
+                "frete": frete,
+                "preco_formatado": _format_currency(preco),
+                "frete_formatado": _format_currency(frete),
+                "total": preco + frete,
+            }
+        )
+
+    return render_template(
+        "public/loja.html",
+        produtos=produtos,
+        pix_key=PIX_KEY,
+        active_page="loja",
     )
 
 
