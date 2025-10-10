@@ -739,10 +739,12 @@ def depoimentos_edit(depoimento_id: int):
     if form.validate_on_submit():
         depoimento.titulo = form.titulo.data
         depoimento.descricao = form.descricao.data
-        if form.video.data:
+        video_field = form.video.data
+        has_new_video = bool(getattr(video_field, "filename", ""))
+        if has_new_video:
             try:
                 video_path = _save_file(
-                    form.video.data,
+                    video_field,
                     current_app.config["VIDEO_UPLOAD_FOLDER"],
                 )
             except ValueError as exc:
@@ -750,8 +752,9 @@ def depoimentos_edit(depoimento_id: int):
                 return render_template(
                     "admin/depoimentos/form.html", form=form, depoimento=depoimento
                 )
-            _delete_file(depoimento.video)
-            depoimento.video = video_path
+            if video_path:
+                _delete_file(depoimento.video)
+                depoimento.video = video_path
         db.session.commit()
         flash("Depoimento atualizado com sucesso.", "success")
         return redirect(url_for("admin.depoimentos_list"))
