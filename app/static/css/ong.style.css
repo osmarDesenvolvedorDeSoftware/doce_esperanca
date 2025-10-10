@@ -146,9 +146,10 @@ section.py-5 {
 }
 
 .depoimento-card video {
-  object-fit: cover;
+  object-fit: contain;
   border-top-left-radius: 0.75rem;
   border-top-right-radius: 0.75rem;
+  background-color: #000;
 }
 
 .pix-qrcode-img {
