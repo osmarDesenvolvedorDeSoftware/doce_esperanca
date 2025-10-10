@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 from datetime import date, datetime, time
+from uuid import uuid4
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, Optional, Sequence
 
@@ -31,6 +32,7 @@ from app.forms import (
     GaleriaForm,
     LoginForm,
     ParceiroForm,
+    ProdutoLojaForm,
     TextoInstitucionalForm,
     TransparenciaForm,
     VoluntarioForm,
@@ -51,6 +53,7 @@ from app.models import (
     User,
     Voluntario,
 )
+from app.services.store import load_products as load_store_products, save_products as save_store_products
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
 
@@ -215,6 +218,32 @@ def _is_safe_redirect_target(target: Optional[str]) -> bool:
     ref_url = urlparse(request.host_url)
     test_url = urlparse(urljoin(request.host_url, target))
     return test_url.scheme in ("http", "https") and ref_url.netloc == test_url.netloc
+
+
+def _save_store_image(field_storage) -> Optional[str]:
+    if not field_storage:
+        return None
+
+    upload_folder = (
+        current_app.config.get("STORE_IMAGE_UPLOAD_FOLDER")
+        or current_app.config.get("IMAGE_UPLOAD_FOLDER")
+    )
+
+    def _processor(storage, destination: Path) -> None:
+        _process_image_with_max_width(storage, destination, max_width=1200)
+
+    return _save_file(field_storage, upload_folder, processor=_processor)
+
+
+def _save_store_video(field_storage) -> Optional[str]:
+    if not field_storage:
+        return None
+
+    upload_folder = (
+        current_app.config.get("STORE_VIDEO_UPLOAD_FOLDER")
+        or current_app.config.get("VIDEO_UPLOAD_FOLDER")
+    )
+    return _save_file(field_storage, upload_folder)
 
 
 def _ensure_institutional_texts() -> Dict[str, TextoInstitucional]:
@@ -1067,3 +1096,66 @@ def transparencia_delete(item_id: int):
     db.session.commit()
     flash("Documento de transparência excluído com sucesso.", "success")
     return redirect(url_for("admin.transparencia_list"))
+
+
+@admin_bp.route("/loja", methods=["GET", "POST"])
+@login_required
+def loja():
+    form = ProdutoLojaForm()
+    produtos = load_store_products()
+    produtos = sorted(
+        produtos,
+        key=lambda item: item.get("created_at") or "",
+        reverse=True,
+    )
+
+    if form.validate_on_submit():
+        imagem_path: Optional[str] = None
+        video_path: Optional[str] = None
+
+        try:
+            imagem_path = _save_store_image(form.imagem.data)
+        except ValueError as exc:
+            form.imagem.errors.append(str(exc))
+
+        if form.video.data:
+            try:
+                video_path = _save_store_video(form.video.data)
+            except ValueError as exc:
+                form.video.errors.append(str(exc))
+
+        if form.errors:
+            if imagem_path:
+                _delete_file(imagem_path)
+            if video_path:
+                _delete_file(video_path)
+            return render_template("admin/loja.html", form=form, produtos=produtos)
+
+        produto = {
+            "id": str(uuid4()),
+            "nome": form.nome.data.strip(),
+            "descricao": form.descricao.data.strip(),
+            "preco": float(form.preco.data or 0),
+            "frete": float(form.frete.data or 0),
+            "imagem": imagem_path,
+            "video": video_path,
+            "created_at": datetime.utcnow().isoformat(),
+        }
+        produtos.insert(0, produto)
+
+        try:
+            save_store_products(produtos)
+        except OSError:
+            flash(
+                "Não foi possível salvar o produto. Tente novamente.",
+                "danger",
+            )
+            if imagem_path:
+                _delete_file(imagem_path)
+            if video_path:
+                _delete_file(video_path)
+        else:
+            flash("Produto cadastrado com sucesso!", "success")
+            return redirect(url_for("admin.loja"))
+
+    return render_template("admin/loja.html", form=form, produtos=produtos)

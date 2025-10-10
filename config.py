@@ -22,6 +22,11 @@ class BaseConfig:
     IMAGE_UPLOAD_FOLDER = str(Path(UPLOAD_FOLDER) / "images")
     BANNER_UPLOAD_FOLDER = str(Path(UPLOAD_FOLDER) / "banners")
     DOC_UPLOAD_FOLDER = str(Path(UPLOAD_FOLDER) / "docs")
+    STORE_UPLOAD_FOLDER = str(Path(UPLOAD_FOLDER) / "store")
+    STORE_IMAGE_UPLOAD_FOLDER = str(Path(STORE_UPLOAD_FOLDER) / "images")
+    STORE_VIDEO_UPLOAD_FOLDER = str(Path(STORE_UPLOAD_FOLDER) / "videos")
+    STORE_DATA_FOLDER = str(BASE_DIR / "app" / "static" / "data")
+    STORE_DATA_FILENAME = "produtos.json"
     MAX_CONTENT_LENGTH = DEFAULT_MAX_CONTENT_LENGTH
 
 

@@ -9,6 +9,7 @@ from flask_wtf.file import FileAllowed, FileField
 from wtforms import (
     BooleanField,
     DateField,
+    DecimalField,
     IntegerField,
     PasswordField,
     StringField,
@@ -185,3 +186,37 @@ class DepoimentoForm(FlaskForm):
         ],
     )
     submit = SubmitField("Salvar")
+
+
+class ProdutoLojaForm(FlaskForm):
+    nome = StringField("Nome", validators=[DataRequired(), Length(max=255)])
+    descricao = TextAreaField("Descrição", validators=[DataRequired()])
+    preco = DecimalField(
+        "Preço",
+        validators=[DataRequired()],
+        places=2,
+        rounding=None,
+    )
+    frete = DecimalField(
+        "Frete",
+        validators=[DataRequired()],
+        places=2,
+        rounding=None,
+    )
+    imagem = FileField(
+        "Imagem",
+        validators=[
+            DataRequired(),
+            FileAllowed(ALLOWED_IMAGE_EXTENSIONS, "Somente imagens são permitidas."),
+            FileSize(),
+        ],
+    )
+    video = FileField(
+        "Vídeo",
+        validators=[
+            OptionalValidator(),
+            FileAllowed(ALLOWED_VIDEO_EXTENSIONS, "Somente vídeos são permitidos."),
+            FileSize(),
+        ],
+    )
+    submit = SubmitField("Salvar produto")

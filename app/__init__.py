@@ -69,6 +69,19 @@ def create_app(config_class=None):
     video_upload_folder = app.config.setdefault(
         "VIDEO_UPLOAD_FOLDER", os.path.join(upload_folder, "videos")
     )
+    store_upload_folder = app.config.setdefault(
+        "STORE_UPLOAD_FOLDER", os.path.join(upload_folder, "store")
+    )
+    store_image_upload_folder = app.config.setdefault(
+        "STORE_IMAGE_UPLOAD_FOLDER", os.path.join(store_upload_folder, "images")
+    )
+    store_video_upload_folder = app.config.setdefault(
+        "STORE_VIDEO_UPLOAD_FOLDER", os.path.join(store_upload_folder, "videos")
+    )
+    store_data_folder = app.config.setdefault(
+        "STORE_DATA_FOLDER", os.path.join(app.static_folder, "data")
+    )
+    app.config.setdefault("STORE_DATA_FILENAME", "produtos.json")
     qrcode_upload_folder = app.config.setdefault(
         "QRCODE_UPLOAD_FOLDER", os.path.join(upload_folder, "qrcodes")
     )
@@ -82,6 +95,10 @@ def create_app(config_class=None):
         apoio_upload_folder,
         video_upload_folder,
         qrcode_upload_folder,
+        store_upload_folder,
+        store_image_upload_folder,
+        store_video_upload_folder,
+        store_data_folder,
     ):
         _ensure_directory(folder)
 

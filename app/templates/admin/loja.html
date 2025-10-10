@@ -1,0 +1,120 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Loja Solidária • Painel Administrativo{% endblock %}
+
+{% block content %}
+  <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+    <div>
+      <h1 class="h3 mb-1">Loja Solidária</h1>
+      <p class="text-muted mb-0">Cadastre novos produtos que serão exibidos na página pública da loja.</p>
+    </div>
+  </div>
+  <div class="row g-4">
+    <div class="col-lg-5">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-header bg-white border-0 pb-0">
+          <h2 class="h5 mb-0">Novo produto</h2>
+        </div>
+        <div class="card-body">
+          <form method="post" enctype="multipart/form-data" novalidate>
+            {{ form.hidden_tag() }}
+            <div class="mb-3">
+              {{ form.nome.label(class="form-label fw-semibold") }}
+              {{ form.nome(class="form-control", placeholder="Nome do produto") }}
+              {% for error in form.nome.errors %}
+                <div class="invalid-feedback d-block">{{ error }}</div>
+              {% endfor %}
+            </div>
+            <div class="mb-3">
+              {{ form.descricao.label(class="form-label fw-semibold") }}
+              {{ form.descricao(class="form-control", rows="4", placeholder="Descrição do produto e materiais utilizados") }}
+              {% for error in form.descricao.errors %}
+                <div class="invalid-feedback d-block">{{ error }}</div>
+              {% endfor %}
+            </div>
+            <div class="row g-3">
+              <div class="col-sm-6">
+                <label class="form-label fw-semibold" for="{{ form.preco.id }}">{{ form.preco.label.text }} <small class="text-muted">(R$)</small></label>
+                {{ form.preco(class="form-control", step="0.01", min="0", placeholder="0,00") }}
+                {% for error in form.preco.errors %}
+                  <div class="invalid-feedback d-block">{{ error }}</div>
+                {% endfor %}
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label fw-semibold" for="{{ form.frete.id }}">{{ form.frete.label.text }} <small class="text-muted">(R$)</small></label>
+                {{ form.frete(class="form-control", step="0.01", min="0", placeholder="0,00") }}
+                {% for error in form.frete.errors %}
+                  <div class="invalid-feedback d-block">{{ error }}</div>
+                {% endfor %}
+              </div>
+            </div>
+            <div class="mt-3">
+              {{ form.imagem.label(class="form-label fw-semibold") }}
+              {{ form.imagem(class="form-control") }}
+              <div class="form-text">Envie uma imagem em formato JPG ou PNG.</div>
+              {% for error in form.imagem.errors %}
+                <div class="invalid-feedback d-block">{{ error }}</div>
+              {% endfor %}
+            </div>
+            <div class="mt-3">
+              {{ form.video.label(class="form-label fw-semibold") }}
+              {{ form.video(class="form-control") }}
+              <div class="form-text">Opcional. Formatos aceitos: MP4, MOV ou AVI.</div>
+              {% for error in form.video.errors %}
+                <div class="invalid-feedback d-block">{{ error }}</div>
+              {% endfor %}
+            </div>
+            <div class="mt-4 text-end">
+              {{ form.submit(class="btn btn-primary") }}
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-7">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-header bg-white border-0 d-flex align-items-center justify-content-between flex-wrap gap-3">
+          <div>
+            <h2 class="h5 mb-0">Produtos cadastrados</h2>
+            <p class="text-muted mb-0 small">Esses itens são exibidos automaticamente na Loja Solidária.</p>
+          </div>
+        </div>
+        <div class="card-body">
+          {% if produtos %}
+            <div class="list-group list-group-flush">
+              {% for produto in produtos %}
+                <div class="list-group-item px-0 py-3">
+                  <div class="d-flex align-items-start gap-3">
+                    {% if produto.imagem %}
+                      <img src="{{ static_url(produto.imagem) }}" alt="{{ produto.nome }}" class="rounded" style="width: 72px; height: 72px; object-fit: cover;">
+                    {% else %}
+                      <div class="bg-light rounded d-flex align-items-center justify-content-center" style="width: 72px; height: 72px;">
+                        <i class="bi bi-image text-secondary"></i>
+                      </div>
+                    {% endif %}
+                    <div class="flex-grow-1">
+                      <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                        <h3 class="h6 mb-0">{{ produto.nome }}</h3>
+                        <span class="badge bg-primary-subtle text-primary fw-semibold">R$ {{ '%.2f'|format(produto.preco) }}</span>
+                        <span class="badge bg-info-subtle text-info fw-semibold">Frete: R$ {{ '%.2f'|format(produto.frete) }}</span>
+                      </div>
+                      <p class="mb-2 small text-muted">{{ produto.descricao }}</p>
+                      {% if produto.video %}
+                        <span class="badge bg-secondary-subtle text-secondary"><i class="bi bi-camera-video me-1"></i>Vídeo disponível</span>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="text-center text-muted py-5">
+              <i class="bi bi-bag fs-1 d-block mb-3"></i>
+              <p class="mb-0">Nenhum produto cadastrado ainda. Use o formulário ao lado para adicionar o primeiro item.</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
