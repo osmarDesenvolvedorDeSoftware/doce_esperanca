@@ -1,0 +1,123 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Editar produto • Painel Administrativo{% endblock %}
+
+{% block content %}
+  <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+    <div>
+      <h1 class="h3 mb-1">Editar produto</h1>
+      <p class="text-muted mb-0">Atualize as informações do item exibido na Loja Solidária.</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a class="btn btn-outline-secondary" href="{{ url_for('admin.loja') }}">
+        <i class="bi bi-arrow-left me-1"></i>Voltar para a Loja
+      </a>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-7">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-header bg-white border-0 pb-0">
+          <h2 class="h5 mb-0">Informações do produto</h2>
+        </div>
+        <div class="card-body">
+          <form method="post" enctype="multipart/form-data" novalidate>
+            {{ form.hidden_tag() }}
+            <div class="mb-3">
+              {{ form.nome.label(class="form-label fw-semibold") }}
+              {{ form.nome(class="form-control", placeholder="Nome do produto") }}
+              {% for error in form.nome.errors %}
+                <div class="invalid-feedback d-block">{{ error }}</div>
+              {% endfor %}
+            </div>
+            <div class="mb-3">
+              {{ form.descricao.label(class="form-label fw-semibold") }}
+              {{ form.descricao(class="form-control", rows="4", placeholder="Descrição do produto e materiais utilizados") }}
+              {% for error in form.descricao.errors %}
+                <div class="invalid-feedback d-block">{{ error }}</div>
+              {% endfor %}
+            </div>
+            <div class="row g-3">
+              <div class="col-sm-6">
+                <label class="form-label fw-semibold" for="{{ form.preco.id }}">{{ form.preco.label.text }} <small class="text-muted">(R$)</small></label>
+                {{ form.preco(class="form-control", step="0.01", min="0", placeholder="0,00") }}
+                {% for error in form.preco.errors %}
+                  <div class="invalid-feedback d-block">{{ error }}</div>
+                {% endfor %}
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label fw-semibold" for="{{ form.frete.id }}">{{ form.frete.label.text }} <small class="text-muted">(R$)</small></label>
+                {{ form.frete(class="form-control", step="0.01", min="0", placeholder="0,00") }}
+                {% for error in form.frete.errors %}
+                  <div class="invalid-feedback d-block">{{ error }}</div>
+                {% endfor %}
+              </div>
+            </div>
+            <div class="mt-3">
+              {{ form.imagem.label(class="form-label fw-semibold") }}
+              {{ form.imagem(class="form-control") }}
+              <div class="form-text">Envie uma nova imagem em formato JPG ou PNG para substituir a atual.</div>
+              {% for error in form.imagem.errors %}
+                <div class="invalid-feedback d-block">{{ error }}</div>
+              {% endfor %}
+            </div>
+            <div class="mt-3">
+              {{ form.video.label(class="form-label fw-semibold") }}
+              {{ form.video(class="form-control") }}
+              <div class="form-text">Opcional. Formatos aceitos: MP4, MOV ou AVI.</div>
+              {% for error in form.video.errors %}
+                <div class="invalid-feedback d-block">{{ error }}</div>
+              {% endfor %}
+            </div>
+            <div class="mt-4 text-end">
+              {{ form.submit(class="btn btn-primary") }}
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-5">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-header bg-white border-0 pb-0">
+          <h2 class="h5 mb-0">Pré-visualização atual</h2>
+        </div>
+        <div class="card-body">
+          <div class="mb-4">
+            <h3 class="h6 text-muted text-uppercase mb-3">Imagem</h3>
+            {% if produto.imagem %}
+              <img src="{{ static_url(produto.imagem) }}" alt="{{ produto.nome }}" class="img-fluid rounded shadow-sm">
+            {% else %}
+              <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 240px;">
+                <div class="text-center text-muted">
+                  <i class="bi bi-image fs-1 d-block mb-2"></i>
+                  <p class="mb-0">Nenhuma imagem cadastrada</p>
+                </div>
+              </div>
+            {% endif %}
+          </div>
+          <div class="mb-4">
+            <h3 class="h6 text-muted text-uppercase mb-3">Valores</h3>
+            <ul class="list-unstyled mb-0">
+              <li class="mb-1"><strong>Preço:</strong> R$ {{ '%.2f'|format(produto.preco|default(0)) }}</li>
+              <li class="mb-1"><strong>Frete:</strong> R$ {{ '%.2f'|format(produto.frete|default(0)) }}</li>
+            </ul>
+          </div>
+          <div>
+            <h3 class="h6 text-muted text-uppercase mb-3">Vídeo</h3>
+            {% if produto.video %}
+              <div class="ratio ratio-16x9">
+                <video class="w-100 rounded" controls preload="metadata">
+                  <source src="{{ static_url(produto.video) }}">
+                  Seu navegador não suporta a reprodução de vídeos.
+                </video>
+              </div>
+            {% else %}
+              <p class="text-muted mb-0">Nenhum vídeo cadastrado para este produto.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

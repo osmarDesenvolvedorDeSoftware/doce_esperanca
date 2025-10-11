@@ -4,7 +4,7 @@ import os
 from datetime import date, datetime, time
 from uuid import uuid4
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, Optional, Sequence
+from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence
 
 from flask import (
     Blueprint,
@@ -1113,6 +1113,10 @@ def loja():
     )
 
     if form.validate_on_submit():
+        if not form.imagem.data:
+            form.imagem.errors.append("Envie uma imagem do produto.")
+            return render_template("admin/loja.html", form=form, produtos=produtos)
+
         imagem_path: Optional[str] = None
         video_path: Optional[str] = None
 
@@ -1136,8 +1140,8 @@ def loja():
 
         produto = {
             "id": str(uuid4()),
-            "nome": form.nome.data.strip(),
-            "descricao": form.descricao.data.strip(),
+            "nome": (form.nome.data or "").strip(),
+            "descricao": (form.descricao.data or "").strip(),
             "preco": float(form.preco.data or 0),
             "frete": float(form.frete.data or 0),
             "imagem": imagem_path,
@@ -1162,3 +1166,112 @@ def loja():
             return redirect(url_for("admin.loja"))
 
     return render_template("admin/loja.html", form=form, produtos=produtos)
+
+
+@admin_bp.route("/loja/<produto_id>/editar", methods=["GET", "POST"])
+@login_required
+def loja_editar(produto_id: str):
+    produtos = load_store_products()
+    produto_index = next(
+        (index for index, item in enumerate(produtos) if str(item.get("id")) == produto_id),
+        None,
+    )
+    if produto_index is None:
+        abort(404)
+
+    produto = produtos[produto_index]
+    form = ProdutoLojaForm()
+    form.submit.label.text = "Atualizar produto"
+
+    if request.method == "GET":
+        form.nome.data = produto.get("nome")
+        form.descricao.data = produto.get("descricao")
+        form.preco.data = produto.get("preco")
+        form.frete.data = produto.get("frete")
+
+    if form.validate_on_submit():
+        nova_imagem: Optional[str] = None
+        novo_video: Optional[str] = None
+
+        if form.imagem.data:
+            try:
+                nova_imagem = _save_store_image(form.imagem.data)
+            except ValueError as exc:
+                form.imagem.errors.append(str(exc))
+
+        if form.video.data:
+            try:
+                novo_video = _save_store_video(form.video.data)
+            except ValueError as exc:
+                form.video.errors.append(str(exc))
+
+        if form.errors:
+            if nova_imagem:
+                _delete_file(nova_imagem)
+            if novo_video:
+                _delete_file(novo_video)
+            return render_template("admin/loja_form.html", form=form, produto=produto)
+
+        produto_original = dict(produto)
+        produto_atualizado = dict(produto)
+        produto_atualizado.update(
+            {
+                "nome": (form.nome.data or "").strip(),
+                "descricao": (form.descricao.data or "").strip(),
+                "preco": float(form.preco.data or 0),
+                "frete": float(form.frete.data or 0),
+            }
+        )
+        if nova_imagem:
+            produto_atualizado["imagem"] = nova_imagem
+        if novo_video:
+            produto_atualizado["video"] = novo_video
+
+        produtos[produto_index] = produto_atualizado
+
+        try:
+            save_store_products(produtos)
+        except OSError:
+            produtos[produto_index] = produto_original
+            if nova_imagem:
+                _delete_file(nova_imagem)
+            if novo_video:
+                _delete_file(novo_video)
+            flash("Não foi possível atualizar o produto. Tente novamente.", "danger")
+        else:
+            if nova_imagem and produto_original.get("imagem") != nova_imagem:
+                _delete_file(produto_original.get("imagem"))
+            if novo_video and produto_original.get("video") != novo_video:
+                _delete_file(produto_original.get("video"))
+            flash("Produto atualizado com sucesso!", "success")
+            return redirect(url_for("admin.loja"))
+
+    return render_template("admin/loja_form.html", form=form, produto=produto)
+
+
+@admin_bp.route("/loja/<produto_id>/excluir", methods=["POST"])
+@login_required
+def loja_excluir(produto_id: str):
+    produtos = load_store_products()
+    produto_removido: Optional[Dict[str, Any]] = None
+    produtos_restantes: List[Dict[str, Any]] = []
+
+    for item in produtos:
+        if produto_removido is None and str(item.get("id")) == produto_id:
+            produto_removido = item
+            continue
+        produtos_restantes.append(item)
+
+    if produto_removido is None:
+        abort(404)
+
+    try:
+        save_store_products(produtos_restantes)
+    except OSError:
+        flash("Não foi possível remover o produto. Tente novamente.", "danger")
+    else:
+        _delete_file(produto_removido.get("imagem"))
+        _delete_file(produto_removido.get("video"))
+        flash("Produto excluído com sucesso!", "success")
+
+    return redirect(url_for("admin.loja"))

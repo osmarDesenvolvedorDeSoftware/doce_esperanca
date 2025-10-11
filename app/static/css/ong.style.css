@@ -180,6 +180,7 @@ section.py-5 {
 }
 
 .store-card__media {
+  display: block;
   background-color: #f1f5f9;
 }
 
@@ -187,6 +188,17 @@ section.py-5 {
   width: 100%;
   height: 220px;
   object-fit: cover;
+}
+
+.store-card__title {
+  color: inherit;
+  text-decoration: none;
+}
+
+.store-card__title:hover,
+.store-card__title:focus {
+  color: #1d4e89;
+  text-decoration: none;
 }
 
 .store-card__placeholder {
@@ -233,4 +245,31 @@ section.py-5 {
 .btn-store:focus-visible {
   outline: 3px solid rgba(66, 170, 255, 0.35);
   outline-offset: 2px;
+}
+
+.store-product-media {
+  background-color: #f1f5f9;
+}
+
+.store-product-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.store-product-placeholder {
+  min-height: 320px;
+  background-color: #e2e8f0;
+  color: #64748b;
+  text-align: center;
+  padding: 2rem;
+}
+
+.store-product-placeholder i {
+  font-size: 3rem;
+}
+
+.store-product-pricing {
+  background: linear-gradient(135deg, rgba(29, 78, 137, 0.08), rgba(66, 170, 255, 0.12));
+  border: 1px solid rgba(15, 23, 42, 0.05);
 }

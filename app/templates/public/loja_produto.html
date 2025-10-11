@@ -1,0 +1,83 @@
+{% extends "public/base.html" %}
+
+{% block title %}{{ produto.nome }} - Loja Solidária - Doce Esperança{% endblock %}
+
+{% block content %}
+  <nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{{ url_for('public.loja') }}">Loja Solidária</a></li>
+      <li class="breadcrumb-item active" aria-current="page">{{ produto.nome }}</li>
+    </ol>
+  </nav>
+
+  <div class="row g-5 align-items-start">
+    <div class="col-lg-6">
+      <div class="store-product-media shadow-sm rounded-4 overflow-hidden">
+        {% if produto.imagem %}
+          <img src="{{ static_url(produto.imagem) }}" alt="{{ produto.nome }}" class="img-fluid w-100">
+        {% else %}
+          <div class="store-product-placeholder d-flex flex-column align-items-center justify-content-center">
+            <i class="bi bi-image mb-3"></i>
+            <p class="text-muted mb-0">Imagem indisponível para este produto.</p>
+          </div>
+        {% endif %}
+      </div>
+      {% if produto.video %}
+        <div class="mt-4">
+          <div class="ratio ratio-16x9 rounded-4 overflow-hidden shadow-sm">
+            <video class="w-100" controls preload="metadata">
+              <source src="{{ static_url(produto.video) }}">
+              Seu navegador não suporta a reprodução de vídeos.
+            </video>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+    <div class="col-lg-6">
+      <span class="badge bg-light text-primary fw-semibold px-3 py-2 mb-3">Loja Solidária</span>
+      <h1 class="display-6 fw-bold mb-3">{{ produto.nome }}</h1>
+      <p class="lead text-muted">{{ produto.descricao }}</p>
+      <div class="store-product-pricing rounded-4 shadow-sm p-4 my-4">
+        <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3">
+          <div>
+            <span class="d-block text-muted text-uppercase small">Valor do produto</span>
+            <strong class="fs-3 text-primary">{{ produto.preco_formatado }}</strong>
+          </div>
+          <div>
+            <span class="d-block text-muted text-uppercase small">Frete estimado</span>
+            <strong class="fs-5">{{ produto.frete_formatado }}</strong>
+          </div>
+          <div>
+            <span class="d-block text-muted text-uppercase small">Total estimado</span>
+            <strong class="fs-3 text-success">{{ produto.total_formatado }}</strong>
+          </div>
+        </div>
+      </div>
+      <div class="d-grid gap-3">
+        <button
+          type="button"
+          class="btn btn-store btn-lg"
+          data-pix-button
+          data-product-name="{{ produto.nome|e }}"
+          data-product-price="{{ '%.2f'|format(produto.preco) }}"
+          data-product-frete="{{ '%.2f'|format(produto.frete) }}"
+        >
+          <i class="bi bi-qr-code me-2"></i>Comprar via Pix
+        </button>
+        <a class="btn btn-outline-secondary btn-lg" href="{{ url_for('public.loja') }}">
+          <i class="bi bi-arrow-left me-2"></i>Voltar para a vitrine
+        </a>
+      </div>
+      <div class="mt-5">
+        <h2 class="h5 fw-semibold mb-3">Como funciona a compra solidária?</h2>
+        <ul class="list-unstyled text-muted small mb-0">
+          <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Escolha o produto e confirme o pagamento via Pix.</li>
+          <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Entraremos em contato utilizando os dados do comprovante para combinar a entrega.</li>
+          <li><i class="bi bi-check-circle text-success me-2"></i>Todo o valor arrecadado é destinado aos projetos sociais da Doce Esperança.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  {% include "public/partials/_pix_modal.html" %}
+{% endblock %}

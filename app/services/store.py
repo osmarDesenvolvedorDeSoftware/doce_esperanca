@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
-from typing import Any, Dict, Iterable, List
+from typing import Any, Dict, Iterable, List, Optional
 
 from flask import current_app
 
@@ -54,10 +54,13 @@ def load_products() -> List[Dict[str, Any]]:
     for item in payload:
         if not isinstance(item, dict):
             continue
+        identifier: Optional[str] = item.get("id")
+        if identifier is not None:
+            identifier = str(identifier)
         product = {
-            "id": item.get("id"),
-            "nome": item.get("nome", ""),
-            "descricao": item.get("descricao", ""),
+            "id": identifier,
+            "nome": (item.get("nome") or "").strip(),
+            "descricao": (item.get("descricao") or "").strip(),
             "preco": _coerce_decimal(item.get("preco"), 0.0),
             "frete": _coerce_decimal(item.get("frete"), 0.0),
             "imagem": item.get("imagem"),
@@ -77,11 +80,14 @@ def save_products(products: Iterable[Dict[str, Any]]) -> None:
     for item in products:
         if not isinstance(item, dict):
             continue
+        identifier: Optional[str] = item.get("id")
+        if identifier is not None:
+            identifier = str(identifier)
         serializable.append(
             {
-                "id": item.get("id"),
-                "nome": item.get("nome"),
-                "descricao": item.get("descricao"),
+                "id": identifier,
+                "nome": (item.get("nome") or "").strip(),
+                "descricao": (item.get("descricao") or "").strip(),
                 "preco": _coerce_decimal(item.get("preco"), 0.0),
                 "frete": _coerce_decimal(item.get("frete"), 0.0),
                 "imagem": item.get("imagem"),
