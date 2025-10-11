@@ -12,40 +12,62 @@
   {% if produtos %}
     <div class="store-grid">
       {% for produto in produtos %}
+        {% set detalhe_url = url_for('public.loja_produto', slug=produto.slug, produto_id=produto.id) if produto.id else None %}
         <article class="store-card card border-0 shadow-sm h-100">
-          <div class="store-card__media">
-            {% if produto.imagem %}
-              <img src="{{ static_url(produto.imagem) }}" alt="{{ produto.nome }}" class="store-card__image">
-            {% else %}
-              <div class="store-card__placeholder">
-                <i class="bi bi-image"></i>
-              </div>
-            {% endif %}
-          </div>
-          <div class="card-body d-flex flex-column">
-            <h2 class="h5 fw-bold">{{ produto.nome }}</h2>
+          {% if detalhe_url %}
+            <a class="store-card__media d-block" href="{{ detalhe_url }}" aria-label="Ver detalhes de {{ produto.nome }}">
+              {% if produto.imagem %}
+                <img src="{{ static_url(produto.imagem) }}" alt="{{ produto.nome }}" class="store-card__image">
+              {% else %}
+                <div class="store-card__placeholder">
+                  <i class="bi bi-image"></i>
+                </div>
+              {% endif %}
+            </a>
+          {% else %}
+            <div class="store-card__media">
+              {% if produto.imagem %}
+                <img src="{{ static_url(produto.imagem) }}" alt="{{ produto.nome }}" class="store-card__image">
+              {% else %}
+                <div class="store-card__placeholder">
+                  <i class="bi bi-image"></i>
+                </div>
+              {% endif %}
+            </div>
+          {% endif %}
+          <div class="card-body d-flex flex-column position-relative">
+            <h2 class="h5 fw-bold">
+              {% if detalhe_url %}
+                <a class="store-card__title" href="{{ detalhe_url }}">{{ produto.nome }}</a>
+              {% else %}
+                <span class="store-card__title">{{ produto.nome }}</span>
+              {% endif %}
+            </h2>
             <p class="mb-3 text-muted">{{ produto.descricao }}</p>
-            {% if produto.video %}
-              <div class="ratio ratio-16x9 mb-3">
-                <video class="store-card__video" controls preload="metadata">
-                  <source src="{{ static_url(produto.video) }}">
-                  Seu navegador não suporta a reprodução de vídeos.
-                </video>
-              </div>
-            {% endif %}
             <div class="mt-auto">
               <div class="store-card__price mb-2">{{ produto.preco_formatado }}</div>
-              <div class="store-card__frete text-muted">Frete estimado: <strong>{{ produto.frete_formatado }}</strong></div>
-              <button
-                type="button"
-                class="btn btn-store w-100 mt-3"
-                data-pix-button
-                data-product-name="{{ produto.nome|e }}"
-                data-product-price="{{ '%.2f'|format(produto.preco) }}"
-                data-product-frete="{{ '%.2f'|format(produto.frete) }}"
-              >
-                <i class="bi bi-qr-code me-2"></i>Comprar via Pix
-              </button>
+              <div class="store-card__frete text-muted mb-3">Frete estimado: <strong>{{ produto.frete_formatado }}</strong></div>
+              <div class="d-grid gap-2">
+                {% if detalhe_url %}
+                  <a class="btn btn-outline-primary" href="{{ detalhe_url }}">
+                    <i class="bi bi-eye me-1"></i>Ver detalhes
+                  </a>
+                {% else %}
+                  <button type="button" class="btn btn-outline-primary" disabled>
+                    <i class="bi bi-eye me-1"></i>Ver detalhes
+                  </button>
+                {% endif %}
+                <button
+                  type="button"
+                  class="btn btn-store"
+                  data-pix-button
+                  data-product-name="{{ produto.nome|e }}"
+                  data-product-price="{{ '%.2f'|format(produto.preco) }}"
+                  data-product-frete="{{ '%.2f'|format(produto.frete) }}"
+                >
+                  <i class="bi bi-qr-code me-2"></i>Comprar via Pix
+                </button>
+              </div>
             </div>
           </div>
         </article>
@@ -58,210 +80,5 @@
     </div>
   {% endif %}
 
-  <div class="modal fade" id="pixModal" tabindex="-1" aria-labelledby="pixModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h1 class="modal-title fs-5" id="pixModalLabel">Comprar via Pix</h1>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-        </div>
-        <div class="modal-body">
-          <div class="row g-4 align-items-center">
-            <div class="col-md-5 text-center">
-              <img src="" alt="QR Code Pix" class="img-fluid rounded shadow-sm" id="pixModalQr" loading="lazy">
-              <p class="small text-muted mt-3 mb-0">Escaneie o QR Code para concluir o pagamento.</p>
-            </div>
-            <div class="col-md-7">
-              <h2 class="h4 fw-bold mb-2" data-pix-product-name></h2>
-              <p class="mb-1 text-muted">Chave Pix (CNPJ): <strong>{{ pix_key }}</strong></p>
-              <p class="mb-3 text-muted">Mensagem: <span data-pix-message></span></p>
-              <div class="d-flex flex-wrap gap-3 align-items-center mb-3">
-                <div>
-                  <span class="d-block text-muted small">Valor do produto</span>
-                  <strong data-pix-price></strong>
-                </div>
-                <div>
-                  <span class="d-block text-muted small">Frete estimado</span>
-                  <strong data-pix-frete></strong>
-                </div>
-                <div>
-                  <span class="d-block text-muted small">Total a pagar</span>
-                  <strong class="text-primary" data-pix-total></strong>
-                </div>
-              </div>
-              <div class="bg-light rounded p-3 mb-3">
-                <p class="small text-muted mb-2">Código Pix copia e cola:</p>
-                <div class="small text-break" data-pix-code></div>
-              </div>
-              <button type="button" class="btn btn-outline-primary" data-pix-copy>
-                <i class="bi bi-clipboard me-2"></i>Copiar código Pix
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      const buttons = document.querySelectorAll('[data-pix-button]');
-      if (!buttons.length) {
-        return;
-      }
-
-      const pixModalEl = document.getElementById('pixModal');
-      const pixModal = new bootstrap.Modal(pixModalEl);
-      const qrImage = document.getElementById('pixModalQr');
-      const nameTarget = pixModalEl.querySelector('[data-pix-product-name]');
-      const messageTarget = pixModalEl.querySelector('[data-pix-message]');
-      const priceTarget = pixModalEl.querySelector('[data-pix-price]');
-      const freteTarget = pixModalEl.querySelector('[data-pix-frete]');
-      const totalTarget = pixModalEl.querySelector('[data-pix-total]');
-      const codeTarget = pixModalEl.querySelector('[data-pix-code]');
-      const copyButton = pixModalEl.querySelector('[data-pix-copy]');
-
-      function formatCurrency(value) {
-        return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
-      }
-
-      function sanitizeText(value, maxLength) {
-        if (!value) {
-          return '';
-        }
-        return value
-          .normalize('NFD')
-          .replace(/[^\w\s-]/g, '')
-          .replace(/[\u0300-\u036f]/g, '')
-          .substring(0, maxLength)
-          .trim();
-      }
-
-      function buildPixField(id, value) {
-        const stringValue = value ?? '';
-        const length = String(stringValue).length;
-        const lengthStr = String(length).padStart(2, '0');
-        return `${id}${lengthStr}${stringValue}`;
-      }
-
-      function computeCRC(payload) {
-        let crc = 0xffff;
-        const polynomial = 0x1021;
-        for (let i = 0; i < payload.length; i += 1) {
-          crc ^= payload.charCodeAt(i) << 8;
-          for (let bit = 0; bit < 8; bit += 1) {
-            if ((crc & 0x8000) !== 0) {
-              crc = ((crc << 1) ^ polynomial) & 0xffff;
-            } else {
-              crc = (crc << 1) & 0xffff;
-            }
-          }
-        }
-        return crc.toString(16).toUpperCase().padStart(4, '0');
-      }
-
-      function buildPixPayload({ key, amount, description, reference }) {
-        const gui = buildPixField('00', 'BR.GOV.BCB.PIX');
-        const keyField = buildPixField('01', key);
-        const descriptionField = description ? buildPixField('02', description) : '';
-        const merchantInfo = buildPixField('26', `${gui}${keyField}${descriptionField}`);
-        const merchantCategory = buildPixField('52', '0000');
-        const currency = buildPixField('53', '986');
-        const amountField = amount ? buildPixField('54', amount) : '';
-        const countryCode = buildPixField('58', 'BR');
-        const merchantName = buildPixField('59', sanitizeText('Doce Esperança', 25) || 'Doce Esperanca');
-        const merchantCity = buildPixField('60', sanitizeText('Recife', 15) || 'RECIFE');
-        const referenceLabel = buildPixField('05', reference || 'DOCELOJA');
-        const additionalData = buildPixField('62', referenceLabel);
-
-        let payload = '';
-        payload += buildPixField('00', '01');
-        payload += buildPixField('01', '12');
-        payload += merchantInfo;
-        payload += merchantCategory;
-        payload += currency;
-        payload += amountField;
-        payload += countryCode;
-        payload += merchantName;
-        payload += merchantCity;
-        payload += additionalData;
-        payload += '6304';
-        const crc = computeCRC(payload);
-        return `${payload}${crc}`;
-      }
-
-      async function copyToClipboard(value) {
-        if (!value) {
-          return;
-        }
-        if (navigator.clipboard && window.isSecureContext) {
-          await navigator.clipboard.writeText(value);
-          return;
-        }
-        const textarea = document.createElement('textarea');
-        textarea.value = value;
-        textarea.setAttribute('readonly', '');
-        textarea.style.position = 'fixed';
-        textarea.style.top = '-1000px';
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textarea);
-      }
-
-      buttons.forEach(function (button) {
-        button.addEventListener('click', function () {
-          const name = button.getAttribute('data-product-name') || '';
-          const price = Number(button.getAttribute('data-product-price') || 0);
-          const frete = Number(button.getAttribute('data-product-frete') || 0);
-          const total = price + frete;
-          const amount = total.toFixed(2);
-          const message = `Doação Loja Solidária - ${name}`;
-          const reference = (sanitizeText(name, 25).replace(/\s+/g, '') || 'DOCELOJA').toUpperCase();
-          const payload = buildPixPayload({
-            key: '{{ pix_key }}',
-            amount,
-            description: sanitizeText(message, 50),
-            reference,
-          });
-
-          nameTarget.textContent = name;
-          messageTarget.textContent = message;
-          priceTarget.textContent = formatCurrency(price);
-          freteTarget.textContent = formatCurrency(frete);
-          totalTarget.textContent = formatCurrency(total);
-          codeTarget.textContent = payload;
-          copyButton.dataset.payload = payload;
-
-          const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(payload)}`;
-          qrImage.src = qrUrl;
-          qrImage.alt = `QR Code Pix para ${name}`;
-
-          pixModal.show();
-        });
-      });
-
-      copyButton.addEventListener('click', function () {
-        const payload = copyButton.dataset.payload || '';
-        if (!payload) {
-          return;
-        }
-        copyToClipboard(payload)
-          .then(function () {
-            const originalText = copyButton.innerHTML;
-            copyButton.innerHTML = '<i class="bi bi-clipboard-check me-2"></i>Código copiado!';
-            copyButton.classList.remove('btn-outline-primary');
-            copyButton.classList.add('btn-success');
-            setTimeout(function () {
-              copyButton.innerHTML = originalText;
-              copyButton.classList.add('btn-outline-primary');
-              copyButton.classList.remove('btn-success');
-            }, 2000);
-          })
-          .catch(function () {
-            alert('Não foi possível copiar o código. Copie manualmente.');
-          });
-      });
-    });
-  </script>
+  {% include "public/partials/_pix_modal.html" %}
 {% endblock %}

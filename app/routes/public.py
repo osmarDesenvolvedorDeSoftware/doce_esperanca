@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 import re
+import unicodedata
 from pathlib import Path
 from typing import Dict, List, Optional
 
 import qrcode
 from qrcode.constants import ERROR_CORRECT_M
 
-from flask import Blueprint, current_app, render_template
+from flask import Blueprint, abort, current_app, redirect, render_template, url_for
 from markupsafe import Markup
 
 from app.content import CONTENT_PLACEHOLDER, INSTITUTIONAL_SECTION_MAP
@@ -69,6 +70,13 @@ def _ensure_pix_qrcode() -> Optional[str]:
 def _format_currency(value: float) -> str:
     formatted = f"R$ {value:,.2f}"
     return formatted.replace(",", "_").replace(".", ",").replace("_", ".")
+
+
+def _slugify(value: str) -> str:
+    normalized = unicodedata.normalize("NFKD", value or "")
+    ascii_value = normalized.encode("ascii", "ignore").decode("ascii")
+    slug = re.sub(r"[^a-zA-Z0-9]+", "-", ascii_value).strip("-").lower()
+    return slug or "produto"
 
 
 @public_bp.context_processor
@@ -267,6 +275,7 @@ def loja() -> str:
     for item in produtos_raw:
         preco = max(float(item.get("preco", 0.0)), 0.0)
         frete = max(float(item.get("frete", 0.0)), 0.0)
+        slug = _slugify(str(item.get("nome", "")))
         produtos.append(
             {
                 "id": item.get("id"),
@@ -279,12 +288,55 @@ def loja() -> str:
                 "preco_formatado": _format_currency(preco),
                 "frete_formatado": _format_currency(frete),
                 "total": preco + frete,
+                "total_formatado": _format_currency(preco + frete),
+                "slug": slug,
             }
         )
 
     return render_template(
         "public/loja.html",
         produtos=produtos,
+        pix_key=PIX_KEY,
+        active_page="loja",
+    )
+
+
+@public_bp.route("/loja/produto/<produto_id>/")
+@public_bp.route("/loja/produto/<slug>/<produto_id>/")
+def loja_produto(produto_id: str, slug: Optional[str] = None) -> str:
+    produtos = load_store_products()
+    produto = next((item for item in produtos if str(item.get("id")) == produto_id), None)
+    if not produto:
+        abort(404)
+
+    preco = max(float(produto.get("preco", 0.0)), 0.0)
+    frete = max(float(produto.get("frete", 0.0)), 0.0)
+    slug_canonical = _slugify(str(produto.get("nome", "")))
+
+    if slug != slug_canonical:
+        return redirect(
+            url_for("public.loja_produto", slug=slug_canonical, produto_id=produto_id),
+            code=301,
+        )
+
+    contexto_produto = {
+        "id": produto.get("id"),
+        "nome": produto.get("nome", ""),
+        "descricao": produto.get("descricao", ""),
+        "imagem": produto.get("imagem"),
+        "video": produto.get("video"),
+        "preco": preco,
+        "frete": frete,
+        "preco_formatado": _format_currency(preco),
+        "frete_formatado": _format_currency(frete),
+        "total": preco + frete,
+        "total_formatado": _format_currency(preco + frete),
+        "slug": slug_canonical,
+    }
+
+    return render_template(
+        "public/loja_produto.html",
+        produto=contexto_produto,
         pix_key=PIX_KEY,
         active_page="loja",
     )

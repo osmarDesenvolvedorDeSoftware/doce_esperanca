@@ -16,7 +16,14 @@ from wtforms import (
     SubmitField,
     TextAreaField,
 )
-from wtforms.validators import DataRequired, Length, Optional as OptionalValidator, URL, ValidationError
+from wtforms.validators import (
+    DataRequired,
+    Length,
+    NumberRange,
+    Optional as OptionalValidator,
+    URL,
+    ValidationError,
+)
 
 ALLOWED_IMAGE_EXTENSIONS: Iterable[str] = ("jpg", "jpeg", "png")
 ALLOWED_DOC_EXTENSIONS: Iterable[str] = ("pdf",)
@@ -188,25 +195,51 @@ class DepoimentoForm(FlaskForm):
     submit = SubmitField("Salvar")
 
 
+def _strip_filter(value: Optional[str]) -> Optional[str]:
+    if isinstance(value, str):
+        return value.strip()
+    return value
+
+
+def _decimal_filter(value: Optional[str]) -> Optional[str]:
+    if isinstance(value, str):
+        cleaned = value.strip().replace(" ", "")
+        if "," in cleaned and "." in cleaned:
+            cleaned = cleaned.replace(".", "")
+        cleaned = cleaned.replace(",", ".")
+        return cleaned
+    return value
+
+
 class ProdutoLojaForm(FlaskForm):
-    nome = StringField("Nome", validators=[DataRequired(), Length(max=255)])
-    descricao = TextAreaField("Descrição", validators=[DataRequired()])
+    nome = StringField(
+        "Nome",
+        validators=[DataRequired(), Length(max=255)],
+        filters=[_strip_filter],
+    )
+    descricao = TextAreaField(
+        "Descrição",
+        validators=[DataRequired()],
+        filters=[_strip_filter],
+    )
     preco = DecimalField(
         "Preço",
-        validators=[DataRequired()],
+        validators=[DataRequired(), NumberRange(min=0)],
         places=2,
         rounding=None,
+        filters=[_decimal_filter],
     )
     frete = DecimalField(
         "Frete",
-        validators=[DataRequired()],
+        validators=[DataRequired(), NumberRange(min=0)],
         places=2,
         rounding=None,
+        filters=[_decimal_filter],
     )
     imagem = FileField(
         "Imagem",
         validators=[
-            DataRequired(),
+            OptionalValidator(),
             FileAllowed(ALLOWED_IMAGE_EXTENSIONS, "Somente imagens são permitidas."),
             FileSize(),
         ],
