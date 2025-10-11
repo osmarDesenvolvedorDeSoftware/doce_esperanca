@@ -1,6 +1,6 @@
 # SECRET_KEY Rotation Guide
 
-This project relies on the `SECRET_KEY` environment variable for session security and cryptographic signing. Follow the steps below to manage and rotate the key safely.
+This project relies on the `SECRET_KEY` environment variable for session security and cryptographic signing. Follow the steps below to manage and rotate the key safely. During local development, the application falls back to a generated key stored in `.flask_secret_key` if neither `SECRET_KEY` nor `SECRET_KEY_FILE` are set. Production deployments must always provide the key explicitly.
 
 ## Generate a New Key
 1. SSH into the server or workstation that manages the deployment.
