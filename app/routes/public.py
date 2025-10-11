@@ -23,6 +23,7 @@ from app.models import (
     Voluntario,
 )
 from app.services.store import load_products as load_store_products
+from app.routes.decorators import safe_route
 
 
 public_bp = Blueprint("public", __name__)
@@ -147,6 +148,7 @@ def _log_texto_details(slug: str, texto: Optional[TextoInstitucional]) -> None:
 
 
 @public_bp.route("/")
+@safe_route()
 def index() -> str:
     textos = _collect_textos(
         "inicio",
@@ -178,6 +180,7 @@ def index() -> str:
 
 
 @public_bp.route("/sobre/")
+@safe_route()
 def sobre() -> str:
     textos = _collect_textos("sobre", "missao")
     requested_slugs = ["sobre", "missao"]
@@ -195,6 +198,7 @@ def sobre() -> str:
 
 
 @public_bp.route("/galeria/")
+@safe_route()
 def galeria() -> str:
     textos = _collect_textos("galeria", "placeholder_galeria")
     requested_slugs = ["galeria", "placeholder_galeria"]
@@ -214,6 +218,7 @@ def galeria() -> str:
 
 
 @public_bp.route("/depoimentos/")
+@safe_route()
 def depoimentos() -> str:
     textos = _collect_textos("depoimentos")
     requested_slugs = ["depoimentos"]
@@ -234,6 +239,7 @@ def depoimentos() -> str:
 
 
 @public_bp.route("/doacao/")
+@safe_route()
 def doacao() -> str:
     textos = _collect_textos(
         "doacao",
@@ -265,6 +271,7 @@ def doacao() -> str:
 
 
 @public_bp.route("/loja/")
+@safe_route()
 def loja() -> str:
     produtos_raw = sorted(
         load_store_products(),
@@ -303,6 +310,7 @@ def loja() -> str:
 
 @public_bp.route("/loja/produto/<produto_id>/")
 @public_bp.route("/loja/produto/<slug>/<produto_id>/")
+@safe_route()
 def loja_produto(produto_id: str, slug: Optional[str] = None) -> str:
     produtos = load_store_products()
     produto = next((item for item in produtos if str(item.get("id")) == produto_id), None)
@@ -343,6 +351,7 @@ def loja_produto(produto_id: str, slug: Optional[str] = None) -> str:
 
 
 @public_bp.route("/projetos/")
+@safe_route()
 def projetos() -> str:
     placeholders = _collect_textos(
         "placeholder_parceiros",
@@ -383,6 +392,7 @@ def projetos() -> str:
 
 
 @public_bp.route("/contato/")
+@safe_route()
 def contato() -> str:
     textos = _collect_textos("contato")
     texto_contato = textos.get("contato")

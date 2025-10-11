@@ -5,6 +5,7 @@ from __future__ import annotations
 import atexit
 import logging
 import sys
+from pathlib import Path
 from logging import Logger
 from logging.handlers import QueueHandler, QueueListener
 from queue import SimpleQueue
@@ -70,6 +71,13 @@ def configure_logging(app) -> None:
         # Fallback to INFO if ``getLevelName`` returned the level name itself
         log_level = logging.INFO
 
+    log_dir = Path(app.root_path).parent / "logs"
+    log_dir.mkdir(parents=True, exist_ok=True)
+    log_file_path = Path(app.config.get("LOG_FILE", log_dir / "app.log"))
+    log_file_path.parent.mkdir(parents=True, exist_ok=True)
+
+    logging.basicConfig(filename=str(log_file_path), level=max(log_level, logging.INFO))
+
     formatter = logging.Formatter(
         fmt=app.config.get(
             "LOG_FORMAT",
@@ -85,7 +93,10 @@ def configure_logging(app) -> None:
     queue_handler.setLevel(log_level)
 
     console_handler = _create_console_handler(log_level, formatter)
-    handlers = [console_handler]
+    file_handler = logging.FileHandler(log_file_path)
+    file_handler.setLevel(log_level)
+    file_handler.setFormatter(formatter)
+    handlers = [console_handler, file_handler]
 
     _configure_root_logger(queue_handler, log_level)
 
