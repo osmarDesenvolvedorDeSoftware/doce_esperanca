@@ -18,6 +18,13 @@ dependências estão instaladas e execute o comando abaixo no diretório raiz do
 gunicorn wsgi:app
 ```
 
+O projeto inclui um arquivo `gunicorn.conf.py` com ajustes de produção que
+substituem os workers síncronos pelo worker threaded (`gthread`). Essa mudança
+permite que cada processo atenda a várias conexões ao mesmo tempo, evitando que
+clientes lentos provoquem timeouts dos workers. O arquivo também define limites
+de tempo e reinícios periódicos para manter a aplicação saudável em execução
+contínua.
+
 Para testes locais, você pode expor a aplicação vinculando-a a todas as interfaces de
 rede:
 
