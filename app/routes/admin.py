@@ -468,20 +468,20 @@ def textos_create():
                     form.imagem.data,
                     current_app.config["IMAGE_UPLOAD_FOLDER"],
                     processor=_content_image_processor,
-                    )
-                except ValueError as exc:
-                    form.imagem.errors.append(str(exc))
-                    return render_template("admin/textos/form.html", form=form, texto=None)
-                texto.imagem_path = relative_path
+                )
+            except ValueError as exc:
+                form.imagem.errors.append(str(exc))
+                return render_template("admin/textos/form.html", form=form, texto=None)
+            texto.imagem_path = relative_path
 
-            db.session.add(texto)
-            try:
-                db.session.commit()
-                flash("Texto criado com sucesso.", "success")
-                return redirect(url_for("admin.textos_list"))
-            except IntegrityError:
-                db.session.rollback()
-                flash("Erro ao salvar texto. Verifique se o slug já está em uso.", "danger")
+        db.session.add(texto)
+        try:
+            db.session.commit()
+            flash("Texto criado com sucesso.", "success")
+            return redirect(url_for("admin.textos_list"))
+        except IntegrityError:
+            db.session.rollback()
+            flash("Erro ao salvar texto. Verifique se o slug já está em uso.", "danger")
     return render_template("admin/textos/form.html", form=form, texto=None)
 
 
