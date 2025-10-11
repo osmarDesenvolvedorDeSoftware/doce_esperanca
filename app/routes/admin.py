@@ -56,6 +56,7 @@ from app.models import (
     Voluntario,
 )
 from app.services.store import load_products as load_store_products, save_products as save_store_products
+from app.routes.decorators import safe_route
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
 
@@ -64,21 +65,36 @@ def _ensure_directory(path: Path) -> None:
     path.mkdir(parents=True, exist_ok=True)
 
 
-def _save_file(
+def _has_file(field_storage) -> bool:
+    return bool(field_storage and getattr(field_storage, "filename", "").strip())
+
+
+def _safe_upload(
     field_storage,
     base_folder: str,
     processor: Optional[Callable[[object, Path], None]] = None,
 ) -> Optional[str]:
-    if not field_storage:
+    if not field_storage or not getattr(field_storage, "filename", "").strip():
         return None
 
     filename = secure_filename(field_storage.filename or "")
     if not filename:
-        return None
+        raise ValueError("Nome de arquivo inválido.")
 
     name, extension = os.path.splitext(filename)
+    extension = extension.lower()
     timestamp = datetime.utcnow().strftime("%Y%m%d%H%M%S%f")
-    final_name = f"{name}_{timestamp}{extension.lower()}"
+
+    is_image_upload = False
+    mimetype = getattr(field_storage, "mimetype", "") or ""
+    if mimetype.startswith("image/") or extension in {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".webp"}:
+        is_image_upload = True
+
+    final_extension = ".jpg" if is_image_upload and processor is None else extension
+    if not final_extension:
+        final_extension = ".bin"
+
+    final_name = f"{name}_{timestamp}{final_extension}"
 
     target_folder = Path(base_folder)
     _ensure_directory(target_folder)
@@ -87,15 +103,23 @@ def _save_file(
     try:
         if processor:
             processor(field_storage, file_path)
+        elif is_image_upload:
+            stream = getattr(field_storage, "stream", field_storage)
+            if hasattr(stream, "seek"):
+                stream.seek(0)
+            with Image.open(stream) as image:
+                image = ImageOps.exif_transpose(image)
+                image = image.convert("RGB")
+                image.save(file_path, format="JPEG", quality=90)
         else:
             field_storage.save(file_path)
-    except ValueError:
+    except (UnidentifiedImageError, ValueError, OSError) as exc:
         if file_path.exists():
             try:
                 file_path.unlink()
             except OSError:
                 pass
-        raise
+        raise ValueError("Falha ao processar o arquivo") from exc
 
     relative_path = os.path.relpath(file_path, start=current_app.static_folder)
     return relative_path.replace(os.sep, "/")
@@ -283,7 +307,7 @@ def _save_store_video(field_storage) -> Optional[str]:
         current_app.config.get("STORE_VIDEO_UPLOAD_FOLDER")
         or current_app.config.get("VIDEO_UPLOAD_FOLDER")
     )
-    return _save_file(field_storage, upload_folder)
+    return _safe_upload(field_storage, upload_folder)
 
 
 def _ensure_institutional_texts() -> Dict[str, TextoInstitucional]:
@@ -338,6 +362,7 @@ def restrict_to_admins() -> Optional[object]:
 
 
 @admin_bp.route("/login", methods=["GET", "POST"])
+@safe_route()
 def login():
     if current_user.is_authenticated:
         if getattr(current_user, "is_admin", False):
@@ -360,6 +385,7 @@ def login():
 
 @admin_bp.route("/logout")
 @login_required
+@safe_route()
 def logout():
     logout_user()
     flash("Sessão encerrada com sucesso.", "success")
@@ -368,6 +394,7 @@ def logout():
 
 @admin_bp.route("/")
 @login_required
+@safe_route()
 def dashboard():
     stats = {
         "textos": TextoInstitucional.query.count(),
@@ -384,6 +411,7 @@ def dashboard():
 
 @admin_bp.route("/uploads/<path:filename>")
 @login_required
+@safe_route()
 def send_upload(filename: str):
     safe_path = Path(filename)
     if safe_path.is_absolute() or ".." in safe_path.parts:
@@ -396,6 +424,7 @@ def send_upload(filename: str):
 
 @admin_bp.route("/textos")
 @login_required
+@safe_route()
 def textos_list():
     featured_map = _ensure_institutional_texts()
 
@@ -419,6 +448,7 @@ def textos_list():
 
 @admin_bp.route("/textos/criar", methods=["GET", "POST"])
 @login_required
+@safe_route()
 def textos_create():
     form = TextoInstitucionalForm()
     _ensure_content_image_hint(form.imagem)
@@ -432,12 +462,12 @@ def textos_create():
                 resumo=form.resumo.data,
                 conteudo=form.conteudo.data,
             )
-            if form.imagem.data:
-                try:
-                    relative_path = _save_file(
-                        form.imagem.data,
-                        current_app.config["IMAGE_UPLOAD_FOLDER"],
-                        processor=_content_image_processor,
+        if _has_file(form.imagem.data):
+            try:
+                relative_path = _safe_upload(
+                    form.imagem.data,
+                    current_app.config["IMAGE_UPLOAD_FOLDER"],
+                    processor=_content_image_processor,
                     )
                 except ValueError as exc:
                     form.imagem.errors.append(str(exc))
@@ -457,6 +487,7 @@ def textos_create():
 
 @admin_bp.route("/textos/<int:texto_id>/editar", methods=["GET", "POST"])
 @login_required
+@safe_route()
 def textos_edit(texto_id: int):
     _ensure_institutional_texts()
     texto = TextoInstitucional.query.get_or_404(texto_id)
@@ -529,9 +560,9 @@ def textos_edit(texto_id: int):
         texto.resumo = form.resumo.data
         texto.conteudo = form.conteudo.data
 
-        if form.imagem.data:
+        if _has_file(form.imagem.data):
             try:
-                new_path = _save_file(
+                new_path = _safe_upload(
                     form.imagem.data,
                     current_app.config["IMAGE_UPLOAD_FOLDER"],
                     processor=_content_image_processor,
@@ -582,6 +613,7 @@ def textos_edit(texto_id: int):
 
 @admin_bp.route("/textos/<int:texto_id>/excluir", methods=["POST"])
 @login_required
+@safe_route()
 def textos_delete(texto_id: int):
     texto = TextoInstitucional.query.get_or_404(texto_id)
     if texto.slug in INSTITUTIONAL_SLUGS:
@@ -599,6 +631,7 @@ def textos_delete(texto_id: int):
 
 @admin_bp.route("/parceiros")
 @login_required
+@safe_route()
 def parceiros_list():
     parceiros = Parceiro.query.order_by(Parceiro.created_at.desc()).all()
     return render_template("admin/parceiros/list.html", parceiros=parceiros)
@@ -606,6 +639,7 @@ def parceiros_list():
 
 @admin_bp.route("/parceiros/criar", methods=["GET", "POST"])
 @login_required
+@safe_route()
 def parceiros_create():
     form = ParceiroForm()
     if form.validate_on_submit():
@@ -615,8 +649,15 @@ def parceiros_create():
             descricao=form.descricao.data,
             website=form.website.data,
         )
-        if form.logo.data:
-            parceiro.logo_path = _save_file(form.logo.data, current_app.config["IMAGE_UPLOAD_FOLDER"])
+        if _has_file(form.logo.data):
+            try:
+                parceiro.logo_path = _safe_upload(
+                    form.logo.data,
+                    current_app.config["IMAGE_UPLOAD_FOLDER"],
+                )
+            except ValueError as exc:
+                form.logo.errors.append(str(exc))
+                return render_template("admin/parceiros/form.html", form=form, parceiro=None)
         db.session.add(parceiro)
         try:
             db.session.commit()
@@ -630,6 +671,7 @@ def parceiros_create():
 
 @admin_bp.route("/parceiros/<int:parceiro_id>/editar", methods=["GET", "POST"])
 @login_required
+@safe_route()
 def parceiros_edit(parceiro_id: int):
     parceiro = Parceiro.query.get_or_404(parceiro_id)
     form = ParceiroForm(obj=parceiro)
@@ -638,9 +680,17 @@ def parceiros_edit(parceiro_id: int):
         parceiro.slug = form.slug.data
         parceiro.descricao = form.descricao.data
         parceiro.website = form.website.data
-        if form.logo.data:
+        if _has_file(form.logo.data):
+            try:
+                new_logo = _safe_upload(
+                    form.logo.data,
+                    current_app.config["IMAGE_UPLOAD_FOLDER"],
+                )
+            except ValueError as exc:
+                form.logo.errors.append(str(exc))
+                return render_template("admin/parceiros/form.html", form=form, parceiro=parceiro)
             _delete_file(parceiro.logo_path)
-            parceiro.logo_path = _save_file(form.logo.data, current_app.config["IMAGE_UPLOAD_FOLDER"])
+            parceiro.logo_path = new_logo
         try:
             db.session.commit()
             flash("Parceiro atualizado com sucesso.", "success")
@@ -653,6 +703,7 @@ def parceiros_edit(parceiro_id: int):
 
 @admin_bp.route("/parceiros/<int:parceiro_id>/excluir", methods=["POST"])
 @login_required
+@safe_route()
 def parceiros_delete(parceiro_id: int):
     parceiro = Parceiro.query.get_or_404(parceiro_id)
     _delete_file(parceiro.logo_path)
@@ -667,6 +718,7 @@ def parceiros_delete(parceiro_id: int):
 
 @admin_bp.route("/apoios")
 @login_required
+@safe_route()
 def apoios_list():
     apoios = Apoio.query.order_by(Apoio.created_at.desc()).all()
     return render_template("admin/apoios/list.html", apoios=apoios)
@@ -674,13 +726,14 @@ def apoios_list():
 
 @admin_bp.route("/apoios/criar", methods=["GET", "POST"])
 @login_required
+@safe_route()
 def apoios_create():
     form = ApoioForm()
     if form.validate_on_submit():
         apoio = Apoio(titulo=form.titulo.data, descricao=form.descricao.data)
-        if form.imagem.data:
+        if _has_file(form.imagem.data):
             try:
-                relative_path = _save_file(
+                relative_path = _safe_upload(
                     form.imagem.data,
                     current_app.config["APOIO_UPLOAD_FOLDER"],
                     processor=_apoio_image_processor,
@@ -698,15 +751,16 @@ def apoios_create():
 
 @admin_bp.route("/apoios/<int:apoio_id>/editar", methods=["GET", "POST"])
 @login_required
+@safe_route()
 def apoios_edit(apoio_id: int):
     apoio = Apoio.query.get_or_404(apoio_id)
     form = ApoioForm(obj=apoio)
     if form.validate_on_submit():
         apoio.titulo = form.titulo.data
         apoio.descricao = form.descricao.data
-        if form.imagem.data:
+        if _has_file(form.imagem.data):
             try:
-                relative_path = _save_file(
+                relative_path = _safe_upload(
                     form.imagem.data,
                     current_app.config["APOIO_UPLOAD_FOLDER"],
                     processor=_apoio_image_processor,
@@ -724,6 +778,7 @@ def apoios_edit(apoio_id: int):
 
 @admin_bp.route("/apoios/<int:apoio_id>/excluir", methods=["POST"])
 @login_required
+@safe_route()
 def apoios_delete(apoio_id: int):
     apoio = Apoio.query.get_or_404(apoio_id)
     _delete_file(apoio.imagem_path)
@@ -738,6 +793,7 @@ def apoios_delete(apoio_id: int):
 
 @admin_bp.route("/depoimentos")
 @login_required
+@safe_route()
 def depoimentos_list():
     depoimentos = Depoimento.query.order_by(Depoimento.created_at.desc()).all()
     return render_template("admin/depoimentos/list.html", depoimentos=depoimentos)
@@ -745,14 +801,15 @@ def depoimentos_list():
 
 @admin_bp.route("/depoimentos/criar", methods=["GET", "POST"])
 @login_required
+@safe_route()
 def depoimentos_create():
     form = DepoimentoForm()
     if form.validate_on_submit():
-        if not form.video.data:
+        if not _has_file(form.video.data):
             form.video.errors.append("Envie um arquivo de vídeo.")
         else:
             try:
-                video_path = _save_file(
+                video_path = _safe_upload(
                     form.video.data,
                     current_app.config["VIDEO_UPLOAD_FOLDER"],
                 )
@@ -773,6 +830,7 @@ def depoimentos_create():
 
 @admin_bp.route("/depoimentos/<int:depoimento_id>/editar", methods=["GET", "POST"])
 @login_required
+@safe_route()
 def depoimentos_edit(depoimento_id: int):
     depoimento = Depoimento.query.get_or_404(depoimento_id)
     form = DepoimentoForm(obj=depoimento)
@@ -780,10 +838,10 @@ def depoimentos_edit(depoimento_id: int):
         depoimento.titulo = form.titulo.data
         depoimento.descricao = form.descricao.data
         video_field = form.video.data
-        has_new_video = bool(getattr(video_field, "filename", ""))
+        has_new_video = _has_file(video_field)
         if has_new_video:
             try:
-                video_path = _save_file(
+                video_path = _safe_upload(
                     video_field,
                     current_app.config["VIDEO_UPLOAD_FOLDER"],
                 )
@@ -803,6 +861,7 @@ def depoimentos_edit(depoimento_id: int):
 
 @admin_bp.route("/depoimentos/<int:depoimento_id>/excluir", methods=["POST"])
 @login_required
+@safe_route()
 def depoimentos_delete(depoimento_id: int):
     depoimento = Depoimento.query.get_or_404(depoimento_id)
     _delete_file(depoimento.video)
@@ -842,6 +901,7 @@ def _ensure_content_image_hint(field: Any) -> None:
 
 @admin_bp.route("/banners")
 @login_required
+@safe_route()
 def banners_list():
     banners = Banner.query.order_by(Banner.ordem.asc(), Banner.created_at.desc()).all()
     return render_template("admin/banners/list.html", banners=banners)
@@ -849,10 +909,11 @@ def banners_list():
 
 @admin_bp.route("/banners/criar", methods=["GET", "POST"])
 @login_required
+@safe_route()
 def banners_create():
     form = BannerForm()
     if form.validate_on_submit():
-        if not form.imagem.data:
+        if not _has_file(form.imagem.data):
             form.imagem.errors.append("Envie uma imagem para o banner.")
         else:
             banner = Banner(
@@ -861,7 +922,7 @@ def banners_create():
                 ordem=form.ordem.data or 0,
             )
             try:
-                banner.imagem_path = _save_file(
+                banner.imagem_path = _safe_upload(
                     form.imagem.data,
                     current_app.config["BANNER_UPLOAD_FOLDER"],
                     processor=_banner_processor,
@@ -879,6 +940,7 @@ def banners_create():
 
 @admin_bp.route("/banners/<int:banner_id>/editar", methods=["GET", "POST"])
 @login_required
+@safe_route()
 def banners_edit(banner_id: int):
     banner = Banner.query.get_or_404(banner_id)
     form = BannerForm(obj=banner)
@@ -887,9 +949,9 @@ def banners_edit(banner_id: int):
         banner.descricao = form.descricao.data
         banner.ordem = form.ordem.data or 0
 
-        if form.imagem.data:
+        if _has_file(form.imagem.data):
             try:
-                new_path = _save_file(
+                new_path = _safe_upload(
                     form.imagem.data,
                     current_app.config["BANNER_UPLOAD_FOLDER"],
                     processor=_banner_processor,
@@ -908,6 +970,7 @@ def banners_edit(banner_id: int):
 
 @admin_bp.route("/banners/<int:banner_id>/excluir", methods=["POST"])
 @login_required
+@safe_route()
 def banners_delete(banner_id: int):
     banner = Banner.query.get_or_404(banner_id)
     _delete_file(banner.imagem_path)
@@ -922,6 +985,7 @@ def banners_delete(banner_id: int):
 
 @admin_bp.route("/voluntarios")
 @login_required
+@safe_route()
 def voluntarios_list():
     voluntarios = Voluntario.query.order_by(Voluntario.created_at.desc()).all()
     return render_template("admin/voluntarios/list.html", voluntarios=voluntarios)
@@ -929,6 +993,7 @@ def voluntarios_list():
 
 @admin_bp.route("/voluntarios/criar", methods=["GET", "POST"])
 @login_required
+@safe_route()
 def voluntarios_create():
     form = VoluntarioForm()
     if form.validate_on_submit():
@@ -947,6 +1012,7 @@ def voluntarios_create():
 
 @admin_bp.route("/voluntarios/<int:voluntario_id>/editar", methods=["GET", "POST"])
 @login_required
+@safe_route()
 def voluntarios_edit(voluntario_id: int):
     voluntario = Voluntario.query.get_or_404(voluntario_id)
     form = VoluntarioForm(obj=voluntario)
@@ -963,6 +1029,7 @@ def voluntarios_edit(voluntario_id: int):
 
 @admin_bp.route("/voluntarios/<int:voluntario_id>/excluir", methods=["POST"])
 @login_required
+@safe_route()
 def voluntarios_delete(voluntario_id: int):
     voluntario = Voluntario.query.get_or_404(voluntario_id)
     db.session.delete(voluntario)
@@ -976,6 +1043,7 @@ def voluntarios_delete(voluntario_id: int):
 
 @admin_bp.route("/galeria")
 @login_required
+@safe_route()
 def galeria_list():
     itens = Galeria.query.order_by(Galeria.created_at.desc()).all()
     return render_template("admin/galeria/list.html", itens=itens)
@@ -983,15 +1051,16 @@ def galeria_list():
 
 @admin_bp.route("/galeria/criar", methods=["GET", "POST"])
 @login_required
+@safe_route()
 def galeria_create():
     form = GaleriaForm()
     _ensure_content_image_hint(form.imagem)
     if form.validate_on_submit():
-        if not form.imagem.data:
+        if not _has_file(form.imagem.data):
             form.imagem.errors.append("Envie uma imagem para a galeria.")
         else:
             try:
-                imagem_path = _save_file(
+                imagem_path = _safe_upload(
                     form.imagem.data,
                     current_app.config["IMAGE_UPLOAD_FOLDER"],
                     processor=_content_image_processor,
@@ -1019,6 +1088,7 @@ def galeria_create():
 
 @admin_bp.route("/galeria/<int:item_id>/editar", methods=["GET", "POST"])
 @login_required
+@safe_route()
 def galeria_edit(item_id: int):
     item = Galeria.query.get_or_404(item_id)
     form = GaleriaForm(obj=item)
@@ -1030,9 +1100,9 @@ def galeria_edit(item_id: int):
         item.slug = form.slug.data
         item.descricao = form.descricao.data
         item.publicado_em = _combine_date_with_min_time(form.publicado_em.data) or item.publicado_em
-        if form.imagem.data:
+        if _has_file(form.imagem.data):
             try:
-                new_path = _save_file(
+                new_path = _safe_upload(
                     form.imagem.data,
                     current_app.config["IMAGE_UPLOAD_FOLDER"],
                     processor=_content_image_processor,
@@ -1057,6 +1127,7 @@ def galeria_edit(item_id: int):
 
 @admin_bp.route("/galeria/<int:item_id>/excluir", methods=["POST"])
 @login_required
+@safe_route()
 def galeria_delete(item_id: int):
     item = Galeria.query.get_or_404(item_id)
     _delete_file(item.imagem_path)
@@ -1071,6 +1142,7 @@ def galeria_delete(item_id: int):
 
 @admin_bp.route("/transparencia")
 @login_required
+@safe_route()
 def transparencia_list():
     itens = Transparencia.query.order_by(Transparencia.created_at.desc()).all()
     return render_template("admin/transparencia/list.html", itens=itens)
@@ -1078,32 +1150,43 @@ def transparencia_list():
 
 @admin_bp.route("/transparencia/criar", methods=["GET", "POST"])
 @login_required
+@safe_route()
 def transparencia_create():
     form = TransparenciaForm()
     if form.validate_on_submit():
-        if not form.arquivo.data:
+        if not _has_file(form.arquivo.data):
             form.arquivo.errors.append("Envie um arquivo PDF.")
         else:
-            item = Transparencia(
-                titulo=form.titulo.data,
-                slug=form.slug.data,
-                descricao=form.descricao.data,
-                publicado_em=_combine_date_with_min_time(form.publicado_em.data) or datetime.utcnow(),
-                arquivo_path=_save_file(form.arquivo.data, current_app.config["DOC_UPLOAD_FOLDER"]),
-            )
-            db.session.add(item)
             try:
-                db.session.commit()
-                flash("Documento de transparência criado com sucesso.", "success")
-                return redirect(url_for("admin.transparencia_list"))
-            except IntegrityError:
-                db.session.rollback()
-                flash("Erro ao salvar documento. Verifique se o slug já está em uso.", "danger")
+                arquivo_path = _safe_upload(
+                    form.arquivo.data,
+                    current_app.config["DOC_UPLOAD_FOLDER"],
+                )
+            except ValueError as exc:
+                form.arquivo.errors.append(str(exc))
+            else:
+                item = Transparencia(
+                    titulo=form.titulo.data,
+                    slug=form.slug.data,
+                    descricao=form.descricao.data,
+                    publicado_em=_combine_date_with_min_time(form.publicado_em.data)
+                    or datetime.utcnow(),
+                    arquivo_path=arquivo_path,
+                )
+                db.session.add(item)
+                try:
+                    db.session.commit()
+                    flash("Documento de transparência criado com sucesso.", "success")
+                    return redirect(url_for("admin.transparencia_list"))
+                except IntegrityError:
+                    db.session.rollback()
+                    flash("Erro ao salvar documento. Verifique se o slug já está em uso.", "danger")
     return render_template("admin/transparencia/form.html", form=form, item=None)
 
 
 @admin_bp.route("/transparencia/<int:item_id>/editar", methods=["GET", "POST"])
 @login_required
+@safe_route()
 def transparencia_edit(item_id: int):
     item = Transparencia.query.get_or_404(item_id)
     form = TransparenciaForm(obj=item)
@@ -1114,9 +1197,17 @@ def transparencia_edit(item_id: int):
         item.slug = form.slug.data
         item.descricao = form.descricao.data
         item.publicado_em = _combine_date_with_min_time(form.publicado_em.data) or item.publicado_em
-        if form.arquivo.data:
+        if _has_file(form.arquivo.data):
+            try:
+                new_path = _safe_upload(
+                    form.arquivo.data,
+                    current_app.config["DOC_UPLOAD_FOLDER"],
+                )
+            except ValueError as exc:
+                form.arquivo.errors.append(str(exc))
+                return render_template("admin/transparencia/form.html", form=form, item=item)
             _delete_file(item.arquivo_path)
-            item.arquivo_path = _save_file(form.arquivo.data, current_app.config["DOC_UPLOAD_FOLDER"])
+            item.arquivo_path = new_path
         elif not item.arquivo_path:
             form.arquivo.errors.append("Envie um arquivo PDF.")
             return render_template("admin/transparencia/form.html", form=form, item=item)
@@ -1132,6 +1223,7 @@ def transparencia_edit(item_id: int):
 
 @admin_bp.route("/transparencia/<int:item_id>/excluir", methods=["POST"])
 @login_required
+@safe_route()
 def transparencia_delete(item_id: int):
     item = Transparencia.query.get_or_404(item_id)
     _delete_file(item.arquivo_path)
@@ -1143,6 +1235,7 @@ def transparencia_delete(item_id: int):
 
 @admin_bp.route("/loja", methods=["GET", "POST"])
 @login_required
+@safe_route()
 def loja():
     form = ProdutoLojaForm()
     produtos = load_store_products()
@@ -1153,7 +1246,7 @@ def loja():
     )
 
     if form.validate_on_submit():
-        if not form.imagem.data:
+        if not _has_file(form.imagem.data):
             form.imagem.errors.append("Envie uma imagem do produto.")
             return render_template("admin/loja.html", form=form, produtos=produtos)
 
@@ -1165,7 +1258,7 @@ def loja():
         except ValueError as exc:
             form.imagem.errors.append(str(exc))
 
-        if form.video.data:
+        if _has_file(form.video.data):
             try:
                 video_path = _save_store_video(form.video.data)
             except ValueError as exc:
@@ -1210,6 +1303,7 @@ def loja():
 
 @admin_bp.route("/loja/upload", methods=["POST"])
 @login_required
+@safe_route(json_response=True)
 def loja_upload():
     form = ProdutoLojaForm()
     imagem_path: Optional[str] = None
@@ -1227,7 +1321,7 @@ def loja_upload():
 
         imagem_path = _save_store_image(imagem_file)
 
-        video_file = form.video.data if form.video.data and getattr(form.video.data, "filename", "").strip() else None
+        video_file = form.video.data if _has_file(form.video.data) else None
         if video_file:
             video_path = _save_store_video(video_file)
 
@@ -1286,6 +1380,7 @@ def loja_upload():
 
 @admin_bp.route("/loja/<produto_id>/editar", methods=["GET", "POST"])
 @login_required
+@safe_route()
 def loja_editar(produto_id: str):
     produtos = load_store_products()
     produto_index = next(
@@ -1309,13 +1404,13 @@ def loja_editar(produto_id: str):
         nova_imagem: Optional[str] = None
         novo_video: Optional[str] = None
 
-        if form.imagem.data:
+        if _has_file(form.imagem.data):
             try:
                 nova_imagem = _save_store_image(form.imagem.data)
             except ValueError as exc:
                 form.imagem.errors.append(str(exc))
 
-        if form.video.data:
+        if _has_file(form.video.data):
             try:
                 novo_video = _save_store_video(form.video.data)
             except ValueError as exc:
@@ -1367,6 +1462,7 @@ def loja_editar(produto_id: str):
 
 @admin_bp.route("/loja/<produto_id>/excluir", methods=["POST"])
 @login_required
+@safe_route()
 def loja_excluir(produto_id: str):
     produtos = load_store_products()
     produto_removido: Optional[Dict[str, Any]] = None

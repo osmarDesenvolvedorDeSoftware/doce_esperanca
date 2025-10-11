@@ -3,7 +3,7 @@ from os import fspath
 from pathlib import Path
 from typing import Optional
 
-from flask import Flask, url_for
+from flask import Flask, render_template, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
@@ -111,6 +111,15 @@ def create_app(config_class=None):
 
     app.register_blueprint(public_bp)
     app.register_blueprint(admin_bp)
+
+    @app.errorhandler(404)
+    def handle_404(error):
+        return render_template("errors/404.html"), 404
+
+    @app.errorhandler(500)
+    def handle_500(error):
+        app.logger.exception("Erro interno global")
+        return render_template("errors/500.html"), 500
 
     @app.context_processor
     def inject_static_url_helper():
