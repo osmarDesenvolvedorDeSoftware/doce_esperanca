@@ -12,6 +12,7 @@ from flask import (
     abort,
     current_app,
     flash,
+    jsonify,
     redirect,
     render_template,
     request,
@@ -1205,6 +1206,82 @@ def loja():
             return redirect(url_for("admin.loja"))
 
     return render_template("admin/loja.html", form=form, produtos=produtos)
+
+
+@admin_bp.route("/loja/upload", methods=["POST"])
+@login_required
+def loja_upload():
+    form = ProdutoLojaForm()
+    imagem_path: Optional[str] = None
+    video_path: Optional[str] = None
+
+    try:
+        if not form.validate():
+            error_messages = [message for messages in form.errors.values() for message in messages]
+            message = error_messages[0] if error_messages else "Dados inválidos."
+            return jsonify({"erro": message, "erros": form.errors}), 400
+
+        imagem_file = form.imagem.data
+        if not imagem_file or not getattr(imagem_file, "filename", "").strip():
+            return jsonify({"erro": "Campos obrigatórios ausentes"}), 400
+
+        imagem_path = _save_store_image(imagem_file)
+
+        video_file = form.video.data if form.video.data and getattr(form.video.data, "filename", "").strip() else None
+        if video_file:
+            video_path = _save_store_video(video_file)
+
+        nome = (form.nome.data or "").strip()
+        descricao = (form.descricao.data or "").strip()
+        preco = float(form.preco.data or 0)
+        frete = float(form.frete.data or 0)
+
+        if not all([nome, descricao]) or preco is None or frete is None:
+            if imagem_path:
+                _delete_file(imagem_path)
+            if video_path:
+                _delete_file(video_path)
+            return jsonify({"erro": "Campos obrigatórios ausentes"}), 400
+
+        produto = {
+            "id": str(uuid4()),
+            "nome": nome,
+            "descricao": descricao,
+            "preco": preco,
+            "frete": frete,
+            "imagem": imagem_path,
+            "video": video_path,
+            "created_at": datetime.utcnow().isoformat(),
+        }
+
+        produtos = load_store_products()
+        produtos.insert(0, produto)
+
+        try:
+            save_store_products(produtos)
+        except OSError as exc:
+            if imagem_path:
+                _delete_file(imagem_path)
+            if video_path:
+                _delete_file(video_path)
+            current_app.logger.exception("Não foi possível salvar o produto da loja.")
+            return jsonify({"erro": str(exc)}), 500
+
+        return jsonify({"status": "ok", "mensagem": "Produto cadastrado com sucesso"}), 201
+
+    except ValueError as exc:
+        if imagem_path:
+            _delete_file(imagem_path)
+        if video_path:
+            _delete_file(video_path)
+        return jsonify({"erro": str(exc)}), 400
+    except Exception as exc:  # pragma: no cover - fallback de segurança
+        if imagem_path:
+            _delete_file(imagem_path)
+        if video_path:
+            _delete_file(video_path)
+        current_app.logger.exception("Erro inesperado ao cadastrar produto na loja.")
+        return jsonify({"erro": str(exc)}), 500
 
 
 @admin_bp.route("/loja/<produto_id>/editar", methods=["GET", "POST"])
