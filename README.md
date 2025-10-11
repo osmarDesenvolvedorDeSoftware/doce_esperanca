@@ -55,7 +55,7 @@ evitando problemas de conteúdo desatualizado.
 
 ## Configuração de variáveis de ambiente
 
-Defina o `SECRET_KEY` em um arquivo `.env` ou diretamente no ambiente antes de iniciar a aplicação. Utilize um valor forte e aleatório; consulte o guia em `docs/secret_key_rotation.md` para instruções de geração e rotação.
+Defina o `SECRET_KEY` em um arquivo `.env` ou diretamente no ambiente antes de iniciar a aplicação. Utilize um valor forte e aleatório; consulte o guia em `docs/secret_key_rotation.md` para instruções de geração e rotação. Caso a variável não esteja definida em ambientes de desenvolvimento, a aplicação criará automaticamente um arquivo `.flask_secret_key` com uma chave aleatória na raiz do projeto e emitirá um aviso nos logs. Para produção, continue configurando a variável de ambiente explicitamente ou forneça um caminho via `SECRET_KEY_FILE` apontando para o arquivo seguro com a chave.
 
 Configure também a variável `DATABASE_URL` apontando para a instância PostgreSQL utilizada no deploy. A aplicação espera uma string de conexão no formato:
 
