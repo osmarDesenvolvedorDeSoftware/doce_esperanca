@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import io
 import os
 from datetime import date, datetime, time
 from uuid import uuid4
@@ -229,10 +230,48 @@ def _save_store_image(field_storage) -> Optional[str]:
         or current_app.config.get("IMAGE_UPLOAD_FOLDER")
     )
 
-    def _processor(storage, destination: Path) -> None:
-        _process_image_with_max_width(storage, destination, max_width=1200)
+    target_folder = Path(upload_folder)
+    _ensure_directory(target_folder)
 
-    return _save_file(field_storage, upload_folder, processor=_processor)
+    stream = getattr(field_storage, "stream", field_storage)
+    if hasattr(stream, "seek"):
+        stream.seek(0)
+
+    buffer: Optional[io.BytesIO]
+    buffer = None
+
+    try:
+        with Image.open(stream) as image:
+            image = ImageOps.exif_transpose(image)
+            image = image.convert("RGB")
+
+            resample = getattr(Image, "Resampling", Image).LANCZOS
+            max_size = 1024
+            image.thumbnail((max_size, max_size), resample)
+
+            buffer = io.BytesIO()
+            image.save(buffer, format="JPEG", quality=85)
+            buffer.seek(0)
+
+    except (UnidentifiedImageError, OSError) as exc:
+        raise ValueError("Formato não reconhecido. Tente novamente com outro arquivo de imagem.") from exc
+    finally:
+        if hasattr(stream, "seek"):
+            stream.seek(0)
+
+    if buffer is None:
+        raise ValueError("Formato não reconhecido. Tente novamente com outro arquivo de imagem.")
+
+    filename = f"{uuid4().hex}.jpg"
+    file_path = target_folder / filename
+
+    with file_path.open("wb") as destination:
+        destination.write(buffer.getvalue())
+
+    buffer.close()
+
+    relative_path = os.path.relpath(file_path, start=current_app.static_folder)
+    return relative_path.replace(os.sep, "/")
 
 
 def _save_store_video(field_storage) -> Optional[str]:
