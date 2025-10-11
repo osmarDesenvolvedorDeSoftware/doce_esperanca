@@ -16,18 +16,18 @@
           <h2 class="h5 mb-0">Novo produto</h2>
         </div>
         <div class="card-body">
-          <form method="post" enctype="multipart/form-data" novalidate>
+          <form method="post" enctype="multipart/form-data" novalidate data-store-form data-upload-url="{{ url_for('admin.loja_upload') }}">
             {{ form.hidden_tag() }}
             <div class="mb-3">
               {{ form.nome.label(class="form-label fw-semibold") }}
-              {{ form.nome(class="form-control", placeholder="Nome do produto") }}
+              {{ form.nome(class="form-control", placeholder="Nome do produto", required=True) }}
               {% for error in form.nome.errors %}
                 <div class="invalid-feedback d-block">{{ error }}</div>
               {% endfor %}
             </div>
             <div class="mb-3">
               {{ form.descricao.label(class="form-label fw-semibold") }}
-              {{ form.descricao(class="form-control", rows="4", placeholder="Descrição do produto e materiais utilizados") }}
+              {{ form.descricao(class="form-control", rows="4", placeholder="Descrição do produto e materiais utilizados", required=True) }}
               {% for error in form.descricao.errors %}
                 <div class="invalid-feedback d-block">{{ error }}</div>
               {% endfor %}
@@ -35,14 +35,14 @@
             <div class="row g-3">
               <div class="col-sm-6">
                 <label class="form-label fw-semibold" for="{{ form.preco.id }}">{{ form.preco.label.text }} <small class="text-muted">(R$)</small></label>
-                {{ form.preco(class="form-control", step="0.01", min="0", placeholder="0,00") }}
+                {{ form.preco(class="form-control", step="0.01", min="0", placeholder="0,00", required=True) }}
                 {% for error in form.preco.errors %}
                   <div class="invalid-feedback d-block">{{ error }}</div>
                 {% endfor %}
               </div>
               <div class="col-sm-6">
                 <label class="form-label fw-semibold" for="{{ form.frete.id }}">{{ form.frete.label.text }} <small class="text-muted">(R$)</small></label>
-                {{ form.frete(class="form-control", step="0.01", min="0", placeholder="0,00") }}
+                {{ form.frete(class="form-control", step="0.01", min="0", placeholder="0,00", required=True) }}
                 {% for error in form.frete.errors %}
                   <div class="invalid-feedback d-block">{{ error }}</div>
                 {% endfor %}
@@ -50,7 +50,7 @@
             </div>
             <div class="mt-3">
               {{ form.imagem.label(class="form-label fw-semibold") }}
-              {{ form.imagem(class="form-control", accept="image/*", **{"data-image-preview-input": "true"}) }}
+              {{ form.imagem(class="form-control", accept="image/*", required=True, **{"data-image-preview-input": "true"}) }}
               <div class="form-text">Envie uma imagem em qualquer formato comum; ela será convertida automaticamente para JPG.</div>
               {% for error in form.imagem.errors %}
                 <div class="invalid-feedback d-block">{{ error }}</div>
@@ -140,6 +140,97 @@
   {{ super() }}
   <script>
     document.addEventListener('DOMContentLoaded', function () {
+      const form = document.querySelector('[data-store-form]');
+      if (form) {
+        const requiredFields = [
+          { name: 'nome', label: 'Nome do produto' },
+          { name: 'descricao', label: 'Descrição' },
+          { name: 'preco', label: 'Preço' },
+          { name: 'frete', label: 'Frete' },
+          { name: 'imagem', label: 'Imagem' }
+        ];
+
+        form.addEventListener('submit', function (event) {
+          const uploadUrl = form.getAttribute('data-upload-url') || form.getAttribute('action') || window.location.href;
+          const submitButton = form.querySelector('[type="submit"]');
+
+          for (const field of requiredFields) {
+            const input = form.querySelector(`[name='${field.name}']`);
+            if (!input) {
+              continue;
+            }
+
+            let valuePresent = false;
+            if (input.type === 'file') {
+              valuePresent = !!(input.files && input.files.length);
+            } else {
+              valuePresent = !!input.value.trim();
+            }
+
+            if (!valuePresent) {
+              event.preventDefault();
+              alert(`Por favor, preencha o campo: ${field.label}`);
+              input.focus();
+              return;
+            }
+          }
+
+          event.preventDefault();
+
+          if (submitButton) {
+            submitButton.disabled = true;
+          }
+
+          const formData = new FormData(form);
+
+          fetch(uploadUrl, {
+            method: 'POST',
+            body: formData,
+          })
+            .then(async (response) => {
+              let payload = null;
+              try {
+                payload = await response.json();
+              } catch (jsonError) {
+                payload = { erro: 'Resposta inválida do servidor.' };
+              }
+
+              if (!response.ok) {
+                const message = payload && payload.erro ? payload.erro : 'Não foi possível cadastrar o produto.';
+                throw new Error(message);
+              }
+
+              return payload;
+            })
+            .then((data) => {
+              const mensagem = data && data.mensagem ? data.mensagem : 'Produto cadastrado com sucesso!';
+              alert(mensagem);
+              form.reset();
+              const imageInput = form.querySelector('[data-image-preview-input]');
+              if (imageInput) {
+                const previewContainer = document.getElementById(`${imageInput.id}_preview`);
+                if (previewContainer) {
+                  previewContainer.hidden = true;
+                  const previewImage = previewContainer.querySelector('img');
+                  if (previewImage) {
+                    previewImage.removeAttribute('src');
+                    previewImage.alt = 'Pré-visualização da imagem selecionada';
+                  }
+                }
+              }
+              window.location.reload();
+            })
+            .catch((error) => {
+              alert(`Erro: ${error.message}`);
+            })
+            .finally(() => {
+              if (submitButton) {
+                submitButton.disabled = false;
+              }
+            });
+        });
+      }
+
       document.querySelectorAll('[data-image-preview-input]').forEach(function (input) {
         const previewContainer = document.getElementById(input.id + '_preview');
         if (!previewContainer) {
