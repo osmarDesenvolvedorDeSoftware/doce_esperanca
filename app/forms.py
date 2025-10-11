@@ -27,7 +27,7 @@ from wtforms.validators import (
 
 ALLOWED_IMAGE_EXTENSIONS: Iterable[str] = ("jpg", "jpeg", "png")
 ALLOWED_DOC_EXTENSIONS: Iterable[str] = ("pdf",)
-ALLOWED_VIDEO_EXTENSIONS: Iterable[str] = ("mp4", "mov", "avi")
+ALLOWED_VIDEO_EXTENSIONS: Iterable[str] = ("mp4", "mov", "avi", "mkv", "webm")
 
 
 class FileSize:
@@ -240,7 +240,6 @@ class ProdutoLojaForm(FlaskForm):
         "Imagem",
         validators=[
             OptionalValidator(),
-            FileAllowed(ALLOWED_IMAGE_EXTENSIONS, "Somente imagens são permitidas."),
             FileSize(),
         ],
     )
