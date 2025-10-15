@@ -8,7 +8,15 @@ from typing import Dict, List, Optional
 import qrcode
 from qrcode.constants import ERROR_CORRECT_M
 
-from flask import Blueprint, abort, current_app, redirect, render_template, url_for
+from flask import (
+    Blueprint,
+    abort,
+    current_app,
+    redirect,
+    render_template,
+    request,
+    url_for,
+)
 from markupsafe import Markup
 
 from app.content import CONTENT_PLACEHOLDER, INSTITUTIONAL_SECTION_MAP
@@ -200,6 +208,8 @@ def sobre() -> str:
 @public_bp.route("/galeria/")
 @safe_route()
 def galeria() -> str:
+    page = request.args.get("page", default=1, type=int)
+    per_page = current_app.config.get("GALLERY_ITEMS_PER_PAGE", 12)
     textos = _collect_textos("galeria", "placeholder_galeria")
     requested_slugs = ["galeria", "placeholder_galeria"]
     current_app.logger.debug(
@@ -207,12 +217,16 @@ def galeria() -> str:
     )
     for slug in requested_slugs:
         _log_texto_details(slug, textos.get(slug))
-    itens = Galeria.query.order_by(Galeria.publicado_em.desc(), Galeria.id.desc()).all()
+    itens_pagination = (
+        Galeria.query.order_by(Galeria.publicado_em.desc(), Galeria.id.desc())
+        .paginate(page=page, per_page=per_page, error_out=False)
+    )
     return render_template(
         "public/galeria.html",
         texto_galeria=textos.get("galeria"),
         galeria_placeholder=textos.get("placeholder_galeria"),
-        itens=itens,
+        itens=itens_pagination.items,
+        pagination=itens_pagination,
         active_page="galeria",
     )
 
