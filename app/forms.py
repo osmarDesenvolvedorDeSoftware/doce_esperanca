@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Iterable, Optional
+from pathlib import Path
+from typing import FrozenSet, Iterable, Optional
 
 from flask import current_app
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileAllowed, FileField
+from werkzeug.utils import secure_filename
 from wtforms import (
     BooleanField,
     DateField,
@@ -26,8 +28,29 @@ from wtforms.validators import (
 )
 
 ALLOWED_IMAGE_EXTENSIONS: Iterable[str] = ("jpg", "jpeg", "png")
-ALLOWED_DOC_EXTENSIONS: Iterable[str] = ("pdf",)
 ALLOWED_VIDEO_EXTENSIONS: Iterable[str] = ("mp4", "mov", "avi", "mkv", "webm")
+DISALLOWED_UPLOAD_EXTENSIONS: FrozenSet[str] = frozenset(
+    {
+        "exe",
+        "bat",
+        "cmd",
+        "com",
+        "cpl",
+        "js",
+        "jse",
+        "msi",
+        "msp",
+        "msc",
+        "pif",
+        "ps1",
+        "reg",
+        "scr",
+        "sh",
+        "vb",
+        "vbe",
+        "vbs",
+    }
+)
 
 
 class FileSize:
@@ -143,11 +166,26 @@ class TransparenciaForm(FlaskForm):
         "Arquivo",
         validators=[
             OptionalValidator(),
-            FileAllowed(ALLOWED_DOC_EXTENSIONS, "Somente arquivos PDF são permitidos."),
             FileSize(),
         ],
     )
     submit = SubmitField("Salvar")
+
+    def validate_arquivo(self, field: FileField) -> None:  # type: ignore[override]
+        data = field.data
+        if not data or not getattr(data, "filename", "").strip():
+            return
+
+        filename = secure_filename(data.filename or "")
+        if not filename:
+            raise ValidationError("Nome de arquivo inválido.")
+
+        suffixes = [suffix.lstrip(".").lower() for suffix in Path(filename).suffixes]
+        if not suffixes:
+            raise ValidationError("Arquivo deve possuir uma extensão válida.")
+
+        if any(suffix in DISALLOWED_UPLOAD_EXTENSIONS for suffix in suffixes):
+            raise ValidationError("Esse tipo de arquivo não é permitido para upload.")
 
 
 class ApoioForm(FlaskForm):
