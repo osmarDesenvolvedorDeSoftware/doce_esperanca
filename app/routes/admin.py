@@ -1155,7 +1155,7 @@ def transparencia_create():
     form = TransparenciaForm()
     if form.validate_on_submit():
         if not _has_file(form.arquivo.data):
-            form.arquivo.errors.append("Envie um arquivo PDF.")
+            form.arquivo.errors.append("Envie um arquivo válido.")
         else:
             try:
                 arquivo_path = _safe_upload(
@@ -1209,7 +1209,7 @@ def transparencia_edit(item_id: int):
             _delete_file(item.arquivo_path)
             item.arquivo_path = new_path
         elif not item.arquivo_path:
-            form.arquivo.errors.append("Envie um arquivo PDF.")
+            form.arquivo.errors.append("Envie um arquivo válido.")
             return render_template("admin/transparencia/form.html", form=form, item=item)
         try:
             db.session.commit()
