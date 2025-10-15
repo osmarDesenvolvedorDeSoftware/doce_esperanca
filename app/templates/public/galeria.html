@@ -48,6 +48,41 @@
           </div>
         {% endfor %}
       </div>
+      {% if pagination and pagination.pages > 1 %}
+        <nav aria-label="Paginação da galeria" class="mt-4">
+          <ul class="pagination justify-content-center">
+            <li class="page-item{% if not pagination.has_prev %} disabled{% endif %}">
+              <a
+                class="page-link"
+                href="{{ url_for('public.galeria', page=pagination.prev_num) if pagination.has_prev else '#' }}"
+                tabindex="-1"
+                aria-disabled="{{ 'true' if not pagination.has_prev else 'false' }}"
+              >Anterior</a>
+            </li>
+            {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+              {% if page_num %}
+                <li class="page-item{% if page_num == pagination.page %} active{% endif %}">
+                  <a class="page-link" href="{{ url_for('public.galeria', page=page_num) }}">
+                    {{ page_num }}
+                    {% if page_num == pagination.page %}<span class="visually-hidden">(página atual)</span>{% endif %}
+                  </a>
+                </li>
+              {% else %}
+                <li class="page-item disabled" aria-hidden="true">
+                  <span class="page-link">&hellip;</span>
+                </li>
+              {% endif %}
+            {% endfor %}
+            <li class="page-item{% if not pagination.has_next %} disabled{% endif %}">
+              <a
+                class="page-link"
+                href="{{ url_for('public.galeria', page=pagination.next_num) if pagination.has_next else '#' }}"
+                aria-disabled="{{ 'true' if not pagination.has_next else 'false' }}"
+              >Próxima</a>
+            </li>
+          </ul>
+        </nav>
+      {% endif %}
     {% else %}
       <p class="texto-placeholder text-center">
         {{ (galeria_placeholder.conteudo if galeria_placeholder and galeria_placeholder.conteudo else content_placeholder) | safe }}
