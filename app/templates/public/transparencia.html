@@ -1,0 +1,66 @@
+{% extends "public/base.html" %}
+
+{% block title %}Portal da Transparência - Doce Esperança{% endblock %}
+
+{% block content %}
+  <div class="row justify-content-center">
+    <div class="col-lg-10 col-xl-9">
+      <header class="text-center mb-5">
+        <div class="text-primary display-6 mb-3">
+          <i class="bi bi-file-earmark-text"></i>
+        </div>
+        <h1 class="h2 fw-bold mb-3">Portal da Transparência</h1>
+        <p class="text-body-secondary mb-0">
+          Acompanhe de forma clara e acessível a destinação dos recursos, relatórios e prestações de contas da Doce Esperança.
+        </p>
+      </header>
+
+      {% if documentos %}
+        <div class="accordion" id="transparenciaAccordion">
+          {% for documento in documentos %}
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="transparenciaHeading{{ loop.index }}">
+                <button
+                  class="accordion-button{% if not loop.first %} collapsed{% endif %}"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#transparenciaCollapse{{ loop.index }}"
+                  aria-expanded="{{ 'true' if loop.first else 'false' }}"
+                  aria-controls="transparenciaCollapse{{ loop.index }}"
+                >
+                  {{ documento.titulo }}
+                </button>
+              </h2>
+              <div
+                id="transparenciaCollapse{{ loop.index }}"
+                class="accordion-collapse collapse{% if loop.first %} show{% endif %}"
+                aria-labelledby="transparenciaHeading{{ loop.index }}"
+                data-bs-parent="#transparenciaAccordion"
+              >
+                <div class="accordion-body">
+                  {% if documento.descricao %}
+                    <p class="mb-3">{{ documento.descricao }}</p>
+                  {% endif %}
+                  <a
+                    class="btn btn-outline-primary"
+                    href="{{ static_url(documento.arquivo_path) }}"
+                    target="_blank"
+                    rel="noopener"
+                  >
+                    <i class="bi bi-box-arrow-up-right me-2"></i>Acessar documento
+                  </a>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="text-center">
+          <p class="lead mb-0">
+            {{ (transparencia_placeholder.conteudo if transparencia_placeholder and transparencia_placeholder.conteudo else content_placeholder) | safe }}
+          </p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}
