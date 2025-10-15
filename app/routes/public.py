@@ -252,6 +252,28 @@ def depoimentos() -> str:
     )
 
 
+@public_bp.route("/transparencia/")
+@safe_route()
+def transparencia() -> str:
+    placeholders = _collect_textos("placeholder_transparencia")
+    requested_slugs = ["placeholder_transparencia"]
+    current_app.logger.debug(
+        "View 'transparencia' requested institucional slugs: %s", requested_slugs
+    )
+    for slug in requested_slugs:
+        _log_texto_details(slug, placeholders.get(slug))
+    documentos = (
+        Transparencia.query.order_by(Transparencia.publicado_em.desc(), Transparencia.id.desc()).all()
+    )
+
+    return render_template(
+        "public/transparencia.html",
+        documentos=documentos,
+        transparencia_placeholder=placeholders.get("placeholder_transparencia"),
+        active_page="transparencia",
+    )
+
+
 @public_bp.route("/doacao/")
 @safe_route()
 def doacao() -> str:
