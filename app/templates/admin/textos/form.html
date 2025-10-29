@@ -35,17 +35,104 @@
             <div class="text-danger small">{{ error }}</div>
           {% endfor %}
         </div>
-        <div class="mb-3">
-          {{ form.conteudo.label(class="form-label") }}
-          <div class="quill-editor rich-text-container" data-rich-text data-target="{{ form.conteudo.id }}"></div>
+        {% if texto and texto.slug == 'contato' %}
+          <div class="alert alert-info" role="status">
+            Atualize os dados abaixo para personalizar o rodapé público. Valores em branco usam os padrões do site.
+          </div>
+          <div class="mb-3">
+            {{ form.support_text.label(class="form-label") }}
+            {{ form.support_text(class="form-control") }}
+            {% if form.support_text.description %}
+              <div class="form-text">{{ form.support_text.description }}</div>
+            {% endif %}
+            {% for error in form.support_text.errors %}
+              <div class="text-danger small">{{ error }}</div>
+            {% endfor %}
+          </div>
+          <div class="mb-3">
+            {{ form.address.label(class="form-label") }}
+            {{ form.address(class="form-control", rows=3) }}
+            {% if form.address.description %}
+              <div class="form-text">{{ form.address.description }}</div>
+            {% endif %}
+            {% for error in form.address.errors %}
+              <div class="text-danger small">{{ error }}</div>
+            {% endfor %}
+          </div>
+          <div class="mb-3">
+            {{ form.phone.label(class="form-label") }}
+            {{ form.phone(class="form-control") }}
+            {% if form.phone.description %}
+              <div class="form-text">{{ form.phone.description }}</div>
+            {% endif %}
+            {% for error in form.phone.errors %}
+              <div class="text-danger small">{{ error }}</div>
+            {% endfor %}
+          </div>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="mb-3">
+                {{ form.facebook.label(class="form-label") }}
+                {{ form.facebook(class="form-control") }}
+                {% if form.facebook.description %}
+                  <div class="form-text">{{ form.facebook.description }}</div>
+                {% endif %}
+                {% for error in form.facebook.errors %}
+                  <div class="text-danger small">{{ error }}</div>
+                {% endfor %}
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                {{ form.instagram.label(class="form-label") }}
+                {{ form.instagram(class="form-control") }}
+                {% if form.instagram.description %}
+                  <div class="form-text">{{ form.instagram.description }}</div>
+                {% endif %}
+                {% for error in form.instagram.errors %}
+                  <div class="text-danger small">{{ error }}</div>
+                {% endfor %}
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                {{ form.youtube.label(class="form-label") }}
+                {{ form.youtube(class="form-control") }}
+                {% if form.youtube.description %}
+                  <div class="form-text">{{ form.youtube.description }}</div>
+                {% endif %}
+                {% for error in form.youtube.errors %}
+                  <div class="text-danger small">{{ error }}</div>
+                {% endfor %}
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                {{ form.whatsapp.label(class="form-label") }}
+                {{ form.whatsapp(class="form-control") }}
+                {% if form.whatsapp.description %}
+                  <div class="form-text">{{ form.whatsapp.description }}</div>
+                {% endif %}
+                {% for error in form.whatsapp.errors %}
+                  <div class="text-danger small">{{ error }}</div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
           {{ form.conteudo(class="form-control d-none") }}
-          {% if form.conteudo.description %}
-            <div class="form-text">{{ form.conteudo.description }}</div>
-          {% endif %}
-          {% for error in form.conteudo.errors %}
-            <div class="text-danger small">{{ error }}</div>
-          {% endfor %}
-        </div>
+        {% else %}
+          <div class="mb-3">
+            {{ form.conteudo.label(class="form-label") }}
+            <div class="quill-editor rich-text-container" data-rich-text data-target="{{ form.conteudo.id }}"></div>
+            {{ form.conteudo(class="form-control d-none") }}
+            {% if form.conteudo.description %}
+              <div class="form-text">{{ form.conteudo.description }}</div>
+            {% endif %}
+            {% for error in form.conteudo.errors %}
+              <div class="text-danger small">{{ error }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
         <div class="mb-3">
           {{ form.imagem.label(class="form-label") }}
           {{ form.imagem(class="form-control") }}

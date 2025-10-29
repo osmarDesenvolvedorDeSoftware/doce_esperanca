@@ -96,6 +96,34 @@ class TextoInstitucionalForm(FlaskForm):
     slug = StringField("Slug", validators=[DataRequired(), Length(max=255)])
     resumo = StringField("Resumo", validators=[OptionalValidator(), Length(max=512)])
     conteudo = TextAreaField("Conteúdo", validators=[DataRequired()])
+    support_text = StringField(
+        "Texto de apoio",
+        validators=[OptionalValidator(), Length(max=255)],
+    )
+    address = TextAreaField(
+        "Endereço",
+        validators=[OptionalValidator(), Length(max=512)],
+    )
+    phone = StringField(
+        "Telefone",
+        validators=[OptionalValidator(), Length(max=64)],
+    )
+    facebook = StringField(
+        "Facebook",
+        validators=[OptionalValidator(), URL(), Length(max=255)],
+    )
+    instagram = StringField(
+        "Instagram",
+        validators=[OptionalValidator(), URL(), Length(max=255)],
+    )
+    youtube = StringField(
+        "YouTube",
+        validators=[OptionalValidator(), URL(), Length(max=255)],
+    )
+    whatsapp = StringField(
+        "WhatsApp",
+        validators=[OptionalValidator(), URL(), Length(max=255)],
+    )
     imagem = FileField(
         "Imagem",
         validators=[

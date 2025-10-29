@@ -1,8 +1,77 @@
 from __future__ import annotations
 
-from typing import Dict, List
+import json
+from logging import Logger
+from typing import Dict, List, Optional
 
 CONTENT_PLACEHOLDER = "Conteúdo em atualização"
+
+FOOTER_CONTACT_FIELDS = (
+    "support_text",
+    "address",
+    "phone",
+    "facebook",
+    "instagram",
+    "youtube",
+    "whatsapp",
+)
+
+FOOTER_CONTACT_DEFAULTS = {
+    "support_text": "Transformando doações em oportunidades.",
+    "address": "Rua Solidária, 123\nBairro Esperança, Recife - PE",
+    "phone": "+55 (81) 99999-9999",
+    "facebook": "https://www.facebook.com",
+    "instagram": "https://www.instagram.com",
+    "youtube": "https://www.youtube.com",
+    "whatsapp": "https://wa.me/5581999999999",
+}
+
+
+def decode_footer_contact_payload(
+    raw_content: Optional[str], *, logger: Optional[Logger] = None
+) -> Dict[str, str]:
+    """Return sanitized footer data parsed from JSON content."""
+
+    if not raw_content:
+        return {}
+
+    try:
+        parsed = json.loads(raw_content)
+    except (TypeError, ValueError) as exc:
+        if logger:
+            logger.warning("JSON inválido no conteúdo do rodapé: %s", exc)
+        return {}
+
+    if not isinstance(parsed, dict):
+        if logger:
+            logger.warning(
+                "Conteúdo do rodapé deve ser um objeto JSON, mas foi %s",
+                type(parsed).__name__,
+            )
+        return {}
+
+    sanitized: Dict[str, str] = {}
+    for field in FOOTER_CONTACT_FIELDS:
+        value = parsed.get(field)
+        if isinstance(value, str):
+            sanitized[field] = value.strip()
+
+    return sanitized
+
+
+def footer_contact_with_defaults(
+    raw_content: Optional[str], *, logger: Optional[Logger] = None
+) -> Dict[str, str]:
+    """Merge stored footer data with defaults for presentation."""
+
+    stored_values = decode_footer_contact_payload(raw_content, logger=logger)
+    combined = dict(FOOTER_CONTACT_DEFAULTS)
+    for field in FOOTER_CONTACT_FIELDS:
+        value = stored_values.get(field)
+        if value:
+            combined[field] = value
+
+    return combined
 
 INSTITUTIONAL_SECTIONS: List[Dict[str, str]] = [
     {
@@ -84,6 +153,10 @@ INSTITUTIONAL_SLUGS: List[str] = [section["slug"] for section in INSTITUTIONAL_S
 
 __all__ = [
     "CONTENT_PLACEHOLDER",
+    "FOOTER_CONTACT_DEFAULTS",
+    "FOOTER_CONTACT_FIELDS",
+    "decode_footer_contact_payload",
+    "footer_contact_with_defaults",
     "INSTITUTIONAL_SECTIONS",
     "INSTITUTIONAL_SECTION_MAP",
     "INSTITUTIONAL_SLUGS",

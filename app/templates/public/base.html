@@ -64,14 +64,24 @@
                 <img src="{{ static_url('img/logo.ico') }}" alt="Logo Doce Esperança" class="me-2 footer-logo">
                 <div>
                   <h5 class="mb-1">{{ (footer_contact.titulo if footer_contact else None) or 'Doce Esperança' }}</h5>
-                  <p class="mb-0 small">Transformando doações em oportunidades.</p>
+                  <p class="mb-0 small">{{ footer_contact_data.support_text }}</p>
                 </div>
               </div>
               <address class="mb-0 small">
-                Rua Solidária, 123<br>
-                Bairro Esperança, Recife - PE<br>
+                {% if footer_contact_data.address %}
+                  {% for line in footer_contact_data.address.splitlines() %}
+                    {{ line }}<br>
+                  {% endfor %}
+                {% else %}
+                  Rua Solidária, 123<br>
+                  Bairro Esperança, Recife - PE<br>
+                {% endif %}
                 <a class="footer-link" href="mailto:{{ (footer_contact.resumo if footer_contact else None) or 'contato@doceesperanca.org' }}">{{ (footer_contact.resumo if footer_contact else None) or 'contato@doceesperanca.org' }}</a><br>
-                <a class="footer-link" href="tel:+5581999999999">+55 (81) 99999-9999</a>
+                {% if footer_contact_phone_href %}
+                  <a class="footer-link" href="tel:{{ footer_contact_phone_href }}">{{ footer_contact_data.phone }}</a>
+                {% else %}
+                  <span class="footer-link text-decoration-none text-body">{{ footer_contact_data.phone }}</span>
+                {% endif %}
               </address>
             </div>
             <div class="col-md-4">
@@ -92,10 +102,18 @@
               <h6 class="text-uppercase fw-bold mb-3">Redes Sociais</h6>
               <p class="small mb-3">Siga o nosso trabalho e compartilhe esperança.</p>
               <div class="d-flex gap-3">
-                <a class="social-icon" href="https://www.facebook.com" target="_blank" rel="noopener"><i class="bi bi-facebook"></i></a>
-                <a class="social-icon" href="https://www.instagram.com" target="_blank" rel="noopener"><i class="bi bi-instagram"></i></a>
-                <a class="social-icon" href="https://www.youtube.com" target="_blank" rel="noopener"><i class="bi bi-youtube"></i></a>
-                <a class="social-icon" href="https://wa.me/5581999999999" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i></a>
+                {% if footer_contact_data.facebook %}
+                  <a class="social-icon" href="{{ footer_contact_data.facebook }}" target="_blank" rel="noopener"><i class="bi bi-facebook"></i></a>
+                {% endif %}
+                {% if footer_contact_data.instagram %}
+                  <a class="social-icon" href="{{ footer_contact_data.instagram }}" target="_blank" rel="noopener"><i class="bi bi-instagram"></i></a>
+                {% endif %}
+                {% if footer_contact_data.youtube %}
+                  <a class="social-icon" href="{{ footer_contact_data.youtube }}" target="_blank" rel="noopener"><i class="bi bi-youtube"></i></a>
+                {% endif %}
+                {% if footer_contact_data.whatsapp %}
+                  <a class="social-icon" href="{{ footer_contact_data.whatsapp }}" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i></a>
+                {% endif %}
               </div>
             </div>
           </div>
@@ -104,11 +122,7 @@
       <div class="footer-bottom py-3 text-center small">
         <div class="container">
           <span>&copy; {{ current_year|default(2024) }} Doce Esperança. Todos os direitos reservados.</span>
-          {% if footer_contact and footer_contact.conteudo %}
-            <span class="ms-2">{{ footer_contact.conteudo | safe }}</span>
-          {% else %}
-            <span class="ms-2">Desenvolvido com carinho pela comunidade solidária.</span>
-          {% endif %}
+          <span class="ms-2">Desenvolvido com carinho pela comunidade solidária.</span>
         </div>
       </div>
     </footer>

@@ -19,7 +19,11 @@ from flask import (
 )
 from markupsafe import Markup
 
-from app.content import CONTENT_PLACEHOLDER, INSTITUTIONAL_SECTION_MAP
+from app.content import (
+    CONTENT_PLACEHOLDER,
+    INSTITUTIONAL_SECTION_MAP,
+    footer_contact_with_defaults,
+)
 from app.models import (
     Apoio,
     Banner,
@@ -88,6 +92,20 @@ def _slugify(value: str) -> str:
     return slug or "produto"
 
 
+def _normalize_phone_link(phone: str) -> Optional[str]:
+    if not phone:
+        return None
+
+    stripped = phone.strip()
+    digits_only = re.sub(r"[^0-9]", "", stripped)
+    if not digits_only:
+        return None
+
+    if stripped.startswith("+"):
+        return f"+{digits_only}"
+    return digits_only
+
+
 @public_bp.context_processor
 def inject_public_defaults() -> Dict[str, object]:
     """Share default context data across public templates."""
@@ -102,12 +120,22 @@ def inject_public_defaults() -> Dict[str, object]:
     for slug, texto in {"contato": contato_texto, "inicio": inicio_texto}.items():
         _log_texto_details(slug, texto)
 
+    footer_contact_data = footer_contact_with_defaults(
+        contato_texto.conteudo if contato_texto else None,
+        logger=current_app.logger,
+    )
+    footer_contact_phone_href = _normalize_phone_link(
+        footer_contact_data.get("phone", "")
+    )
+
     site_identity = CONTENT_PLACEHOLDER
     if inicio_texto and inicio_texto.titulo:
         site_identity = inicio_texto.titulo
 
     return {
         "footer_contact": contato_texto,
+        "footer_contact_data": footer_contact_data,
+        "footer_contact_phone_href": footer_contact_phone_href,
         "site_identity": site_identity,
         "content_placeholder": CONTENT_PLACEHOLDER,
         "institutional_sections": INSTITUTIONAL_SECTION_MAP,
