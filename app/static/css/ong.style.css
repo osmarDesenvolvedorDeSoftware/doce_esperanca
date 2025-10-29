@@ -11,10 +11,15 @@ body {
   color: #1f2937;
 }
 
-.navbar-brand img,
+.navbar-brand img {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+}
+
 .footer-logo {
-  width: 48px;
-  height: 48px;
+  width: 56px;
+  height: 56px;
   object-fit: contain;
 }
 
