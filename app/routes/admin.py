@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import io
+import json
 import os
 from datetime import date, datetime, time
 from uuid import uuid4
@@ -40,6 +41,9 @@ from app.forms import (
     VoluntarioForm,
 )
 from app.content import (
+    FOOTER_CONTACT_DEFAULTS,
+    FOOTER_CONTACT_FIELDS,
+    decode_footer_contact_payload,
     INSTITUTIONAL_SECTION_MAP,
     INSTITUTIONAL_SECTIONS,
     INSTITUTIONAL_SLUGS,
@@ -123,6 +127,34 @@ def _safe_upload(
 
     relative_path = os.path.relpath(file_path, start=current_app.static_folder)
     return relative_path.replace(os.sep, "/")
+
+
+def _assign_footer_placeholders(form: TextoInstitucionalForm) -> None:
+    for field_name in FOOTER_CONTACT_FIELDS:
+        field = getattr(form, field_name, None)
+        if not field:
+            continue
+        render_kw = dict(getattr(field, "render_kw", {}) or {})
+        default_value = FOOTER_CONTACT_DEFAULTS.get(field_name, "")
+        if default_value and "placeholder" not in render_kw:
+            render_kw["placeholder"] = default_value
+        field.render_kw = render_kw
+
+
+def _footer_payload_from_form(form: TextoInstitucionalForm) -> Dict[str, str]:
+    payload: Dict[str, str] = {}
+    for field_name in FOOTER_CONTACT_FIELDS:
+        field = getattr(form, field_name, None)
+        if field is None:
+            continue
+        value = field.data or ""
+        if isinstance(value, str):
+            cleaned = value.strip()
+        else:
+            cleaned = str(value)
+        if cleaned:
+            payload[field_name] = cleaned
+    return payload
 
 
 def _delete_file(relative_path: Optional[str]) -> None:
@@ -493,6 +525,25 @@ def textos_edit(texto_id: int):
     texto = TextoInstitucional.query.get_or_404(texto_id)
     form = TextoInstitucionalForm(obj=texto)
     section_info = INSTITUTIONAL_SECTION_MAP.get(texto.slug)
+    is_footer_contact = texto.slug == "contato"
+
+    if is_footer_contact:
+        _assign_footer_placeholders(form)
+        form.support_text.description = (
+            "Frase curta exibida ao lado da logo no rodapé público."
+        )
+        form.address.description = (
+            "Use quebras de linha para separar rua, bairro e cidade."
+        )
+        form.phone.description = (
+            "Número mostrado no rodapé e usado para o link de ligação."
+        )
+        form.facebook.description = "Informe a URL completa para a página no Facebook."
+        form.instagram.description = "Informe a URL completa do perfil no Instagram."
+        form.youtube.description = "Informe a URL completa do canal no YouTube."
+        form.whatsapp.description = (
+            "Use o link encurtado do WhatsApp (ex.: https://wa.me/55...) para abrir a conversa."
+        )
 
     if section_info:
         render_kw = dict(form.slug.render_kw or {})
@@ -501,7 +552,7 @@ def textos_edit(texto_id: int):
         form.slug.description = section_info.get("label")
         if section_info.get("resumo_help"):
             form.resumo.description = section_info["resumo_help"]
-        if section_info.get("content_help"):
+        if section_info.get("content_help") and not is_footer_contact:
             form.conteudo.description = section_info["content_help"]
         if section_info.get("image_help"):
             form.imagem.description = section_info["image_help"]
@@ -511,6 +562,14 @@ def textos_edit(texto_id: int):
     if request.method == "GET":
         form.conteudo.data = texto.conteudo
         form.slug.data = texto.slug
+        if is_footer_contact:
+            stored_footer = decode_footer_contact_payload(
+                texto.conteudo, logger=current_app.logger
+            )
+            for field_name in FOOTER_CONTACT_FIELDS:
+                field = getattr(form, field_name, None)
+                if field is not None:
+                    field.data = stored_footer.get(field_name, "")
     elif request.method == "POST":
         current_app.logger.debug(
             "textos_edit POST received - request_form_snapshot=%s",
@@ -520,6 +579,10 @@ def textos_edit(texto_id: int):
             form.slug.data = texto.slug
     elif section_info:
         form.slug.data = texto.slug
+
+    if request.method == "POST" and is_footer_contact:
+        footer_payload = _footer_payload_from_form(form)
+        form.conteudo.data = json.dumps(footer_payload, ensure_ascii=False)
 
     is_valid_submission = form.validate_on_submit()
     current_app.logger.debug(
