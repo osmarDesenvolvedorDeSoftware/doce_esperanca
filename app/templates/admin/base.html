@@ -97,17 +97,28 @@
       });
     </script>
     <script>
-      document.addEventListener('submit', function (event) {
-        const form = event.target;
-        if (!(form instanceof HTMLFormElement)) {
-          return;
-        }
-
-        const hiddenRequired = form.querySelectorAll("textarea[required][style*='display:none'], textarea[required][style*='display: none'], textarea[required].d-none");
-        hiddenRequired.forEach(function (textarea) {
-          textarea.removeAttribute('required');
+      document.addEventListener("DOMContentLoaded", function () {
+        // Remove required de textareas ocultos logo ao carregar
+        document.querySelectorAll("textarea[required]").forEach(function (el) {
+          const style = window.getComputedStyle(el);
+          if (el.classList.contains("d-none") || style.display === "none" || style.visibility === "hidden") {
+            el.removeAttribute("required");
+          }
         });
-      }, true);
+
+        // Garante que o mesmo ocorra antes de qualquer envio
+        document.addEventListener("submit", function (event) {
+          const form = event.target;
+          if (!(form instanceof HTMLFormElement)) return;
+
+          form.querySelectorAll("textarea[required]").forEach(function (el) {
+            const style = window.getComputedStyle(el);
+            if (el.classList.contains("d-none") || style.display === "none" || style.visibility === "hidden") {
+              el.removeAttribute("required");
+            }
+          });
+        }, true);
+      });
     </script>
     {% block extra_js %}{% endblock %}
   </body>
