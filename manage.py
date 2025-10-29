@@ -44,9 +44,9 @@ cli = FlaskGroup(create_app=_create_cli_app)
 def create_admin():
     """Create or update the default admin user."""
 
-    username = "admin"
-    email = "admin@example.com"
-    password = "admin123"
+    username = "dina"
+    email = "dina@associacaodoceesperanca.org"
+    password = "dina3561208@"
 
     user = User.query.filter_by(username=username).first()
     if user is None:
@@ -62,7 +62,11 @@ def create_admin():
         action = "updated"
 
     db.session.commit()
-    click.echo(f"Admin user {action}: {username}")
+    messages = {
+        "created": "✅ Admin user created successfully: {username}",
+        "updated": "🔁 Admin user updated successfully: {username}",
+    }
+    click.echo(messages[action].format(username=username))
 
 
 if __name__ == "__main__":
