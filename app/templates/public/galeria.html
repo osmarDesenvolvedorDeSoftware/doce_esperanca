@@ -15,9 +15,9 @@
       {% endif %}
     </section>
 
-    {% if itens %}
+    {% if galerias and galerias|length > 0 %}
       <div class="row g-3">
-        {% for item in itens %}
+        {% for item in galerias %}
           <div class="col-6 col-md-3">
             <figure class="h-100 d-flex flex-column align-items-center text-center">
               <a
