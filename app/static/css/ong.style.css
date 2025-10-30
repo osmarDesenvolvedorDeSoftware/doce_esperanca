@@ -18,6 +18,22 @@ body {
   line-height: 1.6;
 }
 
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--brand-primary);
+  color: #fff;
+  padding: 8px 16px;
+  z-index: 100;
+  border-radius: 4px;
+  transition: top 0.2s ease;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
 p {
   margin-bottom: 1em;
 }
@@ -61,6 +77,11 @@ h4:first-child,
 h5:first-child,
 h6:first-child {
   margin-top: 0;
+}
+
+:focus-visible {
+  outline: 3px solid var(--brand-secondary);
+  outline-offset: 3px;
 }
 
 .container-wide {
@@ -177,6 +198,13 @@ h6:first-child {
 .nav-link:focus::after,
 .nav-link.active::after {
   background-color: var(--brand-secondary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
 }
 
 section.py-5 {

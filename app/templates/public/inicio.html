@@ -7,10 +7,10 @@
 {% set texto_principios = textos.get('principios') %}
 
 {% block header_image %}
-  <section class="hero">
+  <section class="hero" aria-labelledby="inicio-hero-heading">
     <div class="hero-inner">
       <span class="badge bg-light text-uppercase text-primary mb-3">Transforme vidas com carinho</span>
-      <h1 class="display-4 fw-bold">{{ texto_inicio.titulo or content_placeholder }}</h1>
+      <h1 id="inicio-hero-heading" class="display-4 fw-bold">{{ texto_inicio.titulo or content_placeholder }}</h1>
       <p class="hero-lead mx-auto">
         {{
           texto_inicio.resumo
@@ -29,17 +29,17 @@
 {% block content %}
   {{ self.header_image() }}
 
-  <section class="section-spacious">
+  <section class="section-spacious" aria-labelledby="sobre-nos-heading">
     <div class="container-wide">
       <div class="text-center mb-5">
         <span class="text-uppercase text-success fw-semibold">Sobre nós</span>
-        <h2 class="display-6 fw-bold mt-2">Cuidamos de pessoas, transformamos histórias</h2>
+        <h2 id="sobre-nos-heading" class="display-6 fw-bold mt-2">Cuidamos de pessoas, transformamos histórias</h2>
         <p class="text-muted lead">Conheça a essência, a missão e os valores que movem a Doce Esperança todos os dias.</p>
       </div>
       <div class="row g-4">
         <div class="col-md-4">
-          <div class="card-modern h-100 text-center">
-            <div class="text-success mb-3">
+          <article class="card-modern h-100 text-center">
+            <div class="text-success mb-3" aria-hidden="true">
               <i class="bi bi-people-heart display-5"></i>
             </div>
             <h3 class="h5 fw-semibold mb-3">{{ texto_inicio.titulo or 'Quem somos' }}</h3>
@@ -48,11 +48,11 @@
             {% else %}
               <p class="text-muted small mb-0">{{ content_placeholder }}</p>
             {% endif %}
-          </div>
+          </article>
         </div>
         <div class="col-md-4">
-          <div class="card-modern h-100 text-center">
-            <div class="text-success mb-3">
+          <article class="card-modern h-100 text-center">
+            <div class="text-success mb-3" aria-hidden="true">
               <i class="bi bi-compass display-5"></i>
             </div>
             <h3 class="h5 fw-semibold mb-3">{{ texto_missao.titulo or 'Nossa missão' }}</h3>
@@ -61,11 +61,11 @@
             {% else %}
               <p class="text-muted small mb-0">{{ content_placeholder }}</p>
             {% endif %}
-          </div>
+          </article>
         </div>
         <div class="col-md-4">
-          <div class="card-modern h-100 text-center">
-            <div class="text-success mb-3">
+          <article class="card-modern h-100 text-center">
+            <div class="text-success mb-3" aria-hidden="true">
               <i class="bi bi-stars display-5"></i>
             </div>
             <h3 class="h5 fw-semibold mb-3">
@@ -83,17 +83,17 @@
             {% else %}
               <p class="text-muted small mb-0">{{ content_placeholder }}</p>
             {% endif %}
-          </div>
+          </article>
         </div>
       </div>
     </div>
   </section>
 
-  <section class="section-spacious bg-light">
+  <section class="section-spacious bg-light" aria-labelledby="projetos-destaque-heading">
     <div class="container-wide">
       <div class="text-center mb-5">
         <span class="text-uppercase text-success fw-semibold">Nossos Projetos</span>
-        <h2 class="display-6 fw-bold mt-2">Parceiros que fazem a diferença</h2>
+        <h2 id="projetos-destaque-heading" class="display-6 fw-bold mt-2">Parceiros que fazem a diferença</h2>
         <p class="text-muted lead">Histórias de impacto que ganham força com o apoio de pessoas e organizações engajadas.</p>
       </div>
       <div class="row g-4">
@@ -101,14 +101,14 @@
         {% if projetos_destaque %}
           {% for parceiro in projetos_destaque %}
             <div class="col-md-4">
-              <div class="card-modern h-100 text-center d-flex flex-column">
-                <div class="text-success mb-3">
+              <article class="card-modern h-100 text-center d-flex flex-column">
+                <div class="text-success mb-3" aria-hidden="true">
                   <i class="bi bi-rocket-takeoff display-5"></i>
                 </div>
                 <h3 class="h5 fw-semibold mb-3">{{ parceiro.nome }}</h3>
                 <p class="text-muted flex-grow-1">{{ parceiro.descricao or content_placeholder }}</p>
                 <a class="btn btn-outline-success mt-3 align-self-center" href="{{ url_for('public.projetos') }}">Saiba Mais</a>
-              </div>
+              </article>
             </div>
           {% endfor %}
         {% else %}
@@ -122,11 +122,11 @@
     </div>
   </section>
 
-  <section class="section-spacious">
+  <section class="section-spacious" aria-labelledby="momentos-heading">
     <div class="container-wide">
       <div class="text-center mb-5">
         <span class="text-uppercase text-success fw-semibold">Nossos momentos</span>
-        <h2 class="display-6 fw-bold mt-2">Galeria de ações e celebrações</h2>
+        <h2 id="momentos-heading" class="display-6 fw-bold mt-2">Galeria de ações e celebrações</h2>
         <p class="text-muted lead">Reviva os registros que mostram a alegria de quem recebe e de quem doa.</p>
       </div>
       {% if banners %}
@@ -180,9 +180,9 @@
     </div>
   </section>
 
-  <section class="section-spacious text-white" style="margin-left: calc(-1 * (100vw - 100%) / 2); margin-right: calc(-1 * (100vw - 100%) / 2); background: linear-gradient(135deg, #198754, #0f5132);">
+  <section class="section-spacious text-white" aria-labelledby="cta-heading" style="margin-left: calc(-1 * (100vw - 100%) / 2); margin-right: calc(-1 * (100vw - 100%) / 2); background: linear-gradient(135deg, #198754, #0f5132);">
     <div class="container-wide text-center">
-      <h2 class="display-6 fw-bold mb-3">Faça parte desta corrente do bem</h2>
+      <h2 id="cta-heading" class="display-6 fw-bold mb-3">Faça parte desta corrente do bem</h2>
       <p class="lead mb-4">Com o seu apoio, ampliamos o alcance dos nossos projetos e mudamos vidas de forma concreta.</p>
       <a class="btn btn-light btn-lg px-5" href="{{ url_for('public.doacao') }}">Doe Agora</a>
     </div>

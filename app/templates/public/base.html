@@ -10,8 +10,9 @@
     <link rel="stylesheet" href="{{ static_url('css/ong.style.css') }}">
   </head>
   <body class="d-flex flex-column min-vh-100">
+    <a href="#conteudo-principal" class="skip-link">Pular para o conteúdo principal</a>
     <header>
-      <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm fixed-top">
+      <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm fixed-top" aria-label="Navegação principal">
         <div class="container-wide">
           <a class="navbar-brand d-flex align-items-center" href="{{ url_for('public.index') }}">
             <img src="{{ static_url('img/logo.ico') }}" alt="Logo Doce Esperança" class="me-2">
@@ -22,21 +23,21 @@
           </button>
           <div class="collapse navbar-collapse" id="navbarMain">
             <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-              <li class="nav-item"><a class="nav-link {% if active_page == 'inicio' %}active{% endif %}" href="{{ url_for('public.index') }}">Início</a></li>
-              <li class="nav-item"><a class="nav-link {% if active_page == 'sobre' %}active{% endif %}" href="{{ url_for('public.sobre') }}">Sobre</a></li>
-              <li class="nav-item"><a class="nav-link {% if active_page == 'projetos' %}active{% endif %}" href="{{ url_for('public.projetos') }}">Projetos</a></li>
-              <li class="nav-item"><a class="nav-link {% if active_page == 'galeria' %}active{% endif %}" href="{{ url_for('public.galeria') }}">Galeria</a></li>
-              <li class="nav-item"><a class="nav-link {% if active_page == 'depoimentos' %}active{% endif %}" href="{{ url_for('public.depoimentos') }}">Depoimentos</a></li>
-              <li class="nav-item"><a class="nav-link {% if active_page == 'transparencia' %}active{% endif %}" href="{{ url_for('public.transparencia') }}">Portal da Transparência</a></li>
-              <li class="nav-item"><a class="nav-link {% if active_page == 'doacao' %}active{% endif %}" href="{{ url_for('public.doacao') }}">Doações</a></li>
-              <li class="nav-item"><a class="nav-link {% if active_page == 'loja' %}active{% endif %}" href="{{ url_for('public.loja') }}">Loja Solidária</a></li>
-              <li class="nav-item"><a class="nav-link {% if active_page == 'contato' %}active{% endif %}" href="{{ url_for('public.contato') }}">Contato</a></li>
+              <li class="nav-item"><a class="nav-link {% if active_page == 'inicio' %}active{% endif %}" href="{{ url_for('public.index') }}" {% if active_page == 'inicio' %}aria-current="page"{% endif %}>Início</a></li>
+              <li class="nav-item"><a class="nav-link {% if active_page == 'sobre' %}active{% endif %}" href="{{ url_for('public.sobre') }}" {% if active_page == 'sobre' %}aria-current="page"{% endif %}>Sobre</a></li>
+              <li class="nav-item"><a class="nav-link {% if active_page == 'projetos' %}active{% endif %}" href="{{ url_for('public.projetos') }}" {% if active_page == 'projetos' %}aria-current="page"{% endif %}>Projetos</a></li>
+              <li class="nav-item"><a class="nav-link {% if active_page == 'galeria' %}active{% endif %}" href="{{ url_for('public.galeria') }}" {% if active_page == 'galeria' %}aria-current="page"{% endif %}>Galeria</a></li>
+              <li class="nav-item"><a class="nav-link {% if active_page == 'depoimentos' %}active{% endif %}" href="{{ url_for('public.depoimentos') }}" {% if active_page == 'depoimentos' %}aria-current="page"{% endif %}>Depoimentos</a></li>
+              <li class="nav-item"><a class="nav-link {% if active_page == 'transparencia' %}active{% endif %}" href="{{ url_for('public.transparencia') }}" {% if active_page == 'transparencia' %}aria-current="page"{% endif %}>Portal da Transparência</a></li>
+              <li class="nav-item"><a class="nav-link {% if active_page == 'doacao' %}active{% endif %}" href="{{ url_for('public.doacao') }}" {% if active_page == 'doacao' %}aria-current="page"{% endif %}>Doações</a></li>
+              <li class="nav-item"><a class="nav-link {% if active_page == 'loja' %}active{% endif %}" href="{{ url_for('public.loja') }}" {% if active_page == 'loja' %}aria-current="page"{% endif %}>Loja Solidária</a></li>
+              <li class="nav-item"><a class="nav-link {% if active_page == 'contato' %}active{% endif %}" href="{{ url_for('public.contato') }}" {% if active_page == 'contato' %}aria-current="page"{% endif %}>Contato</a></li>
             </ul>
           </div>
         </div>
       </nav>
     </header>
-    <main class="flex-grow-1 pt-5 mt-5">
+    <main id="conteudo-principal" class="flex-grow-1 pt-5 mt-5" role="main">
       <div class="container-wide pt-4">
         {% with messages = get_flashed_messages(with_categories=True) %}
           {% if messages %}
@@ -57,7 +58,7 @@
       <div class="footer-top py-5">
         <div class="container-wide">
           <div class="row gy-4">
-            <div class="col-md-4">
+            <section class="col-md-4" aria-label="Informações da associação">
               <div class="d-flex align-items-center mb-3">
                 <img src="{{ static_url('img/logo.ico') }}" alt="Logo Doce Esperança" class="me-2 footer-logo">
                 <div>
@@ -65,7 +66,7 @@
                   <p class="mb-0 small">{{ footer_contact_data.support_text }}</p>
                 </div>
               </div>
-              <address class="mb-0 small">
+              <address class="mb-0 small" aria-label="Endereço da associação">
                 {% if footer_contact_data.address %}
                   {% for line in footer_contact_data.address.splitlines() %}
                     {{ line }}<br>
@@ -81,8 +82,8 @@
                   <span class="footer-link text-decoration-none text-body">{{ footer_contact_data.phone }}</span>
                 {% endif %}
               </address>
-            </div>
-            <div class="col-md-4">
+            </section>
+            <nav class="col-md-4" aria-label="Links rápidos">
               <h6 class="text-uppercase fw-bold mb-3">Links Rápidos</h6>
               <ul class="list-unstyled footer-links">
                 <li><a href="{{ url_for('public.index') }}">Início</a></li>
@@ -95,25 +96,25 @@
                 <li><a href="{{ url_for('public.loja') }}">Loja Solidária</a></li>
                 <li><a href="{{ url_for('public.contato') }}">Contato</a></li>
               </ul>
-            </div>
-            <div class="col-md-4">
+            </nav>
+            <section class="col-md-4" aria-label="Redes sociais">
               <h6 class="text-uppercase fw-bold mb-3">Redes Sociais</h6>
               <p class="small mb-3">Siga o nosso trabalho e compartilhe esperança.</p>
               <div class="d-flex gap-3">
                 {% if footer_contact_data.facebook %}
-                  <a class="social-icon" href="{{ footer_contact_data.facebook }}" target="_blank" rel="noopener"><i class="bi bi-facebook"></i></a>
+                  <a class="social-icon" href="{{ footer_contact_data.facebook }}" target="_blank" rel="noopener" aria-label="Facebook da Associação Doce Esperança"><i class="bi bi-facebook" aria-hidden="true"></i></a>
                 {% endif %}
                 {% if footer_contact_data.instagram %}
-                  <a class="social-icon" href="{{ footer_contact_data.instagram }}" target="_blank" rel="noopener"><i class="bi bi-instagram"></i></a>
+                  <a class="social-icon" href="{{ footer_contact_data.instagram }}" target="_blank" rel="noopener" aria-label="Instagram da Associação Doce Esperança"><i class="bi bi-instagram" aria-hidden="true"></i></a>
                 {% endif %}
                 {% if footer_contact_data.youtube %}
-                  <a class="social-icon" href="{{ footer_contact_data.youtube }}" target="_blank" rel="noopener"><i class="bi bi-youtube"></i></a>
+                  <a class="social-icon" href="{{ footer_contact_data.youtube }}" target="_blank" rel="noopener" aria-label="YouTube da Associação Doce Esperança"><i class="bi bi-youtube" aria-hidden="true"></i></a>
                 {% endif %}
                 {% if footer_contact_data.whatsapp %}
-                  <a class="social-icon" href="{{ footer_contact_data.whatsapp }}" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i></a>
+                  <a class="social-icon" href="{{ footer_contact_data.whatsapp }}" target="_blank" rel="noopener" aria-label="WhatsApp da Associação Doce Esperança"><i class="bi bi-whatsapp" aria-hidden="true"></i></a>
                 {% endif %}
               </div>
-            </div>
+            </section>
           </div>
         </div>
       </div>
