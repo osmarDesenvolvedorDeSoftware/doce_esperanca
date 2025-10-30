@@ -162,6 +162,55 @@ def _normalize_whatsapp_link(raw_value: str) -> Optional[str]:
     return None
 
 
+def _prepare_map_embed(map_value: Any) -> Optional[Markup]:
+    if not map_value:
+        return None
+
+    if isinstance(map_value, dict):
+        for key in ("iframe", "html", "src", "url"):
+            nested_value = map_value.get(key)
+            if nested_value:
+                map_value = nested_value
+                break
+        else:
+            return None
+
+    map_str = str(map_value).strip()
+    if not map_str:
+        return None
+
+    iframe_pattern = re.compile(
+        r"<iframe\b[^>]*>.*?</iframe>", re.IGNORECASE | re.DOTALL
+    )
+    iframe_match = iframe_pattern.search(map_str)
+
+    if iframe_match:
+        iframe_html = iframe_match.group(0)
+    elif map_str.lower().startswith("<iframe"):
+        iframe_html = map_str
+    else:
+        iframe_src = escape(map_str)
+        iframe_html = (
+            f'<iframe src="{iframe_src}" '
+            "loading=\"lazy\" allowfullscreen=\"\" "
+            "referrerpolicy=\"no-referrer-when-downgrade\"></iframe>"
+        )
+
+    if "class=" in iframe_html:
+        iframe_html = re.sub(
+            r'class=\"',
+            'class="border-0 w-100 h-100 ',
+            iframe_html,
+            count=1,
+        )
+    else:
+        iframe_html = iframe_html.replace(
+            "<iframe", '<iframe class="border-0 w-100 h-100"', 1
+        )
+
+    return Markup(iframe_html)
+
+
 @public_bp.context_processor
 def inject_public_defaults() -> Dict[str, object]:
     """Share default context data across public templates."""
@@ -635,6 +684,14 @@ def contato() -> str:
                 contact_description = Markup(
                     "Estamos à disposição para falar com você pelos canais abaixo."
                 )
+
+            if map_embed is None:
+                map_value = parsed_contact_data.get("map") or parsed_contact_data.get(
+                    "iframe"
+                )
+                map_candidate = _prepare_map_embed(map_value)
+                if map_candidate:
+                    map_embed = map_candidate
         else:
             cleaned_html = raw_content
 
@@ -676,19 +733,9 @@ def contato() -> str:
             )
             map_match = map_pattern.search(cleaned_html)
             if map_match:
-                iframe_html = map_match.group(1)
-                if "class=" in iframe_html:
-                    iframe_html = re.sub(
-                        r"class=\"",
-                        'class="border-0 w-100 h-100 ',
-                        iframe_html,
-                        count=1,
-                    )
-                else:
-                    iframe_html = iframe_html.replace(
-                        "<iframe", '<iframe class="border-0 w-100 h-100"', 1
-                    )
-                map_embed = Markup(iframe_html)
+                map_candidate = _prepare_map_embed(map_match.group(1))
+                if map_candidate:
+                    map_embed = map_candidate
                 cleaned_html = cleaned_html.replace(map_match.group(1), "", 1)
 
             cleaned_html = cleaned_html.strip()

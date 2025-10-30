@@ -4,8 +4,8 @@
 
 {% block content %}
   <div class="container py-5">
-    <div class="row g-5 align-items-start">
-      <div class="col-12 col-lg-5">
+    <div class="row g-5 justify-content-center">
+      <div class="col-12">
         <div class="d-flex flex-column gap-4">
           <div class="card border-0 shadow-sm h-100">
             <div class="card-body p-4">
@@ -107,64 +107,9 @@
                 {{ map_embed }}
               </div>
             </div>
-          {% else %}
-            <div class="alert alert-light border shadow-sm mb-0" role="alert">
-              Incorpore o mapa do Google Maps no texto institucional de contato para mostrar a localização da ONG.
-            </div>
           {% endif %}
-        </div>
-      </div>
-
-      <div class="col-12 col-lg-7">
-        {% set form_action = contact_email and ('mailto:' ~ contact_email) or '#' %}
-        <div class="card border-0 shadow-sm">
-          <div class="card-body p-4 p-lg-5">
-            <h2 class="h4 fw-bold mb-3">Envie uma mensagem</h2>
-            <p class="text-body-secondary mb-4">Preencha o formulário e retornaremos o contato assim que possível.</p>
-            <form id="contactForm" class="needs-validation" action="{{ form_action }}" method="post" novalidate>
-              <div class="mb-3">
-                <label class="form-label" for="nome">Nome</label>
-                <input class="form-control" id="nome" name="nome" type="text" placeholder="Como devemos te chamar?" required>
-                <div class="invalid-feedback">Informe seu nome completo.</div>
-              </div>
-              <div class="mb-3">
-                <label class="form-label" for="email">E-mail</label>
-                <input class="form-control" id="email" name="email" type="email" placeholder="seuemail@exemplo.com" required>
-                <div class="invalid-feedback">Informe um endereço de e-mail válido.</div>
-              </div>
-              <div class="mb-4">
-                <label class="form-label" for="mensagem">Mensagem</label>
-                <textarea class="form-control" id="mensagem" name="mensagem" rows="6" placeholder="Como podemos ajudar?" required></textarea>
-                <div class="invalid-feedback">Escreva uma mensagem para enviarmos à equipe.</div>
-              </div>
-              <div class="d-flex flex-column flex-md-row align-items-md-center gap-3">
-                <button class="btn btn-primary px-4" type="submit"{% if not contact_email %} disabled{% endif %}>Enviar mensagem</button>
-                <small class="text-body-secondary">Utilizamos seus dados apenas para retornar o contato.</small>
-              </div>
-            </form>
-            {% if not contact_email %}
-              <div class="alert alert-warning mt-4 mb-0" role="alert">
-                Informe um e-mail de contato no painel administrativo para habilitar o envio automático do formulário.
-              </div>
-            {% endif %}
-          </div>
         </div>
       </div>
     </div>
   </div>
-
-  <script>
-    (() => {
-      'use strict';
-      const form = document.getElementById('contactForm');
-      if (!form) return;
-      form.addEventListener('submit', event => {
-        if (!form.checkValidity()) {
-          event.preventDefault();
-          event.stopPropagation();
-        }
-        form.classList.add('was-validated');
-      });
-    })();
-  </script>
 {% endblock %}
