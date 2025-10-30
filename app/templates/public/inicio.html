@@ -7,7 +7,7 @@
 {% set texto_principios = textos.get('principios') %}
 
 {% block header_image %}
-  <section class="hero" aria-labelledby="inicio-hero-heading">
+  <header class="hero" role="banner" aria-label="Abertura do site" aria-labelledby="inicio-hero-heading">
     <div class="hero-inner">
       <span class="badge bg-light text-uppercase text-primary mb-3">Transforme vidas com carinho</span>
       <h1 id="inicio-hero-heading" class="display-4 fw-bold">{{ texto_inicio.titulo or content_placeholder }}</h1>
@@ -23,13 +23,13 @@
         <a class="btn btn-outline-light btn-lg px-5" href="{{ url_for('public.sobre') }}">Conheça nossa história</a>
       </div>
     </div>
-  </section>
+  </header>
 {% endblock %}
 
 {% block content %}
   {{ self.header_image() }}
 
-  <section class="section-spacious" aria-labelledby="sobre-nos-heading">
+  <section class="section-spacious" role="region" aria-labelledby="sobre-nos-heading">
     <div class="container-wide">
       <div class="text-center mb-5">
         <span class="text-uppercase text-success fw-semibold">Sobre nós</span>
@@ -89,7 +89,7 @@
     </div>
   </section>
 
-  <section class="section-spacious bg-light" aria-labelledby="projetos-destaque-heading">
+  <section class="section-spacious bg-light" role="region" aria-labelledby="projetos-destaque-heading">
     <div class="container-wide">
       <div class="text-center mb-5">
         <span class="text-uppercase text-success fw-semibold">Nossos Projetos</span>
@@ -122,7 +122,7 @@
     </div>
   </section>
 
-  <section class="section-spacious" aria-labelledby="momentos-heading">
+  <section class="section-spacious" role="region" aria-labelledby="momentos-heading">
     <div class="container-wide">
       <div class="text-center mb-5">
         <span class="text-uppercase text-success fw-semibold">Nossos momentos</span>
@@ -180,7 +180,7 @@
     </div>
   </section>
 
-  <section class="section-spacious text-white" aria-labelledby="cta-heading" style="margin-left: calc(-1 * (100vw - 100%) / 2); margin-right: calc(-1 * (100vw - 100%) / 2); background: linear-gradient(135deg, #198754, #0f5132);">
+  <section class="section-spacious text-white" role="region" aria-labelledby="cta-heading" style="margin-left: calc(-1 * (100vw - 100%) / 2); margin-right: calc(-1 * (100vw - 100%) / 2); background: linear-gradient(135deg, #198754, #0f5132);">
     <div class="container-wide text-center">
       <h2 id="cta-heading" class="display-6 fw-bold mb-3">Faça parte desta corrente do bem</h2>
       <p class="lead mb-4">Com o seu apoio, ampliamos o alcance dos nossos projetos e mudamos vidas de forma concreta.</p>
