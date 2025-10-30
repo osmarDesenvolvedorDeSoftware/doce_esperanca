@@ -4,6 +4,7 @@ import json
 import re
 import unicodedata
 from pathlib import Path
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import qrcode
@@ -13,9 +14,11 @@ from flask import (
     Blueprint,
     abort,
     current_app,
+    g,
     redirect,
-    render_template,
     request,
+    Response,
+    render_template,
     url_for,
 )
 from markupsafe import Markup, escape
@@ -36,6 +39,15 @@ from app.models import (
     Voluntario,
 )
 from app.services.store import load_products as load_store_products
+from app.services.seo import (
+    DEFAULT_KEYWORDS,
+    DEFAULT_SITE_DESCRIPTION,
+    DEFAULT_SITE_NAME,
+    build_metadata,
+    build_organization_schema,
+    parse_iso_datetime,
+    summarize_text,
+)
 from app.routes.decorators import safe_route
 
 
@@ -53,6 +65,68 @@ SOCIAL_PLATFORMS = {
     "instagram": ("bi bi-instagram", "Instagram"),
     "youtube": ("bi bi-youtube", "YouTube"),
 }
+
+
+def _get_inicio_texto() -> Optional[TextoInstitucional]:
+    if hasattr(g, "_inicio_texto"):
+        return getattr(g, "_inicio_texto")
+
+    inicio_texto = TextoInstitucional.query.filter_by(slug="inicio").first()
+    g._inicio_texto = inicio_texto
+    return inicio_texto
+
+
+def _get_site_identity() -> str:
+    if hasattr(g, "_site_identity"):
+        return getattr(g, "_site_identity")
+
+    inicio_texto = _get_inicio_texto()
+    identity = DEFAULT_SITE_NAME
+    if inicio_texto and inicio_texto.titulo:
+        identity = inicio_texto.titulo.strip() or DEFAULT_SITE_NAME
+
+    g._site_identity = identity
+    return identity
+
+
+def _get_site_tagline() -> str:
+    if hasattr(g, "_site_tagline"):
+        return getattr(g, "_site_tagline")
+
+    inicio_texto = _get_inicio_texto()
+    tagline = summarize_text(
+        inicio_texto.resumo if inicio_texto else None,
+        inicio_texto.conteudo if inicio_texto else None,
+        fallback=DEFAULT_SITE_DESCRIPTION,
+    ) or DEFAULT_SITE_DESCRIPTION
+
+    g._site_tagline = tagline
+    return tagline
+
+
+def _absolute_static_url(path: Optional[str]) -> Optional[str]:
+    if not path:
+        return None
+
+    cleaned = str(path).lstrip("/")
+    if not cleaned:
+        return None
+
+    try:
+        return url_for("static", filename=cleaned, _external=True)
+    except Exception:  # pragma: no cover - fallback safety
+        current_app.logger.warning("Falha ao gerar URL absoluta para %s", path)
+        return None
+
+
+def _default_share_image() -> str:
+    cached = getattr(g, "_default_share_image", None)
+    if cached:
+        return cached
+
+    image_url = url_for("static", filename="img/Todos.jpg", _external=True)
+    g._default_share_image = image_url
+    return image_url
 
 
 def _ensure_pix_qrcode() -> Optional[str]:
@@ -239,7 +313,7 @@ def inject_public_defaults() -> Dict[str, object]:
     """Share default context data across public templates."""
 
     contato_texto = TextoInstitucional.query.filter_by(slug="contato").first()
-    inicio_texto = TextoInstitucional.query.filter_by(slug="inicio").first()
+    inicio_texto = _get_inicio_texto()
 
     requested_slugs = ("contato", "inicio")
     current_app.logger.debug(
@@ -256,15 +330,43 @@ def inject_public_defaults() -> Dict[str, object]:
         footer_contact_data.get("phone", "")
     )
 
-    site_identity = CONTENT_PLACEHOLDER
-    if inicio_texto and inicio_texto.titulo:
-        site_identity = inicio_texto.titulo
+    site_identity = _get_site_identity()
+    site_tagline = _get_site_tagline()
+    site_keywords = ", ".join(DEFAULT_KEYWORDS)
+    default_share_image = _default_share_image()
+
+    contato_email = None
+    if contato_texto and contato_texto.resumo:
+        contato_email = contato_texto.resumo.strip() or None
+
+    base_url = url_for("public.index", _external=True)
+    logo_url = _absolute_static_url("img/logo.ico")
+    same_as_links = []
+    for key in ("facebook", "instagram", "youtube", "whatsapp"):
+        normalized = _normalize_external_url(footer_contact_data.get(key, ""))
+        if normalized:
+            same_as_links.append(normalized)
+
+    organization_schema = build_organization_schema(
+        site_name=site_identity,
+        base_url=base_url,
+        logo_url=logo_url,
+        description=site_tagline,
+        email=contato_email,
+        phone=footer_contact_data.get("phone"),
+        address=footer_contact_data.get("address"),
+        same_as=same_as_links,
+    )
 
     return {
         "footer_contact": contato_texto,
         "footer_contact_data": footer_contact_data,
         "footer_contact_phone_href": footer_contact_phone_href,
         "site_identity": site_identity,
+        "site_tagline": site_tagline,
+        "site_keywords": site_keywords,
+        "default_share_image": default_share_image,
+        "organization_schema": organization_schema,
         "content_placeholder": CONTENT_PLACEHOLDER,
         "institutional_sections": INSTITUTIONAL_SECTION_MAP,
     }
@@ -333,6 +435,39 @@ def index() -> str:
         _log_texto_details(slug, textos.get(slug))
     parceiros = Parceiro.query.order_by(Parceiro.nome.asc()).all()
     banners = Banner.query.order_by(Banner.ordem.asc(), Banner.created_at.desc()).all()
+    texto_inicio = textos.get("inicio")
+    site_name = _get_site_identity()
+    description = summarize_text(
+        texto_inicio.resumo if texto_inicio else None,
+        texto_inicio.conteudo if texto_inicio else None,
+        fallback=DEFAULT_SITE_DESCRIPTION,
+    )
+    hero_title = (
+        texto_inicio.titulo.strip()
+        if texto_inicio and texto_inicio.titulo
+        else site_name
+    )
+    share_image = (
+        _absolute_static_url(banners[0].imagem_path)
+        if banners and getattr(banners[0], "imagem_path", None)
+        else None
+    ) or _default_share_image()
+    website_schema = {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "url": url_for("public.index", _external=True),
+        "name": site_name,
+        "description": description,
+    }
+    seo = build_metadata(
+        title=f"Início - {site_name}",
+        description=description,
+        canonical=url_for("public.index", _external=True),
+        extra_keywords=[hero_title, "campanhas solidárias", "impacto comunitário"],
+        og_image=share_image,
+        structured_data=website_schema,
+    )
+
     return render_template(
         "public/inicio.html",
         textos=textos,
@@ -340,6 +475,7 @@ def index() -> str:
         banners=banners,
         parceiros_placeholder=textos.get("placeholder_parceiros"),
         active_page="inicio",
+        seo=seo,
     )
 
 
@@ -353,11 +489,33 @@ def sobre() -> str:
     )
     for slug in requested_slugs:
         _log_texto_details(slug, textos.get(slug))
+    texto_sobre = textos.get("sobre")
+    texto_missao = textos.get("missao")
+    site_name = _get_site_identity()
+    description = summarize_text(
+        texto_sobre.resumo if texto_sobre else None,
+        texto_sobre.conteudo if texto_sobre else None,
+        texto_missao.conteudo if texto_missao else None,
+        fallback=DEFAULT_SITE_DESCRIPTION,
+    )
+    share_image = (
+        _absolute_static_url(texto_sobre.imagem_path)
+        if texto_sobre and texto_sobre.imagem_path
+        else None
+    ) or _default_share_image()
+    seo = build_metadata(
+        title=f"Sobre - {site_name}",
+        description=description,
+        canonical=url_for("public.sobre", _external=True),
+        extra_keywords=["história da ONG", "missão solidária"],
+        og_image=share_image,
+    )
     return render_template(
         "public/sobre.html",
-        texto_sobre=textos.get("sobre"),
-        texto_missao=textos.get("missao"),
+        texto_sobre=texto_sobre,
+        texto_missao=texto_missao,
         active_page="sobre",
+        seo=seo,
     )
 
 
@@ -391,6 +549,37 @@ def galeria() -> str:
         if texto_galeria and texto_galeria.conteudo
         else (None if has_items else CONTENT_PLACEHOLDER)
     )
+    canonical_url = (
+        url_for("public.galeria", page=page, _external=True)
+        if page and page > 1
+        else url_for("public.galeria", _external=True)
+    )
+    description = summarize_text(
+        texto_galeria.resumo if texto_galeria else None,
+        texto_galeria.conteudo if texto_galeria else None,
+        fallback="Explore a galeria de fotos e registros das ações da Doce Esperança.",
+    )
+    gallery_image = (
+        _absolute_static_url(galerias[0].imagem_path)
+        if galerias and getattr(galerias[0], "imagem_path", None)
+        else None
+    ) or _default_share_image()
+    gallery_schema = {
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        "name": header_title,
+        "description": description,
+        "url": canonical_url,
+    }
+    seo = build_metadata(
+        title=f"Galeria - {_get_site_identity()}",
+        description=description,
+        canonical=canonical_url,
+        extra_keywords=["galeria de fotos", "ações sociais"],
+        og_image=gallery_image,
+        structured_data=gallery_schema,
+        noindex=page > 1,
+    )
     return render_template(
         "public/galeria.html",
         texto_galeria=texto_galeria,
@@ -402,6 +591,7 @@ def galeria() -> str:
         header_title=header_title,
         header_intro_html=header_intro_html,
         active_page="galeria",
+        seo=seo,
     )
 
 
@@ -418,11 +608,25 @@ def depoimentos() -> str:
     depoimentos_itens = Depoimento.query.order_by(
         Depoimento.created_at.desc(), Depoimento.id.desc()
     ).all()
+    texto_depoimentos = textos.get("depoimentos")
+    description = summarize_text(
+        texto_depoimentos.resumo if texto_depoimentos else None,
+        texto_depoimentos.conteudo if texto_depoimentos else None,
+        fallback="Histórias de transformação contadas por quem vivencia a Doce Esperança.",
+    )
+    seo = build_metadata(
+        title=f"Depoimentos - {_get_site_identity()}",
+        description=description,
+        canonical=url_for("public.depoimentos", _external=True),
+        extra_keywords=["relatos de impacto", "histórias reais"],
+        og_image=_default_share_image(),
+    )
     return render_template(
         "public/depoimentos.html",
-        texto_depoimentos=textos.get("depoimentos"),
+        texto_depoimentos=texto_depoimentos,
         depoimentos=depoimentos_itens,
         active_page="depoimentos",
+        seo=seo,
     )
 
 
@@ -440,11 +644,21 @@ def transparencia() -> str:
         Transparencia.query.order_by(Transparencia.publicado_em.desc(), Transparencia.id.desc()).all()
     )
 
+    description = "Acesse relatórios, documentos e prestações de contas da Doce Esperança."
+    seo = build_metadata(
+        title=f"Transparência - {_get_site_identity()}",
+        description=description,
+        canonical=url_for("public.transparencia", _external=True),
+        extra_keywords=["prestação de contas", "documentos da ONG"],
+        og_image=_default_share_image(),
+    )
+
     return render_template(
         "public/transparencia.html",
         documentos=documentos,
         transparencia_placeholder=placeholders.get("placeholder_transparencia"),
         active_page="transparencia",
+        seo=seo,
     )
 
 
@@ -455,6 +669,19 @@ def doacao() -> str:
         Transparencia.query.order_by(Transparencia.publicado_em.desc(), Transparencia.id.desc()).all()
     )
     pix_qrcode_path = _ensure_pix_qrcode()
+    site_name = _get_site_identity()
+    description = (
+        "Contribua com a Doce Esperança por PIX, transferência ou doações em "
+        "materiais e fortaleça projetos sociais que transformam vidas."
+    )
+    share_image = _absolute_static_url(pix_qrcode_path) if pix_qrcode_path else _default_share_image()
+    seo = build_metadata(
+        title=f"Doações - {site_name}",
+        description=description,
+        canonical=url_for("public.doacao", _external=True),
+        extra_keywords=["doações por PIX", "como ajudar"],
+        og_image=share_image,
+    )
     return render_template(
         "public/doacao.html",
         documentos=documentos,
@@ -462,6 +689,7 @@ def doacao() -> str:
         pix_key=PIX_KEY,
         pix_copy_paste=PIX_COPY_AND_PASTE,
         active_page="doacao",
+        seo=seo,
     )
 
 
@@ -495,11 +723,38 @@ def loja() -> str:
             }
         )
 
+    site_name = _get_site_identity()
+    description = (
+        "Conheça a loja solidária da Doce Esperança e apoie projetos sociais "
+        "adquirindo produtos artesanais feitos com carinho."
+    )
+    share_image = (
+        _absolute_static_url(produtos[0]["imagem"])
+        if produtos and produtos[0].get("imagem")
+        else _default_share_image()
+    )
+    catalog_schema = {
+        "@context": "https://schema.org",
+        "@type": "OfferCatalog",
+        "name": f"Loja Solidária {site_name}",
+        "description": description,
+        "url": url_for("public.loja", _external=True),
+    }
+    seo = build_metadata(
+        title=f"Loja Solidária - {site_name}",
+        description=description,
+        canonical=url_for("public.loja", _external=True),
+        extra_keywords=["produtos solidários", "artesanato social"],
+        og_image=share_image,
+        structured_data=catalog_schema,
+    )
+
     return render_template(
         "public/loja.html",
         produtos=produtos,
         pix_key=PIX_KEY,
         active_page="loja",
+        seo=seo,
     )
 
 
@@ -536,12 +791,56 @@ def loja_produto(produto_id: str, slug: Optional[str] = None) -> str:
         "total_formatado": _format_currency(preco + frete),
         "slug": slug_canonical,
     }
+    canonical_url = url_for(
+        "public.loja_produto",
+        produto_id=contexto_produto["id"],
+        slug=slug_canonical,
+        _external=True,
+    )
+    description = summarize_text(
+        contexto_produto.get("descricao"),
+        fallback="Produto solidário disponível na loja da Doce Esperança.",
+    )
+    image_url = (
+        _absolute_static_url(contexto_produto.get("imagem"))
+        if contexto_produto.get("imagem")
+        else None
+    ) or _default_share_image()
+    video_url = None
+    if contexto_produto.get("video"):
+        video_url = _absolute_static_url(contexto_produto.get("video"))
+    product_schema = {
+        "@context": "https://schema.org",
+        "@type": "Product",
+        "name": contexto_produto.get("nome") or "Produto solidário",
+        "description": description,
+        "image": [image_url] if image_url else None,
+        "url": canonical_url,
+        "offers": {
+            "@type": "Offer",
+            "price": f"{contexto_produto['total']:.2f}",
+            "priceCurrency": "BRL",
+            "availability": "https://schema.org/InStock",
+            "url": canonical_url,
+        },
+    }
+    if video_url:
+        product_schema["video"] = video_url
+    seo = build_metadata(
+        title=f"{contexto_produto.get('nome') or 'Produto'} - {_get_site_identity()}",
+        description=description,
+        canonical=canonical_url,
+        extra_keywords=[contexto_produto.get("nome") or "produto solidário"],
+        og_image=image_url,
+        structured_data=product_schema,
+    )
 
     return render_template(
         "public/loja_produto.html",
         produto=contexto_produto,
         pix_key=PIX_KEY,
         active_page="loja",
+        seo=seo,
     )
 
 
@@ -572,6 +871,26 @@ def projetos() -> str:
         Transparencia.query.order_by(Transparencia.publicado_em.desc(), Transparencia.id.desc()).all()
     )
 
+    description = (
+        "Conheça os projetos, parceiros, apoios e voluntários que movimentam a "
+        "rede solidária da Doce Esperança."
+    )
+    schema = {
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        "name": "Projetos sociais",
+        "description": description,
+        "url": url_for("public.projetos", _external=True),
+    }
+    seo = build_metadata(
+        title=f"Projetos - {_get_site_identity()}",
+        description=description,
+        canonical=url_for("public.projetos", _external=True),
+        extra_keywords=["projetos sociais", "parcerias solidárias"],
+        og_image=_default_share_image(),
+        structured_data=schema,
+    )
+
     return render_template(
         "public/projetos.html",
         parceiros=parceiros,
@@ -583,6 +902,7 @@ def projetos() -> str:
         voluntarios_placeholder=placeholders.get("placeholder_voluntarios"),
         transparencia_placeholder=placeholders.get("placeholder_transparencia"),
         active_page="projetos",
+        seo=seo,
     )
 
 
@@ -772,6 +1092,18 @@ def contato() -> str:
             "href": f"mailto:{contact_email}",
             "label": contact_email,
         }
+    description = summarize_text(
+        contact_description,
+        texto_contato.conteudo if texto_contato else None,
+        fallback="Entre em contato com a equipe da Doce Esperança e conheça nossos canais de atendimento.",
+    )
+    seo = build_metadata(
+        title=f"Contato - {_get_site_identity()}",
+        description=description,
+        canonical=url_for("public.contato", _external=True),
+        extra_keywords=["fale conosco", "contato ONG"],
+        og_image=_default_share_image(),
+    )
     return render_template(
         "public/contato.html",
         texto_contato=texto_contato,
@@ -785,4 +1117,102 @@ def contato() -> str:
         contact_content_is_json=contact_content_is_json,
         contact_info=contact_info,
         active_page="contato",
+        seo=seo,
     )
+
+
+@public_bp.route("/robots.txt")
+@safe_route()
+def robots_txt() -> Response:
+    sitemap_url = url_for("public.sitemap", _external=True)
+    lines = [
+        "User-agent: *",
+        "Disallow: /admin/",
+        "Allow: /",
+        f"Sitemap: {sitemap_url}",
+    ]
+    body = "\n".join(lines) + "\n"
+    return current_app.response_class(body, mimetype="text/plain")
+
+
+@public_bp.route("/sitemap.xml")
+@safe_route()
+def sitemap() -> Response:
+    urls: List[Dict[str, Optional[str]]] = []
+    pages = [
+        ("public.index", "weekly", "1.0"),
+        ("public.sobre", "monthly", "0.8"),
+        ("public.projetos", "monthly", "0.8"),
+        ("public.galeria", "weekly", "0.7"),
+        ("public.depoimentos", "monthly", "0.6"),
+        ("public.transparencia", "monthly", "0.6"),
+        ("public.doacao", "weekly", "0.7"),
+        ("public.loja", "weekly", "0.7"),
+        ("public.contato", "yearly", "0.5"),
+    ]
+
+    for endpoint, changefreq, priority in pages:
+        try:
+            loc = url_for(endpoint, _external=True)
+        except Exception:
+            current_app.logger.debug("Endpoint %s not found for sitemap", endpoint)
+            continue
+        urls.append(
+            {
+                "loc": loc,
+                "changefreq": changefreq,
+                "priority": priority,
+                "lastmod": None,
+            }
+        )
+
+    produtos = load_store_products()
+    for item in produtos:
+        produto_id = item.get("id")
+        if produto_id is None:
+            continue
+        slug = _slugify(str(item.get("nome", "")))
+        try:
+            loc = url_for(
+                "public.loja_produto",
+                produto_id=produto_id,
+                slug=slug,
+                _external=True,
+            )
+        except Exception:
+            continue
+        timestamp = item.get("updated_at") or item.get("created_at")
+        lastmod_dt: Optional[datetime] = None
+        if isinstance(timestamp, (int, float)):
+            lastmod_dt = datetime.utcfromtimestamp(timestamp)
+        elif isinstance(timestamp, str):
+            lastmod_dt = parse_iso_datetime(timestamp)
+        lastmod = lastmod_dt.date().isoformat() if lastmod_dt else None
+        urls.append(
+            {
+                "loc": loc,
+                "changefreq": "weekly",
+                "priority": "0.6",
+                "lastmod": lastmod,
+            }
+        )
+
+    xml_entries = []
+    for entry in urls:
+        parts = ["  <url>", f"    <loc>{entry['loc']}</loc>"]
+        if entry.get("lastmod"):
+            parts.append(f"    <lastmod>{entry['lastmod']}</lastmod>")
+        if entry.get("changefreq"):
+            parts.append(f"    <changefreq>{entry['changefreq']}</changefreq>")
+        if entry.get("priority"):
+            parts.append(f"    <priority>{entry['priority']}</priority>")
+        parts.append("  </url>")
+        xml_entries.append("\n".join(parts))
+
+    xml_body = (
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+        "<urlset xmlns=\"https://www.sitemaps.org/schemas/sitemap/0.9\">\n"
+        + "\n".join(xml_entries)
+        + "\n</urlset>\n"
+    )
+    return current_app.response_class(xml_body, mimetype="application/xml")
