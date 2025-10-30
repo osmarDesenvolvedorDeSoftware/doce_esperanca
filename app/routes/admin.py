@@ -529,6 +529,9 @@ def textos_edit(texto_id: int):
 
     if is_footer_contact:
         _assign_footer_placeholders(form)
+        render_kw = dict(form.conteudo.render_kw or {})
+        render_kw["required"] = False
+        form.conteudo.render_kw = render_kw
         form.support_text.description = (
             "Frase curta exibida ao lado da logo no rodapé público."
         )
