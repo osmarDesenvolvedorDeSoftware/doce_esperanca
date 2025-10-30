@@ -17,7 +17,7 @@
                 <div class="text-body-secondary mb-4">
                   {{ contact_description }}
                 </div>
-              {% elif texto_contato and texto_contato.conteudo %}
+              {% elif texto_contato and texto_contato.conteudo and not contact_content_is_json %}
                 <div class="text-body-secondary mb-4">
                   {{ texto_contato.conteudo | safe }}
                 </div>
@@ -28,39 +28,74 @@
               {% set phone = contact_channels.get('phone') %}
               {% set whatsapp = contact_channels.get('whatsapp') %}
               {% set email_channel = contact_channels.get('email') %}
-              {% if phone or whatsapp or email_channel %}
-                <ul class="list-unstyled mb-0 d-flex flex-column gap-3">
-                  {% if phone %}
-                    <li class="d-flex align-items-start gap-3">
-                      <span class="text-primary fs-4"><i class="bi bi-telephone-fill" aria-hidden="true"></i></span>
-                      <div>
-                        <span class="text-uppercase small text-muted fw-semibold d-block">Telefone</span>
-                        <a class="fw-semibold link-underline link-underline-opacity-0" href="{{ phone.href }}">{{ phone.label }}</a>
-                      </div>
-                    </li>
+              {% set has_address = contact_address_lines %}
+              {% set has_social = contact_social_links %}
+              {% set has_channels = phone or email_channel %}
+              {% set has_contact_info = has_address or has_channels or whatsapp or has_social %}
+              {% if has_contact_info %}
+                <div class="d-flex flex-column gap-4">
+                  {% if has_address %}
+                    <div class="d-flex align-items-start gap-3">
+                      <span class="text-primary fs-4"><i class="bi bi-geo-alt-fill" aria-hidden="true"></i></span>
+                      <address class="mb-0 contact-address-text">
+                        {% for line in contact_address_lines %}
+                          {{ line }}{% if not loop.last %}<br>{% endif %}
+                        {% endfor %}
+                      </address>
+                    </div>
                   {% endif %}
+
+                  {% if has_channels %}
+                    <ul class="list-unstyled mb-0 d-flex flex-column gap-3 contact-info-list">
+                      {% if phone %}
+                        <li class="d-flex align-items-start gap-3">
+                          <span class="text-primary fs-4"><i class="bi bi-telephone-fill" aria-hidden="true"></i></span>
+                          <div>
+                            <span class="text-uppercase small text-muted fw-semibold d-block">Telefone</span>
+                            <a class="fw-semibold contact-channel-link" href="{{ phone.href }}">{{ phone.label }}</a>
+                          </div>
+                        </li>
+                      {% endif %}
+                      {% if email_channel %}
+                        <li class="d-flex align-items-start gap-3">
+                          <span class="text-primary fs-4"><i class="bi bi-envelope-fill" aria-hidden="true"></i></span>
+                          <div>
+                            <span class="text-uppercase small text-muted fw-semibold d-block">E-mail</span>
+                            <a class="fw-semibold contact-channel-link" href="{{ email_channel.href }}">{{ email_channel.label }}</a>
+                          </div>
+                        </li>
+                      {% endif %}
+                    </ul>
+                  {% endif %}
+
                   {% if whatsapp %}
-                    <li class="d-flex align-items-start gap-3">
-                      <span class="text-success fs-4"><i class="bi bi-whatsapp" aria-hidden="true"></i></span>
-                      <div>
-                        <span class="text-uppercase small text-muted fw-semibold d-block">WhatsApp</span>
-                        <a class="fw-semibold link-underline link-underline-opacity-0" href="{{ whatsapp.href }}" target="_blank" rel="noopener">{{ whatsapp.label }}</a>
-                      </div>
-                    </li>
+                    <div class="d-flex flex-column flex-sm-row align-items-sm-center gap-3">
+                      {% if contact_whatsapp_display %}
+                        <span class="text-body-secondary fw-semibold"><i class="bi bi-chat-dots-fill me-2 text-success" aria-hidden="true"></i>{{ contact_whatsapp_display }}</span>
+                      {% endif %}
+                      <a class="btn btn-contact-primary d-inline-flex align-items-center gap-2" href="{{ whatsapp.href }}" target="_blank" rel="noopener">
+                        <i class="bi bi-whatsapp" aria-hidden="true"></i>
+                        <span>{{ whatsapp.label or 'Enviar mensagem' }}</span>
+                      </a>
+                    </div>
                   {% endif %}
-                  {% if email_channel %}
-                    <li class="d-flex align-items-start gap-3">
-                      <span class="text-danger fs-4"><i class="bi bi-envelope-fill" aria-hidden="true"></i></span>
-                      <div>
-                        <span class="text-uppercase small text-muted fw-semibold d-block">E-mail</span>
-                        <a class="fw-semibold link-underline link-underline-opacity-0" href="{{ email_channel.href }}">{{ email_channel.label }}</a>
+
+                  {% if has_social %}
+                    <div class="d-flex flex-column gap-2">
+                      <span class="text-uppercase small text-muted fw-semibold">Redes sociais</span>
+                      <div class="d-flex flex-wrap gap-3">
+                        {% for social in contact_social_links %}
+                          <a class="contact-social-link" href="{{ social.href }}" target="_blank" rel="noopener" aria-label="{{ social.title }}">
+                            <i class="{{ social.icon }}" aria-hidden="true"></i>
+                          </a>
+                        {% endfor %}
                       </div>
-                    </li>
+                    </div>
                   {% endif %}
-                </ul>
+                </div>
               {% else %}
                 <div class="alert alert-info mb-0" role="alert">
-                  Adicione links de telefone, WhatsApp ou e-mail no conteúdo institucional para exibi-los aqui automaticamente.
+                  Informações de contato indisponíveis no momento.
                 </div>
               {% endif %}
             </div>
