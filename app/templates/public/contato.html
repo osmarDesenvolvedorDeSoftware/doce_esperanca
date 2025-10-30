@@ -5,110 +5,108 @@
 {% block content %}
   <div class="container py-5">
     <div class="row g-5 justify-content-center">
-      <div class="col-12">
-        <div class="d-flex flex-column gap-4">
-          <div class="card border-0 shadow-sm h-100">
-            <div class="card-body p-4">
-              <div class="d-flex align-items-center gap-3 mb-4">
-                <span class="text-primary fs-2"><i class="bi bi-chat-dots-fill" aria-hidden="true"></i></span>
-                <h1 class="h3 fw-bold mb-0">{{ texto_contato.titulo or content_placeholder }}</h1>
+      <div class="col-12 col-md-10 col-lg-8 mx-auto d-flex flex-column align-items-stretch gap-4 p-4 p-md-5">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body p-4">
+            <div class="d-flex align-items-center gap-3 mb-4">
+              <span class="text-primary fs-2"><i class="bi bi-chat-dots-fill" aria-hidden="true"></i></span>
+              <h1 class="h3 fw-bold mb-0">{{ texto_contato.titulo or content_placeholder }}</h1>
+            </div>
+            {% if contact_description %}
+              <div class="text-body-secondary mb-4">
+                {{ contact_description }}
               </div>
-              {% if contact_description %}
-                <div class="text-body-secondary mb-4">
-                  {{ contact_description }}
-                </div>
-              {% elif texto_contato and texto_contato.conteudo and not contact_content_is_json %}
-                <div class="text-body-secondary mb-4">
-                  {{ texto_contato.conteudo | safe }}
-                </div>
-              {% else %}
-                <p class="text-body-secondary mb-4">{{ content_placeholder }}</p>
-              {% endif %}
+            {% elif texto_contato and texto_contato.conteudo and not contact_content_is_json %}
+              <div class="text-body-secondary mb-4">
+                {{ texto_contato.conteudo | safe }}
+              </div>
+            {% else %}
+              <p class="text-body-secondary mb-4">{{ content_placeholder }}</p>
+            {% endif %}
 
-              {% set phone = contact_channels.get('phone') %}
-              {% set whatsapp = contact_channels.get('whatsapp') %}
-              {% set email_channel = contact_channels.get('email') %}
-              {% set has_address = contact_address_lines %}
-              {% set has_social = contact_social_links %}
-              {% set has_channels = phone or email_channel %}
-              {% set has_contact_info = has_address or has_channels or whatsapp or has_social %}
-              {% if has_contact_info %}
-                <div class="d-flex flex-column gap-4">
-                  {% if has_address %}
-                    <div class="d-flex align-items-start gap-3">
-                      <span class="text-primary fs-4"><i class="bi bi-geo-alt-fill" aria-hidden="true"></i></span>
-                      <address class="mb-0 contact-address-text">
-                        {% for line in contact_address_lines %}
-                          {{ line }}{% if not loop.last %}<br>{% endif %}
-                        {% endfor %}
-                      </address>
+            {% set phone = contact_channels.get('phone') %}
+            {% set whatsapp = contact_channels.get('whatsapp') %}
+            {% set email_channel = contact_channels.get('email') %}
+            {% set has_address = contact_address_lines %}
+            {% set has_social = contact_social_links %}
+            {% set has_channels = phone or email_channel %}
+            {% set has_contact_info = has_address or has_channels or whatsapp or has_social %}
+            {% if has_contact_info %}
+              <div class="d-flex flex-column gap-4">
+                {% if has_address %}
+                  <div class="d-flex align-items-start gap-3">
+                    <span class="text-primary fs-4"><i class="bi bi-geo-alt-fill" aria-hidden="true"></i></span>
+                    <address class="mb-0 contact-address-text">
+                      {% for line in contact_address_lines %}
+                        {{ line }}{% if not loop.last %}<br>{% endif %}
+                      {% endfor %}
+                    </address>
+                  </div>
+                {% endif %}
+
+                {% if has_channels %}
+                  <ul class="list-unstyled mb-0 d-flex flex-column gap-3 contact-info-list">
+                    {% if phone %}
+                      <li class="d-flex align-items-start gap-3">
+                        <span class="text-primary fs-4"><i class="bi bi-telephone-fill" aria-hidden="true"></i></span>
+                        <div>
+                          <span class="text-uppercase small text-muted fw-semibold d-block">Telefone</span>
+                          <a class="fw-semibold contact-channel-link" href="{{ phone.href }}">{{ phone.label }}</a>
+                        </div>
+                      </li>
+                    {% endif %}
+                    {% if email_channel %}
+                      <li class="d-flex align-items-start gap-3">
+                        <span class="text-primary fs-4"><i class="bi bi-envelope-fill" aria-hidden="true"></i></span>
+                        <div>
+                          <span class="text-uppercase small text-muted fw-semibold d-block">E-mail</span>
+                          <a class="fw-semibold contact-channel-link" href="{{ email_channel.href }}">{{ email_channel.label }}</a>
+                        </div>
+                      </li>
+                    {% endif %}
+                  </ul>
+                {% endif %}
+
+                {% if whatsapp %}
+                  <div class="d-flex flex-column flex-sm-row align-items-sm-center gap-3">
+                    {% if contact_whatsapp_display %}
+                      <span class="text-body-secondary fw-semibold"><i class="bi bi-chat-dots-fill me-2 text-success" aria-hidden="true"></i>{{ contact_whatsapp_display }}</span>
+                    {% endif %}
+                    <a class="btn btn-contact-primary d-inline-flex align-items-center gap-2" href="{{ whatsapp.href }}" target="_blank" rel="noopener">
+                      <i class="bi bi-whatsapp" aria-hidden="true"></i>
+                      <span>{{ whatsapp.label or 'Enviar mensagem' }}</span>
+                    </a>
+                  </div>
+                {% endif %}
+
+                {% if has_social %}
+                  <div class="d-flex flex-column gap-2">
+                    <span class="text-uppercase small text-muted fw-semibold">Redes sociais</span>
+                    <div class="d-flex flex-wrap gap-3">
+                      {% for social in contact_social_links %}
+                        <a class="contact-social-link" href="{{ social.href }}" target="_blank" rel="noopener" aria-label="{{ social.title }}">
+                          <i class="{{ social.icon }}" aria-hidden="true"></i>
+                        </a>
+                      {% endfor %}
                     </div>
-                  {% endif %}
+                  </div>
+                {% endif %}
+              </div>
+            {% else %}
+              <div class="alert alert-info mb-0" role="alert">
+                Informações de contato indisponíveis no momento.
+              </div>
+            {% endif %}
+          </div>
+        </div>
 
-                  {% if has_channels %}
-                    <ul class="list-unstyled mb-0 d-flex flex-column gap-3 contact-info-list">
-                      {% if phone %}
-                        <li class="d-flex align-items-start gap-3">
-                          <span class="text-primary fs-4"><i class="bi bi-telephone-fill" aria-hidden="true"></i></span>
-                          <div>
-                            <span class="text-uppercase small text-muted fw-semibold d-block">Telefone</span>
-                            <a class="fw-semibold contact-channel-link" href="{{ phone.href }}">{{ phone.label }}</a>
-                          </div>
-                        </li>
-                      {% endif %}
-                      {% if email_channel %}
-                        <li class="d-flex align-items-start gap-3">
-                          <span class="text-primary fs-4"><i class="bi bi-envelope-fill" aria-hidden="true"></i></span>
-                          <div>
-                            <span class="text-uppercase small text-muted fw-semibold d-block">E-mail</span>
-                            <a class="fw-semibold contact-channel-link" href="{{ email_channel.href }}">{{ email_channel.label }}</a>
-                          </div>
-                        </li>
-                      {% endif %}
-                    </ul>
-                  {% endif %}
-
-                  {% if whatsapp %}
-                    <div class="d-flex flex-column flex-sm-row align-items-sm-center gap-3">
-                      {% if contact_whatsapp_display %}
-                        <span class="text-body-secondary fw-semibold"><i class="bi bi-chat-dots-fill me-2 text-success" aria-hidden="true"></i>{{ contact_whatsapp_display }}</span>
-                      {% endif %}
-                      <a class="btn btn-contact-primary d-inline-flex align-items-center gap-2" href="{{ whatsapp.href }}" target="_blank" rel="noopener">
-                        <i class="bi bi-whatsapp" aria-hidden="true"></i>
-                        <span>{{ whatsapp.label or 'Enviar mensagem' }}</span>
-                      </a>
-                    </div>
-                  {% endif %}
-
-                  {% if has_social %}
-                    <div class="d-flex flex-column gap-2">
-                      <span class="text-uppercase small text-muted fw-semibold">Redes sociais</span>
-                      <div class="d-flex flex-wrap gap-3">
-                        {% for social in contact_social_links %}
-                          <a class="contact-social-link" href="{{ social.href }}" target="_blank" rel="noopener" aria-label="{{ social.title }}">
-                            <i class="{{ social.icon }}" aria-hidden="true"></i>
-                          </a>
-                        {% endfor %}
-                      </div>
-                    </div>
-                  {% endif %}
-                </div>
-              {% else %}
-                <div class="alert alert-info mb-0" role="alert">
-                  Informações de contato indisponíveis no momento.
-                </div>
-              {% endif %}
+        {% if map_embed %}
+          <div class="card border-0 shadow-sm overflow-hidden">
+            <div class="ratio ratio-4x3">
+              {{ map_embed }}
             </div>
           </div>
-
-          {% if map_embed %}
-            <div class="card border-0 shadow-sm overflow-hidden">
-              <div class="ratio ratio-4x3">
-                {{ map_embed }}
-              </div>
-            </div>
-          {% endif %}
-        </div>
+        {% endif %}
       </div>
     </div>
   </div>
