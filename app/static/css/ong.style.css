@@ -181,11 +181,68 @@ section.py-5 {
   display: block;
 }
 
-.support-card-img {
-  max-height: 170px;
-  object-fit: contain;
-  padding: 24px;
+.support-card {
+  background-color: #ffffff;
+  border-radius: 16px;
+  padding: 28px 24px 32px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.support-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  transform: translateY(-4px);
+}
+
+.support-card-image-wrapper {
+  width: 100%;
+  max-height: 220px;
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background-color: #f8fafc;
+  margin-bottom: 24px;
+}
+
+.support-card-img {
+  width: 100%;
+  max-height: 220px;
+  object-fit: contain;
+  transition: transform 0.3s ease;
+}
+
+.support-card:hover .support-card-img {
+  transform: scale(1.05);
+}
+
+.support-card-body {
+  gap: 12px;
+}
+
+.support-card-title {
+  font-weight: 700;
+  color: #0d47a1;
+}
+
+.support-card-description {
+  color: #555555;
+  font-size: 0.95rem;
+}
+
+.support-card-link {
+  color: #0d47a1;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.support-card-link:hover,
+.support-card-link:focus {
+  color: #123354;
+  text-decoration: underline;
 }
 
 .volunteer-card-img {

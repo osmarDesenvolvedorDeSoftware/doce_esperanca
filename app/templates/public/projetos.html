@@ -56,27 +56,25 @@
             {% set descricao = (apoio.descricao or '').strip() %}
             {% set has_link = descricao.lower().startswith('http://') or descricao.lower().startswith('https://') %}
             <div class="col-12 col-md-6 col-lg-4">
-              <div class="card project-card h-100">
-                {% if apoio.imagem_path %}
-                  <img src="{{ static_url(apoio.imagem_path) }}" alt="{{ apoio.titulo }}" class="card-img-top project-card-img support-card-img">
-                {% else %}
-                  <img src="{{ support_placeholder_src }}" alt="Rede de apoio" class="card-img-top project-card-img support-card-img">
-                {% endif %}
-                <div class="card-body d-flex flex-column">
-                  <h5 class="fw-bold text-dark mb-2">{{ apoio.titulo }}</h5>
+              <div class="support-card h-100 d-flex flex-column text-center">
+                <div class="support-card-image-wrapper">
+                  {% if apoio.imagem_path %}
+                    <img src="{{ static_url(apoio.imagem_path) }}" alt="{{ apoio.titulo }}" class="support-card-img">
+                  {% else %}
+                    <img src="{{ support_placeholder_src }}" alt="Rede de apoio" class="support-card-img">
+                  {% endif %}
+                </div>
+                <div class="support-card-body d-flex flex-column align-items-center justify-content-center">
+                  <h5 class="support-card-title mb-2">{{ apoio.titulo }}</h5>
                   {% if descricao and not has_link %}
-                    <p class="text-muted mb-3">{{ descricao }}</p>
+                    <p class="support-card-description mb-0">{{ descricao }}</p>
                   {% elif not descricao %}
-                    <p class="text-muted mb-3">Mais informações em breve.</p>
+                    <p class="support-card-description mb-0">Mais informações em breve.</p>
                   {% endif %}
                   {% if has_link %}
-                    <a class="btn btn-outline-primary mt-auto" href="{{ descricao }}" target="_blank" rel="noopener">
-                      Visitar apoiador
+                    <a class="support-card-link mt-3" href="{{ descricao }}" target="_blank" rel="noopener">
+                      Visitar rede de apoio
                     </a>
-                  {% else %}
-                    <span class="btn btn-outline-secondary disabled mt-auto" tabindex="-1" role="button" aria-disabled="true">
-                      Conheça em breve
-                    </span>
                   {% endif %}
                 </div>
               </div>
