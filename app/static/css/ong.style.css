@@ -112,7 +112,20 @@ section.py-5 {
 }
 
 .footer-bottom {
-  background-color: #071221;
+  background-color: #f8f9fa;
+  padding: 20px 0;
+}
+
+.footer-institutional-text {
+  color: #555 !important;
+  font-size: 0.9rem;
+  font-weight: 300;
+  line-height: 1.6;
+}
+
+.footer-institutional-text strong {
+  font-weight: 600;
+  color: #1d4e89 !important;
 }
 
 .footer-links li + li {
