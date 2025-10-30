@@ -451,45 +451,16 @@ def transparencia() -> str:
 @public_bp.route("/doacao/")
 @safe_route()
 def doacao() -> str:
-    textos = _collect_textos(
-        "doacao",
-        "placeholder_transparencia",
-    )
-    requested_slugs = [
-        "doacao",
-        "placeholder_transparencia",
-    ]
-    current_app.logger.debug(
-        "View 'doacao' requested institucional slugs: %s", requested_slugs
-    )
-    for slug in requested_slugs:
-        _log_texto_details(slug, textos.get(slug))
     documentos = (
         Transparencia.query.order_by(Transparencia.publicado_em.desc(), Transparencia.id.desc()).all()
     )
     pix_qrcode_path = _ensure_pix_qrcode()
-    texto_doacao = textos.get("doacao")
-    has_doacao_intro = bool(texto_doacao and texto_doacao.conteudo)
-    header_title = (
-        texto_doacao.titulo
-        if texto_doacao and texto_doacao.titulo
-        else ("Doação" if has_doacao_intro else CONTENT_PLACEHOLDER)
-    )
-    header_intro_html = (
-        texto_doacao.conteudo
-        if has_doacao_intro
-        else (None if texto_doacao and texto_doacao.titulo else CONTENT_PLACEHOLDER)
-    )
     return render_template(
         "public/doacao.html",
-        texto_doacao=texto_doacao,
         documentos=documentos,
-        transparencia_placeholder=textos.get("placeholder_transparencia"),
         pix_qrcode_path=pix_qrcode_path,
         pix_key=PIX_KEY,
         pix_copy_paste=PIX_COPY_AND_PASTE,
-        header_title=header_title,
-        header_intro_html=header_intro_html,
         active_page="doacao",
     )
 
