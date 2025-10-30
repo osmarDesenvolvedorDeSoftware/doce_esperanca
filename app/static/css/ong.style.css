@@ -125,7 +125,17 @@ section.py-5 {
 
 .footer-institutional-text strong {
   font-weight: 600;
-  color: #1d4e89 !important;
+}
+
+.footer-institutional-text .footer-dev-link {
+  color: #0d47a1;
+  text-decoration: none;
+  transition: color 0.2s ease, text-decoration-color 0.2s ease;
+}
+
+.footer-institutional-text .footer-dev-link:hover {
+  color: #42a5f5;
+  text-decoration: underline;
 }
 
 .footer-links li + li {
