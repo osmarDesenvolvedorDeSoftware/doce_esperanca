@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import json
 import re
 import unicodedata
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import qrcode
 from qrcode.constants import ERROR_CORRECT_M
@@ -17,7 +18,7 @@ from flask import (
     request,
     url_for,
 )
-from markupsafe import Markup
+from markupsafe import Markup, escape
 
 from app.content import (
     CONTENT_PLACEHOLDER,
@@ -46,6 +47,12 @@ PIX_COPY_AND_PASTE = (
     "00020126360014BR.GOV.BCB.PIX0114156576160001075204000053039865802BR5901N6001C62170513DoacaoViaSite630474C1"
 )
 PIX_QRCODE_FILENAME = "pix.png"
+
+SOCIAL_PLATFORMS = {
+    "facebook": ("bi bi-facebook", "Facebook"),
+    "instagram": ("bi bi-instagram", "Instagram"),
+    "youtube": ("bi bi-youtube", "YouTube"),
+}
 
 
 def _ensure_pix_qrcode() -> Optional[str]:
@@ -104,6 +111,55 @@ def _normalize_phone_link(phone: str) -> Optional[str]:
     if stripped.startswith("+"):
         return f"+{digits_only}"
     return digits_only
+
+
+def _normalize_external_url(url: str) -> Optional[str]:
+    if not url:
+        return None
+
+    stripped = url.strip()
+    if not stripped:
+        return None
+
+    if stripped.startswith("//"):
+        return f"https:{stripped}"
+
+    if re.match(r"^https?://", stripped, re.IGNORECASE):
+        return stripped
+
+    return f"https://{stripped}"
+
+
+def _normalize_whatsapp_link(raw_value: str) -> Optional[str]:
+    if not raw_value:
+        return None
+
+    stripped = raw_value.strip()
+    if not stripped:
+        return None
+
+    lower_value = stripped.lower()
+
+    if lower_value.startswith("http://"):
+        return f"https://{stripped[7:]}"
+
+    if lower_value.startswith("https://"):
+        return stripped
+
+    if lower_value.startswith("//"):
+        return f"https:{stripped}"
+
+    if lower_value.startswith("wa.me/"):
+        return f"https://{stripped}"
+
+    if lower_value.startswith("api.whatsapp.com"):
+        return f"https://{stripped}" if not lower_value.startswith("https://") else stripped
+
+    digits_only = re.sub(r"[^0-9]", "", stripped)
+    if digits_only:
+        return f"https://api.whatsapp.com/send?phone={digits_only}"
+
+    return None
 
 
 @public_bp.context_processor
@@ -469,69 +525,175 @@ def contato() -> str:
     contact_email: Optional[str] = None
     if texto_contato and texto_contato.resumo:
         contact_email = texto_contato.resumo.strip()
+
     contact_channels: Dict[str, Dict[str, str]] = {}
     contact_description: Optional[Markup] = None
     map_embed: Optional[Markup] = None
+    contact_address_lines: List[str] = []
+    contact_social_links: List[Dict[str, str]] = []
+    contact_whatsapp_display: Optional[str] = None
+    contact_content_is_json = False
+    contact_info: Dict[str, Any] = {}
+
     if texto_contato and texto_contato.conteudo:
-        raw_html = texto_contato.conteudo
-        cleaned_html = raw_html
+        raw_content = texto_contato.conteudo
+        stripped_content = raw_content.strip()
+        parsed_contact_data: Optional[Dict[str, Any]] = None
 
-        anchor_pattern = re.compile(
-            r"<a\\b[^>]*href\\s*=\\s*\"(?P<href>[^\"]+)\"[^>]*>(?P<label>.*?)</a>",
-            re.IGNORECASE | re.DOTALL,
-        )
-        for match in anchor_pattern.finditer(raw_html):
-            href = match.group("href").strip()
-            label_markup = Markup(match.group("label"))
-            label = label_markup.striptags().strip() or href
-            href_lower = href.lower()
-            channel_key: Optional[str] = None
+        if stripped_content:
+            try:
+                parsed = json.loads(stripped_content)
+            except ValueError:
+                parsed = None
 
-            if href_lower.startswith("tel:"):
-                channel_key = "phone"
-                href = f"tel:{href.split(':', 1)[1]}"
-            elif "wa.me" in href_lower or "api.whatsapp.com" in href_lower:
-                channel_key = "whatsapp"
-                if href_lower.startswith("//"):
-                    href = f"https:{href}"
-                elif href_lower.startswith("wa.me"):
-                    href = f"https://{href}"
-                elif href_lower.startswith("http://"):
-                    href = f"https://{href[7:]}"
-                elif not href_lower.startswith("https://"):
-                    href = f"https://wa.me/{href.split('/')[-1]}"
-            elif href_lower.startswith("mailto:"):
-                channel_key = "email"
-                href = f"mailto:{href.split(':', 1)[1]}"
+            if isinstance(parsed, dict):
+                parsed_contact_data = parsed
 
-            if channel_key and channel_key not in contact_channels:
-                contact_channels[channel_key] = {"href": href, "label": label}
-                cleaned_html = cleaned_html.replace(match.group(0), label, 1)
+        if parsed_contact_data is not None:
+            contact_content_is_json = True
+            contact_info = parsed_contact_data
 
-        map_pattern = re.compile(
-            r"(<iframe\\b[^>]*src=\"[^\"]*google\\.com/maps[^\"]*\"[^>]*></iframe>)",
-            re.IGNORECASE | re.DOTALL,
-        )
-        map_match = map_pattern.search(cleaned_html)
-        if map_match:
-            iframe_html = map_match.group(1)
-            if "class=" in iframe_html:
-                iframe_html = re.sub(
-                    r"class=\"",
-                    'class="border-0 w-100 h-100 ',
-                    iframe_html,
-                    count=1,
+            address_value = str(parsed_contact_data.get("address") or "").strip()
+            if address_value:
+                contact_address_lines = [
+                    line.strip()
+                    for line in re.split(r"\r?\n", address_value)
+                    if line.strip()
+                ]
+
+            phone_value = str(parsed_contact_data.get("phone") or "").strip()
+            if phone_value and "phone" not in contact_channels:
+                normalized_phone = _normalize_phone_link(phone_value)
+                href_phone = normalized_phone or phone_value
+                contact_channels["phone"] = {
+                    "href": f"tel:{href_phone}",
+                    "label": phone_value,
+                }
+
+            email_value = str(parsed_contact_data.get("email") or "").strip()
+            if email_value:
+                contact_email = contact_email or email_value
+                contact_channels.setdefault(
+                    "email",
+                    {
+                        "href": f"mailto:{email_value}",
+                        "label": email_value,
+                    },
                 )
+
+            whatsapp_value = parsed_contact_data.get("whatsapp")
+            whatsapp_href = (
+                _normalize_whatsapp_link(str(whatsapp_value))
+                if whatsapp_value
+                else None
+            )
+            if whatsapp_href:
+                whatsapp_label = (
+                    str(parsed_contact_data.get("whatsapp_label") or "").strip()
+                    or "Enviar mensagem"
+                )
+                contact_channels["whatsapp"] = {
+                    "href": whatsapp_href,
+                    "label": whatsapp_label,
+                }
+
+            whatsapp_display_value = (
+                parsed_contact_data.get("whatsapp_display")
+                or parsed_contact_data.get("whatsapp_number")
+            )
+            if whatsapp_display_value:
+                contact_whatsapp_display = str(whatsapp_display_value).strip() or None
+
+            social_links: List[Dict[str, str]] = []
+            for platform, (icon, title) in SOCIAL_PLATFORMS.items():
+                link_value = parsed_contact_data.get(platform)
+                normalized_link = (
+                    _normalize_external_url(str(link_value)) if link_value else None
+                )
+                if normalized_link:
+                    social_links.append(
+                        {
+                            "platform": platform,
+                            "icon": icon,
+                            "title": title,
+                            "href": normalized_link,
+                        }
+                    )
+            contact_social_links = social_links
+
+            description_value = (
+                parsed_contact_data.get("description")
+                or parsed_contact_data.get("intro")
+                or parsed_contact_data.get("about")
+            )
+            if description_value:
+                safe_description = "<br>".join(
+                    escape(str(description_value)).splitlines()
+                )
+                contact_description = Markup(safe_description)
             else:
-                iframe_html = iframe_html.replace(
-                    "<iframe", '<iframe class="border-0 w-100 h-100"', 1
+                contact_description = Markup(
+                    "Estamos à disposição para falar com você pelos canais abaixo."
                 )
-            map_embed = Markup(iframe_html)
-            cleaned_html = cleaned_html.replace(map_match.group(1), "", 1)
+        else:
+            cleaned_html = raw_content
 
-        cleaned_html = cleaned_html.strip()
-        if cleaned_html:
-            contact_description = Markup(cleaned_html)
+            anchor_pattern = re.compile(
+                r"<a\b[^>]*href\s*=\s*\"(?P<href>[^\"]+)\"[^>]*>(?P<label>.*?)</a>",
+                re.IGNORECASE | re.DOTALL,
+            )
+            for match in anchor_pattern.finditer(raw_content):
+                href = match.group("href").strip()
+                label_markup = Markup(match.group("label"))
+                label = label_markup.striptags().strip() or href
+                href_lower = href.lower()
+                channel_key: Optional[str] = None
+
+                if href_lower.startswith("tel:"):
+                    channel_key = "phone"
+                    href = f"tel:{href.split(':', 1)[1]}"
+                elif "wa.me" in href_lower or "api.whatsapp.com" in href_lower:
+                    channel_key = "whatsapp"
+                    if href_lower.startswith("//"):
+                        href = f"https:{href}"
+                    elif href_lower.startswith("wa.me"):
+                        href = f"https://{href}"
+                    elif href_lower.startswith("http://"):
+                        href = f"https://{href[7:]}"
+                    elif not href_lower.startswith("https://"):
+                        href = f"https://wa.me/{href.split('/')[-1]}"
+                elif href_lower.startswith("mailto:"):
+                    channel_key = "email"
+                    href = f"mailto:{href.split(':', 1)[1]}"
+
+                if channel_key and channel_key not in contact_channels:
+                    contact_channels[channel_key] = {"href": href, "label": label}
+                    cleaned_html = cleaned_html.replace(match.group(0), label, 1)
+
+            map_pattern = re.compile(
+                r"(<iframe\b[^>]*src=\"[^\"]*google\.com/maps[^\"]*\"[^>]*></iframe>)",
+                re.IGNORECASE | re.DOTALL,
+            )
+            map_match = map_pattern.search(cleaned_html)
+            if map_match:
+                iframe_html = map_match.group(1)
+                if "class=" in iframe_html:
+                    iframe_html = re.sub(
+                        r"class=\"",
+                        'class="border-0 w-100 h-100 ',
+                        iframe_html,
+                        count=1,
+                    )
+                else:
+                    iframe_html = iframe_html.replace(
+                        "<iframe", '<iframe class="border-0 w-100 h-100"', 1
+                    )
+                map_embed = Markup(iframe_html)
+                cleaned_html = cleaned_html.replace(map_match.group(1), "", 1)
+
+            cleaned_html = cleaned_html.strip()
+            if cleaned_html:
+                contact_description = Markup(cleaned_html)
 
     if "email" not in contact_channels and contact_email:
         contact_channels["email"] = {
@@ -545,5 +707,10 @@ def contato() -> str:
         contact_channels=contact_channels,
         contact_description=contact_description,
         map_embed=map_embed,
+        contact_address_lines=contact_address_lines,
+        contact_social_links=contact_social_links,
+        contact_whatsapp_display=contact_whatsapp_display,
+        contact_content_is_json=contact_content_is_json,
+        contact_info=contact_info,
         active_page="contato",
     )
