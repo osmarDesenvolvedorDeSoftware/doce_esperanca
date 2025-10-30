@@ -5,6 +5,14 @@
   --brand-light: #e6f0fa;
   --brand-bg-light: #f9fafc;
   --brand-gradient: linear-gradient(135deg, #0d47a1, #1565c0);
+  --brand-alert: #c22734;
+  --brand-alert-hover: #a71d2a;
+  --brand-alert-soft: #fdecef;
+  --bs-danger: var(--brand-alert);
+  --bs-danger-rgb: 194, 39, 52;
+  --bs-danger-text-emphasis: #66111a;
+  --bs-danger-bg-subtle: var(--brand-alert-soft);
+  --bs-danger-border-subtle: #f6c8cf;
 }
 
 html {
@@ -16,6 +24,53 @@ body {
   background-color: var(--brand-bg-light);
   color: #1f2937;
   line-height: 1.6;
+}
+
+.text-danger,
+.price-discount {
+  color: var(--brand-alert) !important;
+}
+
+.bg-danger,
+.text-bg-danger,
+.badge.bg-danger,
+.badge.text-bg-danger {
+  background-color: var(--brand-alert) !important;
+  color: #fff !important;
+}
+
+.alert-danger {
+  color: var(--bs-danger-text-emphasis) !important;
+  background-color: var(--brand-alert-soft) !important;
+  border-color: var(--bs-danger-border-subtle) !important;
+}
+
+.btn-danger {
+  --bs-btn-color: #fff;
+  --bs-btn-bg: var(--brand-alert);
+  --bs-btn-border-color: var(--brand-alert);
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: var(--brand-alert-hover);
+  --bs-btn-hover-border-color: var(--brand-alert-hover);
+  --bs-btn-focus-shadow-rgb: var(--bs-danger-rgb);
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: #881521;
+  --bs-btn-active-border-color: #881521;
+  --bs-btn-disabled-bg: #d8939b;
+  --bs-btn-disabled-border-color: #d8939b;
+}
+
+.btn-outline-danger {
+  --bs-btn-color: var(--brand-alert);
+  --bs-btn-border-color: var(--brand-alert);
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: var(--brand-alert);
+  --bs-btn-hover-border-color: var(--brand-alert);
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: #881521;
+  --bs-btn-active-border-color: #881521;
+  --bs-btn-disabled-color: #d8939b;
+  --bs-btn-disabled-border-color: #d8939b;
 }
 
 .skip-link {
