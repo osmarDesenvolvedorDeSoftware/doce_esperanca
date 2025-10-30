@@ -37,6 +37,27 @@ body {
   transition: color 0.2s ease;
 }
 
+.navbar-nav .nav-link {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.navbar-nav {
+  gap: 0.75rem;
+}
+
+@media (min-width: 992px) {
+  .navbar-nav {
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
 .nav-link:hover,
 .nav-link:focus {
   color: var(--brand-secondary) !important;
