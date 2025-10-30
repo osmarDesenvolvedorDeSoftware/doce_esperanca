@@ -378,13 +378,29 @@ def galeria() -> str:
         .paginate(page=page, per_page=per_page, error_out=False)
     )
     galerias = list(itens_pagination.items)
+    has_items = len(galerias) > 0
+
+    texto_galeria = textos.get("galeria")
+    header_title = (
+        texto_galeria.titulo
+        if texto_galeria and texto_galeria.titulo
+        else ("Galeria" if has_items else CONTENT_PLACEHOLDER)
+    )
+    header_intro_html = (
+        texto_galeria.conteudo
+        if texto_galeria and texto_galeria.conteudo
+        else (None if has_items else CONTENT_PLACEHOLDER)
+    )
     return render_template(
         "public/galeria.html",
-        texto_galeria=textos.get("galeria"),
+        texto_galeria=texto_galeria,
         galeria_placeholder=textos.get("placeholder_galeria"),
         galerias=galerias,
         itens=galerias,
         pagination=itens_pagination,
+        has_items=has_items,
+        header_title=header_title,
+        header_intro_html=header_intro_html,
         active_page="galeria",
     )
 
@@ -452,14 +468,28 @@ def doacao() -> str:
         Transparencia.query.order_by(Transparencia.publicado_em.desc(), Transparencia.id.desc()).all()
     )
     pix_qrcode_path = _ensure_pix_qrcode()
+    texto_doacao = textos.get("doacao")
+    has_doacao_intro = bool(texto_doacao and texto_doacao.conteudo)
+    header_title = (
+        texto_doacao.titulo
+        if texto_doacao and texto_doacao.titulo
+        else ("Doação" if has_doacao_intro else CONTENT_PLACEHOLDER)
+    )
+    header_intro_html = (
+        texto_doacao.conteudo
+        if has_doacao_intro
+        else (None if texto_doacao and texto_doacao.titulo else CONTENT_PLACEHOLDER)
+    )
     return render_template(
         "public/doacao.html",
-        texto_doacao=textos.get("doacao"),
+        texto_doacao=texto_doacao,
         documentos=documentos,
         transparencia_placeholder=textos.get("placeholder_transparencia"),
         pix_qrcode_path=pix_qrcode_path,
         pix_key=PIX_KEY,
         pix_copy_paste=PIX_COPY_AND_PASTE,
+        header_title=header_title,
+        header_intro_html=header_intro_html,
         active_page="doacao",
     )
 
