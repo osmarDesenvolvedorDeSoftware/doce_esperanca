@@ -377,11 +377,13 @@ def galeria() -> str:
         Galeria.query.order_by(Galeria.publicado_em.desc(), Galeria.id.desc())
         .paginate(page=page, per_page=per_page, error_out=False)
     )
+    galerias = list(itens_pagination.items)
     return render_template(
         "public/galeria.html",
         texto_galeria=textos.get("galeria"),
         galeria_placeholder=textos.get("placeholder_galeria"),
-        itens=itens_pagination.items,
+        galerias=galerias,
+        itens=galerias,
         pagination=itens_pagination,
         active_page="galeria",
     )
