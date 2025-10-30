@@ -156,6 +156,14 @@ class VoluntarioForm(FlaskForm):
     area = StringField("Área", validators=[DataRequired(), Length(max=255)])
     disponibilidade = StringField("Disponibilidade", validators=[OptionalValidator(), Length(max=255)])
     descricao = TextAreaField("Descrição", validators=[OptionalValidator()])
+    foto = FileField(
+        "Foto",
+        validators=[
+            OptionalValidator(),
+            FileAllowed(ALLOWED_IMAGE_EXTENSIONS, "Somente imagens são permitidas."),
+            FileSize(),
+        ],
+    )
     submit = SubmitField("Salvar")
 
 

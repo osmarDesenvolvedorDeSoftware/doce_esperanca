@@ -53,6 +53,7 @@ class Voluntario(db.Model, TimestampMixin):
     area = db.Column(db.String(255))
     disponibilidade = db.Column(db.String(255))
     descricao = db.Column(db.Text)
+    foto = db.Column(db.String(512))
 
     def __repr__(self) -> str:  # pragma: no cover - debug helper
         return f"<Voluntario {self.nome!r}>"
