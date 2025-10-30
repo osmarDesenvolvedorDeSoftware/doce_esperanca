@@ -5,17 +5,15 @@
 {% block content %}
   <div class="container py-5">
     <section class="mb-5 text-center">
-      <h2 class="mb-3">{{ texto_galeria.titulo or content_placeholder }}</h2>
-      {% if texto_galeria and texto_galeria.conteudo %}
+      <h2 class="mb-3">{{ header_title }}</h2>
+      {% if header_intro_html %}
         <div class="mx-auto" style="max-width: 720px;">
-          {{ texto_galeria.conteudo | safe }}
+          {{ header_intro_html | safe }}
         </div>
-      {% else %}
-        <p class="mx-auto" style="max-width: 720px;">{{ content_placeholder }}</p>
       {% endif %}
     </section>
 
-    {% if galerias and galerias|length > 0 %}
+    {% if has_items %}
       <div class="row g-3">
         {% for item in galerias %}
           <div class="col-6 col-md-3">
