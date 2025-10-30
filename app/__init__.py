@@ -108,9 +108,16 @@ def create_app(config_class=None):
     csrf.init_app(app)
 
     from app.routes import admin_bp, public_bp
+    from app.routes.public import inject_public_defaults
 
     app.register_blueprint(public_bp)
     app.register_blueprint(admin_bp)
+
+    @app.context_processor
+    def inject_public_defaults_into_app():
+        """Expose public blueprint defaults to all templates."""
+
+        return inject_public_defaults()
 
     @app.errorhandler(404)
     def handle_404(error):
