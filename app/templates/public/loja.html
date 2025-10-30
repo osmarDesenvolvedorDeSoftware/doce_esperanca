@@ -3,59 +3,42 @@
 {% block title %}Loja Solidária - Doce Esperança{% endblock %}
 
 {% block content %}
-  <div class="loja-container" role="region" aria-labelledby="loja-hero-heading">
-    <header class="loja-hero text-center mb-5" aria-label="Apresentação da Loja Solidária">
-      <span class="badge bg-light text-primary fw-semibold px-3 py-2 mb-3">Loja Solidária</span>
+  <section class="loja-container" role="region" aria-labelledby="loja-hero-heading">
+    <header class="loja-hero text-center mb-5">
+      <span class="badge badge-contrast fw-semibold px-3 py-2 mb-3 text-uppercase">Loja Solidária</span>
       <h1 id="loja-hero-heading" class="display-6 fw-bold mb-3">Transforme suas compras em esperança</h1>
-      <p class="lead text-muted mb-0">Cada produto disponível aqui foi feito com carinho e toda a arrecadação fortalece os projetos sociais da Doce Esperança.</p>
+      <p class="lead text-muted mb-0 text-md-start">Cada produto disponível aqui foi feito com carinho e toda a arrecadação fortalece os projetos sociais da Doce Esperança.</p>
     </header>
 
     {% if produtos %}
-      <section class="vitrine-section" role="region" aria-label="Lista de produtos disponíveis">
+      <section class="vitrine-section" role="region" aria-labelledby="loja-vitrine-heading">
+        <h2 id="loja-vitrine-heading" class="vitrine-heading h3 fw-bold text-center mb-4">Produtos disponíveis para apoiar nossos projetos</h2>
         <div class="vitrine" role="list">
           {% for produto in produtos %}
           {% set detalhe_url = url_for('public.loja_produto', slug=produto.slug, produto_id=produto.id) if produto.id else None %}
           <article class="produto-card" role="listitem" aria-labelledby="produto-{{ loop.index }}-titulo">
-            {% if detalhe_url %}
-              <a class="produto-media" href="{{ detalhe_url }}" aria-label="Ver detalhes de {{ produto.nome }}">
-                {% if produto.imagem %}
-                  <img src="{{ static_url(produto.imagem) }}" alt="Produto solidário: {{ produto.nome }}" class="produto-img">
-                {% else %}
-                  <div class="produto-placeholder" role="img" aria-label="Imagem do produto indisponível">
-                    <i class="bi bi-image" aria-hidden="true"></i>
-                  </div>
-                {% endif %}
-              </a>
-            {% else %}
-              <div class="produto-media">
-                {% if produto.imagem %}
-                  <img src="{{ static_url(produto.imagem) }}" alt="Produto solidário: {{ produto.nome }}" class="produto-img">
-                {% else %}
-                  <div class="produto-placeholder" role="img" aria-label="Imagem do produto indisponível">
-                    <i class="bi bi-image" aria-hidden="true"></i>
-                  </div>
-                {% endif %}
-              </div>
-            {% endif %}
+            <div class="produto-media">
+              {% if produto.imagem %}
+                <img src="{{ static_url(produto.imagem) }}" alt="Produto solidário: {{ produto.nome }}" class="produto-img">
+              {% else %}
+                <div class="produto-placeholder" role="img" aria-label="Imagem do produto indisponível">
+                  <i class="bi bi-image" aria-hidden="true"></i>
+                </div>
+              {% endif %}
+            </div>
             <div class="produto-info">
-              <h2 id="produto-{{ loop.index }}-titulo" class="produto-titulo">
-                {% if detalhe_url %}
-                  <a class="produto-link" href="{{ detalhe_url }}">{{ produto.nome }}</a>
-                {% else %}
-                  <span class="produto-link">{{ produto.nome }}</span>
-                {% endif %}
-              </h2>
+              <h2 id="produto-{{ loop.index }}-titulo" class="produto-titulo">{{ produto.nome }}</h2>
               <p class="produto-descricao">{{ produto.descricao }}</p>
               <div class="produto-preco">{{ produto.preco_formatado }}</div>
               <p class="produto-frete">Frete estimado: <strong>{{ produto.frete_formatado }}</strong></p>
               <div class="produto-acoes">
                 {% if detalhe_url %}
                   <a class="btn btn-detalhes" href="{{ detalhe_url }}" aria-label="Ver detalhes completos de {{ produto.nome }}">
-                    <i class="bi bi-eye me-1"></i>Ver detalhes
+                    <i class="bi bi-eye me-1" aria-hidden="true"></i>Ver detalhes
                   </a>
                 {% else %}
-                  <button type="button" class="btn btn-detalhes" disabled>
-                    <i class="bi bi-eye me-1"></i>Ver detalhes
+                  <button type="button" class="btn btn-detalhes btn-disabled" aria-disabled="true" aria-label="Detalhes indisponíveis para {{ produto.nome }}">
+                    <i class="bi bi-eye me-1" aria-hidden="true"></i>Detalhes indisponíveis
                   </button>
                 {% endif %}
                 <button
@@ -67,7 +50,7 @@
                   data-product-frete="{{ '%.2f'|format(produto.frete) }}"
                   aria-label="Comprar {{ produto.nome }} via Pix"
                 >
-                  <i class="bi bi-qr-code me-2"></i>Comprar via Pix
+                  <i class="bi bi-qr-code me-2" aria-hidden="true"></i>Comprar via Pix
                 </button>
               </div>
             </div>
@@ -81,7 +64,7 @@
         <p class="lead">Em breve novos produtos estarão disponíveis em nossa Loja Solidária.</p>
       </div>
     {% endif %}
-  </div>
+  </section>
 
   {% include "public/partials/_pix_modal.html" %}
 {% endblock %}
