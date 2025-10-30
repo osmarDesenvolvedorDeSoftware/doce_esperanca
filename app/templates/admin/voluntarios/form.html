@@ -6,7 +6,7 @@
       <h1 class="h4 mb-0">{{ 'Editar' if voluntario else 'Novo' }} voluntário</h1>
     </div>
     <div class="card-body">
-      <form method="post">
+      <form method="post" enctype="multipart/form-data">
         {{ form.hidden_tag() }}
         <div class="row g-3">
           <div class="col-md-6">
@@ -37,6 +37,21 @@
           {% for error in form.descricao.errors %}
             <div class="text-danger small">{{ error }}</div>
           {% endfor %}
+        </div>
+        <div class="row g-3 mt-1">
+          <div class="col-md-6">
+            {{ form.foto.label(class="form-label") }}
+            {{ form.foto(class="form-control") }}
+            {% if voluntario and voluntario.foto %}
+              <div class="mt-2">
+                <span class="text-muted small d-block">Pré-visualização atual:</span>
+                <img src="{{ static_url(voluntario.foto) }}" alt="Foto de {{ voluntario.nome }}" class="img-fluid rounded border" style="max-height: 180px; object-fit: cover;">
+              </div>
+            {% endif %}
+            {% for error in form.foto.errors %}
+              <div class="text-danger small">{{ error }}</div>
+            {% endfor %}
+          </div>
         </div>
         <div class="d-flex justify-content-end gap-2 mt-4">
           <a class="btn btn-outline-secondary" href="{{ url_for('admin.voluntarios_list') }}">Cancelar</a>

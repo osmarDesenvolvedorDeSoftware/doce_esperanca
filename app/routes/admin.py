@@ -1060,11 +1060,22 @@ def voluntarios_list():
 def voluntarios_create():
     form = VoluntarioForm()
     if form.validate_on_submit():
+        foto_path: Optional[str] = None
+        if _has_file(form.foto.data):
+            try:
+                foto_path = _safe_upload(
+                    form.foto.data,
+                    current_app.config["IMAGE_UPLOAD_FOLDER"],
+                )
+            except ValueError as exc:
+                form.foto.errors.append(str(exc))
+                return render_template("admin/voluntarios/form.html", form=form, voluntario=None)
         voluntario = Voluntario(
             nome=form.nome.data,
             area=form.area.data,
             disponibilidade=form.disponibilidade.data,
             descricao=form.descricao.data,
+            foto=foto_path,
         )
         db.session.add(voluntario)
         db.session.commit()
@@ -1084,6 +1095,17 @@ def voluntarios_edit(voluntario_id: int):
         voluntario.area = form.area.data
         voluntario.disponibilidade = form.disponibilidade.data
         voluntario.descricao = form.descricao.data
+        if _has_file(form.foto.data):
+            try:
+                new_path = _safe_upload(
+                    form.foto.data,
+                    current_app.config["IMAGE_UPLOAD_FOLDER"],
+                )
+            except ValueError as exc:
+                form.foto.errors.append(str(exc))
+                return render_template("admin/voluntarios/form.html", form=form, voluntario=voluntario)
+            _delete_file(voluntario.foto)
+            voluntario.foto = new_path
         db.session.commit()
         flash("Voluntário atualizado com sucesso.", "success")
         return redirect(url_for("admin.voluntarios_list"))
@@ -1095,6 +1117,7 @@ def voluntarios_edit(voluntario_id: int):
 @safe_route()
 def voluntarios_delete(voluntario_id: int):
     voluntario = Voluntario.query.get_or_404(voluntario_id)
+    _delete_file(voluntario.foto)
     db.session.delete(voluntario)
     db.session.commit()
     flash("Voluntário excluído com sucesso.", "success")
