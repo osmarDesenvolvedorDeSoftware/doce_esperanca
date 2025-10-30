@@ -4,17 +4,17 @@
 
 {% block content %}
   <div class="container-wide">
-    <section class="mb-5 text-center">
-      <h2 class="mb-3">{{ header_title }}</h2>
+    <header class="mb-5 text-center" aria-labelledby="galeria-heading">
+      <h1 id="galeria-heading" class="display-5 fw-bold mb-3">{{ header_title }}</h1>
       {% if header_intro_html %}
         <div class="mx-auto" style="max-width: 720px;">
           {{ header_intro_html | safe }}
         </div>
       {% endif %}
-    </section>
+    </header>
 
     {% if has_items %}
-      <div class="row g-3">
+      <section class="row g-3" aria-label="Galeria de imagens">
         {% for item in galerias %}
           <div class="col-6 col-md-3">
             <figure class="h-100 d-flex flex-column align-items-center text-center">
@@ -45,7 +45,7 @@
             </figure>
           </div>
         {% endfor %}
-      </div>
+      </section>
       {% if pagination and pagination.pages > 1 %}
         <nav aria-label="Paginação da galeria" class="mt-4">
           <ul class="pagination justify-content-center">
@@ -88,11 +88,11 @@
     {% endif %}
   </div>
 
-  <div class="modal fade" id="galleryModal" tabindex="-1" aria-hidden="true">
+  <div class="modal fade" id="galleryModal" tabindex="-1" aria-hidden="true" aria-labelledby="galleryModalTitle">
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title"></h5>
+          <h2 id="galleryModalTitle" class="modal-title h5 mb-0"></h2>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
         </div>
         <div class="modal-body">

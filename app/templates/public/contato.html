@@ -4,10 +4,10 @@
 
 {% block content %}
   <div class="container-wide">
-    <div class="contact-card">
+    <section class="contact-card" aria-labelledby="contato-heading">
       <div class="d-flex align-items-center gap-3 mb-4">
-        <span class="text-primary fs-2"><i class="bi bi-chat-dots-fill" aria-hidden="true"></i></span>
-        <h1 class="h3 fw-bold mb-0">{{ texto_contato.titulo or content_placeholder }}</h1>
+        <span class="text-primary fs-2" aria-hidden="true"><i class="bi bi-chat-dots-fill"></i></span>
+        <h1 id="contato-heading" class="h3 fw-bold mb-0">{{ texto_contato.titulo or content_placeholder }}</h1>
       </div>
       {% if contact_description %}
         <div class="text-body-secondary mb-4">
@@ -32,8 +32,8 @@
         <div class="d-flex flex-column gap-4">
           {% if has_address %}
             <div class="d-flex align-items-start gap-3">
-              <span class="text-primary fs-4"><i class="bi bi-geo-alt-fill" aria-hidden="true"></i></span>
-              <address class="mb-0 contact-address-text">
+              <span class="text-primary fs-4" aria-hidden="true"><i class="bi bi-geo-alt-fill"></i></span>
+              <address class="mb-0 contact-address-text" aria-label="Endereço da associação">
                 {% for line in contact_address_lines %}
                   {{ line }}{% if not loop.last %}<br>{% endif %}
                 {% endfor %}
@@ -45,7 +45,7 @@
             <ul class="list-unstyled mb-0 d-flex flex-column gap-3 contact-info-list">
               {% if phone %}
                 <li class="d-flex align-items-start gap-3">
-                  <span class="text-primary fs-4"><i class="bi bi-telephone-fill" aria-hidden="true"></i></span>
+                  <span class="text-primary fs-4" aria-hidden="true"><i class="bi bi-telephone-fill"></i></span>
                   <div>
                     <span class="text-uppercase small text-muted fw-semibold d-block">Telefone</span>
                     <a class="fw-semibold contact-channel-link" href="{{ phone.href }}">{{ phone.label }}</a>
@@ -54,7 +54,7 @@
               {% endif %}
               {% if email_channel %}
                 <li class="d-flex align-items-start gap-3">
-                  <span class="text-primary fs-4"><i class="bi bi-envelope-fill" aria-hidden="true"></i></span>
+                  <span class="text-primary fs-4" aria-hidden="true"><i class="bi bi-envelope-fill"></i></span>
                   <div>
                     <span class="text-uppercase small text-muted fw-semibold d-block">E-mail</span>
                     <a class="fw-semibold contact-channel-link" href="{{ email_channel.href }}">{{ email_channel.label }}</a>
@@ -94,14 +94,14 @@
           Informações de contato indisponíveis no momento.
         </div>
       {% endif %}
-    </div>
+    </section>
 
     {% if map_embed %}
-      <div class="card-modern overflow-hidden p-0">
+      <section class="card-modern overflow-hidden p-0" aria-label="Mapa de localização">
         <div class="ratio ratio-4x3">
           {{ map_embed }}
         </div>
-      </div>
+      </section>
     {% endif %}
   </div>
 {% endblock %}

@@ -5,22 +5,26 @@
 {% block content %}
   {% set volunteer_placeholder_src = "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%27800%27%20height%3D%27600%27%20viewBox%3D%270%200%20800%20600%27%3E%3Crect%20fill%3D%27%23f8fafc%27%20width%3D%27800%27%20height%3D%27600%27/%3E%3Ccircle%20cx%3D%27400%27%20cy%3D%27220%27%20r%3D%27100%27%20fill%3D%27%23cbd5f5%27/%3E%3Cpath%20d%3D%27M260%20520c0-80%2070-140%20140-140s140%2060%20140%20140%27%20fill%3D%27%23cbd5f5%27/%3E%3Ctext%20x%3D%27400%27%20y%3D%27560%27%20text-anchor%3D%27middle%27%20font-family%3D%27Inter%2C%20Arial%2C%20sans-serif%27%20font-size%3D%2760%27%20fill%3D%27%230d47a1%27%3EVolunt%C3%A1rio%3C/text%3E%3C/svg%3E" %}
   {% set support_placeholder_src = "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%27800%27%20height%3D%27600%27%20viewBox%3D%270%200%20800%20600%27%3E%3Crect%20fill%3D%27%23f8fafc%27%20width%3D%27800%27%20height%3D%27600%27/%3E%3Ccircle%20cx%3D%27400%27%20cy%3D%27220%27%20r%3D%27100%27%20fill%3D%27%23cfe6ff%27/%3E%3Cpath%20d%3D%27M260%20520c0-80%2070-140%20140-140s140%2060%20140%20140%27%20fill%3D%27%23cfe6ff%27/%3E%3Ctext%20x%3D%27400%27%20y%3D%27560%27%20text-anchor%3D%27middle%27%20font-family%3D%27Inter%2C%20Arial%2C%20sans-serif%27%20font-size%3D%2760%27%20fill%3D%27%230d47a1%27%3EApoio%3C/text%3E%3C/svg%3E" %}
-  <section id="parcerias" class="section-spacious">
+  <section id="parcerias" class="section-spacious" aria-labelledby="parcerias-heading">
     <div class="container-wide">
+      <header class="text-center mb-5" aria-labelledby="projetos-heading">
+        <h1 id="projetos-heading" class="display-5 fw-bold mb-3">Projetos e parcerias em ação</h1>
+        <p class="lead text-muted mb-0">Conheça iniciativas que ampliam o impacto social da Associação Doce Esperança.</p>
+      </header>
       <div class="text-center mb-4">
-        <h2 class="fw-bold">Parcerias</h2>
+        <h2 id="parcerias-heading" class="fw-bold">Parcerias</h2>
         <p class="text-muted mb-0">Conheça quem caminha conosco para fortalecer nossos projetos.</p>
       </div>
       {% if parceiros %}
         <div class="row g-4">
           {% for parceiro in parceiros %}
             <div class="col-12 col-md-6 col-lg-4">
-              <div class="project-card h-100">
+              <article class="project-card h-100" aria-labelledby="parceria-{{ loop.index }}-titulo">
                 {% if parceiro.logo_path %}
                   <img src="{{ static_url(parceiro.logo_path) }}" alt="Logo {{ parceiro.nome }}" class="card-img-top img-fluid object-fit-contain p-4" style="height: 200px;">
                 {% endif %}
                 <div class="card-body d-flex flex-column">
-                  <h5 class="card-title">{{ parceiro.nome }}</h5>
+                  <h3 id="parceria-{{ loop.index }}-titulo" class="card-title h5">{{ parceiro.nome }}</h3>
                   {% if parceiro.descricao %}
                     <p class="card-text">{{ parceiro.descricao }}</p>
                   {% endif %}
@@ -34,7 +38,7 @@
                     </span>
                   {% endif %}
                 </div>
-              </div>
+              </article>
             </div>
           {% endfor %}
         </div>
@@ -46,10 +50,10 @@
     </div>
   </section>
 
-  <section id="apoios" class="section-spacious project-section apoio-section">
+  <section id="apoios" class="section-spacious project-section apoio-section" aria-labelledby="apoios-heading">
     <div class="container-wide">
       <div class="apoio-section-header text-center mb-5">
-        <h2 class="project-section-title apoio-title fw-bold">Redes de Apoio</h2>
+        <h2 id="apoios-heading" class="project-section-title apoio-title fw-bold">Redes de Apoio</h2>
         <p class="project-section-subtitle text-muted mb-0">Instituições que contribuem com recursos e iniciativas estratégicas.</p>
       </div>
       {% if apoios %}
@@ -58,7 +62,7 @@
             {% set descricao = (apoio.descricao or '').strip() %}
             {% set has_link = descricao.lower().startswith('http://') or descricao.lower().startswith('https://') %}
             <div class="col-12 col-md-6 col-lg-4">
-              <article class="apoio-card h-100">
+              <article class="apoio-card h-100" aria-labelledby="apoio-{{ loop.index }}-titulo">
                 <div class="apoio-card-image">
                   {% if apoio.imagem_path %}
                     <img src="{{ static_url(apoio.imagem_path) }}" alt="{{ apoio.titulo }}">
@@ -67,7 +71,7 @@
                   {% endif %}
                 </div>
                 <div class="apoio-card-body">
-                  <h5 class="apoio-card-title mb-3">{{ apoio.titulo }}</h5>
+                  <h3 id="apoio-{{ loop.index }}-titulo" class="apoio-card-title h5 mb-3">{{ apoio.titulo }}</h3>
                   {% if descricao and not has_link %}
                     <p class="apoio-card-description mb-0">{{ descricao }}</p>
                   {% elif has_link %}
@@ -90,22 +94,22 @@
     </div>
   </section>
 
-  <section id="voluntariado" class="section-spacious project-section">
+  <section id="voluntariado" class="section-spacious project-section" aria-labelledby="voluntariado-heading">
     <div class="container-wide">
-      <h2 class="project-section-title text-center mb-3 fw-bold">Voluntariado</h2>
+      <h2 id="voluntariado-heading" class="project-section-title text-center mb-3 fw-bold">Voluntariado</h2>
       <p class="project-section-subtitle text-center text-muted mb-5">Pessoas que doam tempo e talento para transformar realidades.</p>
       {% if voluntarios %}
         <div class="row g-4">
           {% for voluntario in voluntarios %}
             <div class="col-12 col-md-6 col-lg-4">
-              <div class="project-card h-100">
+              <article class="project-card h-100" aria-labelledby="voluntario-{{ loop.index }}-titulo">
                 {% if voluntario.foto %}
                   <img src="{{ static_url(voluntario.foto) }}" class="card-img-top project-card-img volunteer-card-img" alt="{{ voluntario.nome }}">
                 {% else %}
                   <img src="{{ volunteer_placeholder_src }}" class="card-img-top project-card-img volunteer-card-img" alt="Voluntário">
                 {% endif %}
                 <div class="card-body d-flex flex-column">
-                  <h5 class="fw-bold text-dark mb-1">{{ voluntario.nome }}</h5>
+                  <h3 id="voluntario-{{ loop.index }}-titulo" class="fw-bold text-dark h5 mb-1">{{ voluntario.nome }}</h3>
                   {% if voluntario.area %}
                     <p class="small text-muted mb-1"><strong>Área:</strong> {{ voluntario.area }}</p>
                   {% endif %}
@@ -118,7 +122,7 @@
                     <p class="text-muted mb-0">Descrição breve não informada.</p>
                   {% endif %}
                 </div>
-              </div>
+              </article>
             </div>
           {% endfor %}
         </div>
@@ -130,19 +134,19 @@
     </div>
   </section>
 
-  <section id="transparencia" class="section-spacious">
+  <section id="transparencia" class="section-spacious" aria-labelledby="transparencia-heading">
     <div class="container-wide">
       <div class="text-center mb-4">
-        <h2 class="fw-bold">Portal da Transparência</h2>
+        <h2 id="transparencia-heading" class="fw-bold">Portal da Transparência</h2>
         <p class="text-muted mb-0">Acompanhe documentos e relatórios que reforçam nosso compromisso com a transparência.</p>
       </div>
       {% if documentos %}
         <div class="row g-4">
           {% for documento in documentos %}
             <div class="col-12 col-md-6 col-lg-4">
-              <div class="card-modern h-100 d-flex flex-column">
+              <article class="card-modern h-100 d-flex flex-column" aria-labelledby="documento-{{ loop.index }}-titulo">
                 <div class="d-flex flex-column flex-grow-1">
-                  <h5 class="card-title">{{ documento.titulo }}</h5>
+                  <h3 id="documento-{{ loop.index }}-titulo" class="card-title h5">{{ documento.titulo }}</h3>
                   {% if documento.descricao %}
                     <p class="card-text">{{ documento.descricao }}</p>
                   {% endif %}
@@ -150,7 +154,7 @@
                     Ver detalhes
                   </a>
                 </div>
-              </div>
+              </article>
             </div>
           {% endfor %}
         </div>
