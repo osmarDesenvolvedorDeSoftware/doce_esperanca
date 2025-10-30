@@ -1,6 +1,6 @@
 :root {
   --brand-primary: #0d47a1;
-  --brand-secondary: #42a5f5;
+  --brand-secondary: #2196f3;
   --brand-dark: #0b1d33;
   --brand-light: #e6f0fa;
   --brand-bg-light: #f9fafc;
@@ -76,6 +76,20 @@ h6:first-child {
   padding-bottom: 4rem;
 }
 
+@media (max-width: 575.98px) {
+  .section-spacious {
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+  }
+}
+
+@media (min-width: 1200px) {
+  .section-spacious {
+    padding-top: 5rem;
+    padding-bottom: 5rem;
+  }
+}
+
 :is(.card-modern, .project-card, .apoio-card, .produto-card, .depoimento-card, .contact-card) {
   background: var(--brand-bg-light);
   border-radius: 16px;
@@ -117,7 +131,7 @@ h6:first-child {
   padding-left: 1rem !important;
   padding-right: 1rem !important;
   position: relative;
-  transition: color 0.2s ease, border-bottom-color 0.2s ease;
+  transition: color 0.3s ease, border-bottom-color 0.3s ease;
 }
 
 .navbar-nav .nav-link {
@@ -150,7 +164,7 @@ h6:first-child {
   bottom: 0.4rem;
   height: 2px;
   background-color: transparent;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.3s ease;
 }
 
 .nav-link:hover,
@@ -178,6 +192,9 @@ section.py-5 {
   text-align: center;
   min-height: 60vh;
   padding: 5rem 1.5rem;
+  position: relative;
+  width: 100%;
+  overflow: hidden;
 }
 
 .hero .hero-inner {
@@ -189,10 +206,87 @@ section.py-5 {
   margin-bottom: 1.5rem;
 }
 
+@media (max-width: 575.98px) {
+  .navbar-brand img {
+    width: 48px;
+    height: 48px;
+  }
+
+  .navbar-brand .brand-name {
+    font-size: 1rem;
+  }
+
+  .hero {
+    padding: 4rem 1.25rem;
+    min-height: 0;
+  }
+
+  .hero .display-4 {
+    font-size: 2rem;
+    line-height: 1.2;
+  }
+
+  .hero .hero-lead {
+    font-size: 1rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .hero {
+    padding: 5.5rem 2rem;
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  .hero .hero-inner {
+    text-align: left;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+@media (max-width: 991.98px) {
+  .navbar .navbar-collapse {
+    background: rgba(11, 29, 51, 0.96);
+    border-radius: 14px;
+    padding: 1rem;
+    margin-top: 1rem;
+  }
+
+  .navbar-nav .nav-link {
+    padding: 0.75rem 0.75rem !important;
+  }
+}
+
+@media (min-width: 992px) {
+  .navbar-nav .nav-link {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+}
+
+@media (min-width: 1200px) {
+  .hero {
+    padding: 7rem 3rem;
+  }
+
+  .hero .hero-inner {
+    max-width: 800px;
+  }
+}
+
 .btn-primary {
   background-color: var(--brand-primary);
   border-color: var(--brand-primary);
   transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+}
+
+.btn-outline-light {
+  color: rgba(255, 255, 255, 0.94);
+  border-color: rgba(255, 255, 255, 0.65);
+  background-color: transparent;
+  transition: color 0.3s ease, border-color 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 0 0 rgba(0, 0, 0, 0);
 }
 
 .btn-primary:hover,
@@ -207,6 +301,8 @@ section.py-5 {
 .btn-outline-light:focus {
   color: var(--brand-dark);
   background-color: #ffffff;
+  border-color: #ffffff;
+  box-shadow: 0 10px 24px rgba(255, 255, 255, 0.18);
 }
 
 .footer-top {
@@ -236,7 +332,7 @@ section.py-5 {
 }
 
 .footer-institutional-text .footer-dev-link:hover {
-  color: #42a5f5;
+  color: var(--brand-secondary);
   text-decoration: underline;
 }
 
@@ -246,9 +342,9 @@ section.py-5 {
 
 .footer-links a,
 .footer-link {
-  color: #e2e8f0;
+  color: #e8eef7;
   text-decoration: none;
-  transition: color 0.2s ease;
+  transition: color 0.3s ease;
 }
 
 .footer-links a:hover,
@@ -263,16 +359,17 @@ section.py-5 {
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.12);
-  color: #ffffff;
+  background: rgba(11, 29, 51, 0.72);
+  color: #f8fbff;
   font-size: 1.25rem;
-  transition: background-color 0.2s ease, transform 0.2s ease, color 0.2s ease;
+  transition: background-color 0.3s ease, transform 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .social-icon:hover {
   background-color: var(--brand-secondary);
-  color: var(--brand-dark);
+  color: #06142b;
   transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 8px 20px rgba(33, 150, 243, 0.35);
 }
 
 .alert a {
