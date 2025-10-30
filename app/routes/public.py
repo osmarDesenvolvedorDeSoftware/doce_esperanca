@@ -208,6 +208,29 @@ def _prepare_map_embed(map_value: Any) -> Optional[Markup]:
             "<iframe", '<iframe class="border-0 w-100 h-100"', 1
         )
 
+    style_pattern = re.compile(r'style\s*=\s*"([^"]*)"', re.IGNORECASE)
+
+    def _inject_min_height(match: re.Match) -> str:
+        existing = match.group(1).strip()
+        if re.search(r"min-height\s*:", existing, re.IGNORECASE):
+            return f'style="{existing}"'
+
+        prefix = "min-height:400px;"
+        if existing:
+            if not existing.endswith(";"):
+                existing = f"{existing};"
+            new_value = f"{prefix} {existing.strip()}"
+        else:
+            new_value = prefix
+        return f'style="{new_value}"'
+
+    if style_pattern.search(iframe_html):
+        iframe_html = style_pattern.sub(_inject_min_height, iframe_html, count=1)
+    else:
+        iframe_html = iframe_html.replace(
+            "<iframe", '<iframe style="min-height:400px"', 1
+        )
+
     return Markup(iframe_html)
 
 
@@ -685,13 +708,12 @@ def contato() -> str:
                     "Estamos à disposição para falar com você pelos canais abaixo."
                 )
 
-            if map_embed is None:
-                map_value = parsed_contact_data.get("map") or parsed_contact_data.get(
-                    "iframe"
-                )
-                map_candidate = _prepare_map_embed(map_value)
-                if map_candidate:
-                    map_embed = map_candidate
+            map_value = parsed_contact_data.get("map") or parsed_contact_data.get(
+                "iframe"
+            )
+            map_candidate = _prepare_map_embed(map_value)
+            if map_candidate:
+                map_embed = map_candidate
         else:
             cleaned_html = raw_content
 
