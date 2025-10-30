@@ -56,15 +56,15 @@
             {% set descricao = (apoio.descricao or '').strip() %}
             {% set has_link = descricao.lower().startswith('http://') or descricao.lower().startswith('https://') %}
             <div class="col-12 col-md-6 col-lg-4">
-              <div class="support-card h-100 d-flex flex-column text-center">
-                <div class="support-card-image-wrapper">
+              <div class="support-card h-100 d-flex flex-column align-items-center text-center">
+                <div class="support-card-image mb-4 w-100">
                   {% if apoio.imagem_path %}
                     <img src="{{ static_url(apoio.imagem_path) }}" alt="{{ apoio.titulo }}" class="support-card-img">
                   {% else %}
                     <img src="{{ support_placeholder_src }}" alt="Rede de apoio" class="support-card-img">
                   {% endif %}
                 </div>
-                <div class="support-card-body d-flex flex-column align-items-center justify-content-center">
+                <div class="support-card-body d-flex flex-column align-items-center">
                   <h5 class="support-card-title mb-2">{{ apoio.titulo }}</h5>
                   {% if descricao and not has_link %}
                     <p class="support-card-description mb-0">{{ descricao }}</p>
