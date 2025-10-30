@@ -7,29 +7,21 @@
 {% set texto_principios = textos.get('principios') %}
 
 {% block header_image %}
-  {% set lead_banner = banners[0] if banners else None %}
-  {% set hero_image =
-    lead_banner.imagem_path
-    if lead_banner and lead_banner.imagem_path
-    else texto_inicio.imagem_path
-    if texto_inicio and texto_inicio.imagem_path
-    else 'img/Todos.jpg'
-  %}
-  <section
-    class="hero-section position-relative vh-100 d-flex align-items-center text-white py-5"
-    style="margin-left: calc(-1 * (100vw - 100%) / 2); margin-right: calc(-1 * (100vw - 100%) / 2); background-image: linear-gradient(rgba(18, 51, 84, 0.75), rgba(18, 51, 84, 0.55)), url('{{ static_url(hero_image) }}'); background-size: cover; background-position: center;"
-  >
-    <div class="container text-center">
-      <span class="badge bg-success text-uppercase mb-3">Transforme vidas com carinho</span>
-      <h1 class="display-4 fw-bold mb-3">{{ texto_inicio.titulo or content_placeholder }}</h1>
-      <p class="lead mb-4 mx-auto" style="max-width: 720px;">
+  <section class="hero">
+    <div class="hero-inner">
+      <span class="badge bg-light text-uppercase text-primary mb-3">Transforme vidas com carinho</span>
+      <h1 class="display-4 fw-bold">{{ texto_inicio.titulo or content_placeholder }}</h1>
+      <p class="hero-lead mx-auto">
         {{
           texto_inicio.resumo
           if texto_inicio and texto_inicio.resumo
           else 'Sua contribuição gera oportunidades e espalha esperança para quem mais precisa.'
         }}
       </p>
-      <a class="btn btn-success btn-lg px-5 shadow" href="{{ url_for('public.doacao') }}">Doe Agora</a>
+      <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center mt-4">
+        <a class="btn btn-primary btn-lg px-5" href="{{ url_for('public.doacao') }}">Doe Agora</a>
+        <a class="btn btn-outline-light btn-lg px-5" href="{{ url_for('public.sobre') }}">Conheça nossa história</a>
+      </div>
     </div>
   </section>
 {% endblock %}
@@ -37,8 +29,8 @@
 {% block content %}
   {{ self.header_image() }}
 
-  <section class="py-5">
-    <div class="container py-5">
+  <section class="section-spacious">
+    <div class="container-wide">
       <div class="text-center mb-5">
         <span class="text-uppercase text-success fw-semibold">Sobre nós</span>
         <h2 class="display-6 fw-bold mt-2">Cuidamos de pessoas, transformamos histórias</h2>
@@ -46,65 +38,59 @@
       </div>
       <div class="row g-4">
         <div class="col-md-4">
-          <div class="card h-100 shadow-sm border-0">
-            <div class="card-body text-center p-4">
-              <div class="text-success mb-3">
-                <i class="bi bi-people-heart display-5"></i>
-              </div>
-              <h3 class="h5 fw-semibold mb-3">{{ texto_inicio.titulo or 'Quem somos' }}</h3>
-              {% if texto_inicio and texto_inicio.conteudo %}
-                <div class="text-muted small text-start">{{ texto_inicio.conteudo | safe }}</div>
-              {% else %}
-                <p class="text-muted small mb-0">{{ content_placeholder }}</p>
-              {% endif %}
+          <div class="card-modern h-100 text-center">
+            <div class="text-success mb-3">
+              <i class="bi bi-people-heart display-5"></i>
             </div>
+            <h3 class="h5 fw-semibold mb-3">{{ texto_inicio.titulo or 'Quem somos' }}</h3>
+            {% if texto_inicio and texto_inicio.conteudo %}
+              <div class="text-muted small text-start">{{ texto_inicio.conteudo | safe }}</div>
+            {% else %}
+              <p class="text-muted small mb-0">{{ content_placeholder }}</p>
+            {% endif %}
           </div>
         </div>
         <div class="col-md-4">
-          <div class="card h-100 shadow-sm border-0">
-            <div class="card-body text-center p-4">
-              <div class="text-success mb-3">
-                <i class="bi bi-compass display-5"></i>
-              </div>
-              <h3 class="h5 fw-semibold mb-3">{{ texto_missao.titulo or 'Nossa missão' }}</h3>
-              {% if texto_missao and texto_missao.conteudo %}
-                <div class="text-muted small text-start">{{ texto_missao.conteudo | safe }}</div>
-              {% else %}
-                <p class="text-muted small mb-0">{{ content_placeholder }}</p>
-              {% endif %}
+          <div class="card-modern h-100 text-center">
+            <div class="text-success mb-3">
+              <i class="bi bi-compass display-5"></i>
             </div>
+            <h3 class="h5 fw-semibold mb-3">{{ texto_missao.titulo or 'Nossa missão' }}</h3>
+            {% if texto_missao and texto_missao.conteudo %}
+              <div class="text-muted small text-start">{{ texto_missao.conteudo | safe }}</div>
+            {% else %}
+              <p class="text-muted small mb-0">{{ content_placeholder }}</p>
+            {% endif %}
           </div>
         </div>
         <div class="col-md-4">
-          <div class="card h-100 shadow-sm border-0">
-            <div class="card-body text-center p-4">
-              <div class="text-success mb-3">
-                <i class="bi bi-stars display-5"></i>
-              </div>
-              <h3 class="h5 fw-semibold mb-3">
-                {{
-                  texto_principios.titulo
-                  or (
-                    institutional_sections['principios']['label']
-                    if 'principios' in institutional_sections
-                    else 'Nossos princípios'
-                  )
-                }}
-              </h3>
-              {% if texto_principios and texto_principios.conteudo %}
-                <div class="text-muted small text-start">{{ texto_principios.conteudo | safe }}</div>
-              {% else %}
-                <p class="text-muted small mb-0">{{ content_placeholder }}</p>
-              {% endif %}
+          <div class="card-modern h-100 text-center">
+            <div class="text-success mb-3">
+              <i class="bi bi-stars display-5"></i>
             </div>
+            <h3 class="h5 fw-semibold mb-3">
+              {{
+                texto_principios.titulo
+                or (
+                  institutional_sections['principios']['label']
+                  if 'principios' in institutional_sections
+                  else 'Nossos princípios'
+                )
+              }}
+            </h3>
+            {% if texto_principios and texto_principios.conteudo %}
+              <div class="text-muted small text-start">{{ texto_principios.conteudo | safe }}</div>
+            {% else %}
+              <p class="text-muted small mb-0">{{ content_placeholder }}</p>
+            {% endif %}
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  <section class="py-5 bg-light">
-    <div class="container py-5">
+  <section class="section-spacious bg-light">
+    <div class="container-wide">
       <div class="text-center mb-5">
         <span class="text-uppercase text-success fw-semibold">Nossos Projetos</span>
         <h2 class="display-6 fw-bold mt-2">Parceiros que fazem a diferença</h2>
@@ -115,15 +101,13 @@
         {% if projetos_destaque %}
           {% for parceiro in projetos_destaque %}
             <div class="col-md-4">
-              <div class="card h-100 shadow-sm border-0">
-                <div class="card-body d-flex flex-column text-center p-4">
-                  <div class="text-success mb-3">
-                    <i class="bi bi-rocket-takeoff display-5"></i>
-                  </div>
-                  <h3 class="h5 fw-semibold mb-3">{{ parceiro.nome }}</h3>
-                  <p class="text-muted flex-grow-1">{{ parceiro.descricao or content_placeholder }}</p>
-                  <a class="btn btn-outline-success mt-3" href="{{ url_for('public.projetos') }}">Saiba Mais</a>
+              <div class="card-modern h-100 text-center d-flex flex-column">
+                <div class="text-success mb-3">
+                  <i class="bi bi-rocket-takeoff display-5"></i>
                 </div>
+                <h3 class="h5 fw-semibold mb-3">{{ parceiro.nome }}</h3>
+                <p class="text-muted flex-grow-1">{{ parceiro.descricao or content_placeholder }}</p>
+                <a class="btn btn-outline-success mt-3 align-self-center" href="{{ url_for('public.projetos') }}">Saiba Mais</a>
               </div>
             </div>
           {% endfor %}
@@ -138,8 +122,8 @@
     </div>
   </section>
 
-  <section class="py-5">
-    <div class="container py-5">
+  <section class="section-spacious">
+    <div class="container-wide">
       <div class="text-center mb-5">
         <span class="text-uppercase text-success fw-semibold">Nossos momentos</span>
         <h2 class="display-6 fw-bold mt-2">Galeria de ações e celebrações</h2>
@@ -196,8 +180,8 @@
     </div>
   </section>
 
-  <section class="py-5 text-white" style="margin-left: calc(-1 * (100vw - 100%) / 2); margin-right: calc(-1 * (100vw - 100%) / 2); background: linear-gradient(135deg, #198754, #0f5132);">
-    <div class="container py-5 text-center">
+  <section class="section-spacious text-white" style="margin-left: calc(-1 * (100vw - 100%) / 2); margin-right: calc(-1 * (100vw - 100%) / 2); background: linear-gradient(135deg, #198754, #0f5132);">
+    <div class="container-wide text-center">
       <h2 class="display-6 fw-bold mb-3">Faça parte desta corrente do bem</h2>
       <p class="lead mb-4">Com o seu apoio, ampliamos o alcance dos nossos projetos e mudamos vidas de forma concreta.</p>
       <a class="btn btn-light btn-lg px-5" href="{{ url_for('public.doacao') }}">Doe Agora</a>

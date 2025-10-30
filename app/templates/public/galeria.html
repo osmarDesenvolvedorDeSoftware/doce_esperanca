@@ -3,7 +3,7 @@
 {% block title %}Galeria - Doce Esperança{% endblock %}
 
 {% block content %}
-  <div class="container py-5">
+  <div class="container-wide">
     <section class="mb-5 text-center">
       <h2 class="mb-3">{{ header_title }}</h2>
       {% if header_intro_html %}
@@ -28,7 +28,7 @@
                 data-gallery-title="{{ item.titulo }}"
                 data-gallery-description="{{ item.descricao | default('', true) | striptags | e }}"
               >
-                <div class="ratio ratio-1x1 overflow-hidden rounded shadow">
+                <div class="ratio ratio-1x1 overflow-hidden">
                   <img
                     src="{{ static_url(item.imagem_path) }}"
                     alt="{{ item.titulo }}"

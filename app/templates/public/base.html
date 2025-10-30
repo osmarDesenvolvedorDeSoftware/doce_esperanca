@@ -12,7 +12,7 @@
   <body class="d-flex flex-column min-vh-100">
     <header>
       <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm fixed-top">
-        <div class="container">
+        <div class="container-wide">
           <a class="navbar-brand d-flex align-items-center" href="{{ url_for('public.index') }}">
             <img src="{{ static_url('img/logo.ico') }}" alt="Logo Doce Esperança" class="me-2">
             <span class="brand-name">{{ site_identity or 'Doce Esperança' }}</span>
@@ -37,7 +37,7 @@
       </nav>
     </header>
     <main class="flex-grow-1 pt-5 mt-5">
-      <div class="container pt-4">
+      <div class="container-wide pt-4">
         {% with messages = get_flashed_messages(with_categories=True) %}
           {% if messages %}
             {% for category, message in messages %}
@@ -49,15 +49,13 @@
           {% endif %}
         {% endwith %}
       </div>
-      <section class="py-5">
-        <div class="container">
-          {% block content %}{% endblock %}
-        </div>
+      <section class="section-spacious">
+        {% block content %}{% endblock %}
       </section>
     </main>
     <footer class="mt-auto text-light">
       <div class="footer-top py-5">
-        <div class="container">
+        <div class="container-wide">
           <div class="row gy-4">
             <div class="col-md-4">
               <div class="d-flex align-items-center mb-3">
@@ -120,7 +118,7 @@
         </div>
       </div>
       <div class="footer-bottom text-center">
-        <div class="container">
+        <div class="container-wide">
           <p class="footer-institutional-text mb-0">
             © 2025 <strong>Associação Doce Esperança</strong> — desenvolvido com carinho por
             <a class="footer-dev-link" href="https://github.com/osmarDesenvolvedorDeSoftware" target="_blank" rel="noopener">
